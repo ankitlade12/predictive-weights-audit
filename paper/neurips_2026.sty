@@ -1,0 +1,123 @@
+% neurips_2026.sty — NeurIPS 2026 style (based on standard NeurIPS template)
+% Adapted from neurips_2024.sty
+%
+% Usage: \usepackage[preprint]{neurips_2026}
+%   Options: preprint, final, nonatbib
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{neurips_2026}[2026/01/01 NeurIPS 2026 submission style]
+
+% Options
+\newif\if@natbib\@natbibtrue
+\newif\if@preprint\@preprintfalse
+\newif\if@final\@finalfalse
+
+\DeclareOption{nonatbib}{\@natbibfalse}
+\DeclareOption{preprint}{\@preprinttrue}
+\DeclareOption{final}{\@finaltrue}
+\ProcessOptions\relax
+
+% natbib
+\if@natbib
+  \RequirePackage[round]{natbib}
+  \bibliographystyle{plainnat}
+\fi
+
+% Page layout: 5.5in x 9in text area
+\RequirePackage{geometry}
+\geometry{
+  textheight=9in,
+  textwidth=5.5in,
+  top=1in,
+  headheight=12pt,
+  headsep=25pt,
+  footskip=30pt,
+}
+
+% Fonts
+\RequirePackage{times}
+
+% Title formatting
+\def\@maketitle{%
+  \vbox to \titlebox{%
+    \vskip 0.5in minus 0.2in
+    \begin{center}
+      {\LARGE\bf \@title \par}
+      \vskip 0.3in minus 0.1in
+      \if@final
+        {\large
+          \lineskip .5em
+          \begin{tabular}[t]{c}
+            \@author
+          \end{tabular}\par}
+      \else
+        \if@preprint
+          {\large
+            \lineskip .5em
+            \begin{tabular}[t]{c}
+              \@author
+            \end{tabular}\par}
+        \else
+          {\large Anonymous Author(s)\par}
+          \vskip 0.1in
+          {\normalsize Submitted to NeurIPS 2026. Do not distribute.}
+        \fi
+      \fi
+      \vskip 0.3in minus 0.1in
+    \end{center}}
+}
+
+\newlength\titlebox
+\setlength\titlebox{2.5in}
+
+% Section formatting
+\def\section{\@startsection{section}{1}{\z@}{-10pt plus -3pt minus -2pt}%
+  {4pt plus 2pt minus 1pt}{\large\bf}}
+\def\subsection{\@startsection{subsection}{2}{\z@}{-8pt plus -2pt minus -2pt}%
+  {3pt plus 1pt minus 1pt}{\normalsize\bf}}
+\def\subsubsection{\@startsection{subsubsection}{3}{\z@}{-6pt plus -2pt minus -1pt}%
+  {1pt plus 1pt minus 0pt}{\normalsize\bf}}
+\def\paragraph{\@startsection{paragraph}{4}{\z@}{0pt}{-1em}{\normalsize\bf}}
+
+% Abstract
+\renewenvironment{abstract}{%
+  \centerline{\large\bf Abstract}%
+  \vspace{0.5ex}%
+  \begin{quote}%
+}{\par\end{quote}\vskip 1ex}
+
+% Footnote formatting
+\renewcommand{\footnoterule}{%
+  \kern -3pt
+  \hrule width 2in height 0.4pt
+  \kern 2.6pt
+}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+% Line numbers for review
+\if@final\else
+  \if@preprint\else
+    \RequirePackage{lineno}
+    \linenumbers
+  \fi
+\fi
+
+% Author macros
+\newcommand{\And}{\end{tabular}\hfil\linebreak[0]\hfil
+  \begin{tabular}[t]{c}\bf\rule{\z@}{24pt}\ignorespaces}
+\newcommand{\AND}{\end{tabular}\hfil\linebreak[4]\hfil
+  \begin{tabular}[t]{c}\bf\rule{\z@}{24pt}\ignorespaces}
+
+% Hyperref setup
+\AtBeginDocument{%
+  \@ifpackageloaded{hyperref}{%
+    \hypersetup{
+      colorlinks=true,
+      linkcolor=red,
+      citecolor=blue,
+      urlcolor=magenta,
+    }
+  }{}
+}
+
+\endinput

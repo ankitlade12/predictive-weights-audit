@@ -1,0 +1,161 @@
+% ============================================================
+% EXPERIMENTS — Full version for NeurIPS 2026
+% ============================================================
+
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate \methodname{} against four baselines on synthetic and
+real-world benchmarks. All code, data generators, and trained models
+are available at the URL in the abstract.
+
+\paragraph{Implementation details.}
+All experiments use a Mamba model with $d_{\text{model}} = 64$,
+$d_{\text{state}} = 16$, $L = 4$ layers, expand factor 2, and causal
+convolution kernel size 4. Training uses AdamW (lr = $10^{-3}$,
+weight decay = $10^{-4}$) with cosine annealing, for 150 epochs on
+subsequences of length 200. No data augmentation or early stopping.
+All time series are standardized to zero mean and unit variance before
+training. Results are reported over 3 random seeds (mean $\pm$ std
+where indicated). All ground truth graphs are defined by the data
+generation process (coefficient matrices for VAR, physics equations
+for Lorenz, established literature for climate/fMRI). Full
+hyperparameters for all methods are in
+Appendix~\ref{app:hyperparams}.
+
+\paragraph{Baselines.}
+\begin{itemize}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+    \item \textbf{Granger}~\citep{granger1969investigating}: Bivariate
+    F-tests via \texttt{statsmodels}, max lag 5. Score = negative log
+    $p$-value.
+    \item \textbf{PCMCI}~\citep{runge2019pcmci}: Partial correlation
+    conditional independence test, $\tau_{\max} = 5$, via
+    \texttt{tigramite}.
+    \item \textbf{cLSTM}~\citep{tank2021neural}: Per-target LSTM with
+    group-lasso ($\lambda = 0.01$), 200 epochs.
+    \item \textbf{Correlation}: Absolute Pearson correlation matrix.
+    Non-causal sanity check.
+\end{itemize}
+
+\paragraph{Metrics.}
+AUROC (primary, threshold-free), AUPRC, F1 at the oracle threshold,
+precision, recall, and Spearman rank correlation between predicted and
+true causal strengths. We report wall-clock runtime including training.
+
+% ── 4.1 Synthetic ──
+\subsection{Synthetic Benchmarks}
+\label{sec:synthetic}
+
+We evaluate on five synthetic datasets with known ground-truth causal
+graphs (Table~\ref{tab:synthetic}):
+
+\begin{itemize}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+    \item \textbf{VAR(1) chain K=3, K=5}: Linear chain
+    $X_0 \to X_1 \to \cdots \to X_{K-1}$ with coefficient 0.4.
+    \item \textbf{VAR(1) fork K=5}: Hub structure with $X_0$ driving all
+    others.
+    \item \textbf{Regime-switching K=3}: Forward chain for $t < T/2$,
+    reversed chain for $t \geq T/2$. Tests non-stationarity robustness.
+    \item \textbf{Lorenz K=3}: Nonlinear chaotic system with known
+    coupling structure ($X \leftrightarrow Y$, $X \to Z$, $Y \to Z$).
+\end{itemize}
+
+\input{table1_synthetic}
+
+\textbf{Key findings.} (1)~\methodname{} achieves perfect AUROC (1.0) on
+3 of 5 benchmarks. (2)~It outperforms both PCMCI and cLSTM on
+\emph{all 5} datasets. (3)~Granger tests dominate on linear stationary
+data---their exact design target---but \methodname{} remains within 0.15
+AUROC. (4)~\methodname{} is the only neural method competitive with the
+classical gold standard.
+
+% ── 4.2 Non-stationary ──
+\subsection{Non-Stationary Data}
+\label{sec:nonstationary}
+
+The regime-switching benchmark (Table~\ref{tab:synthetic}, row 4) tests
+causal recovery when stationarity is violated. PCMCI's theoretical
+guarantees assume stationarity; when this assumption breaks, its
+performance should degrade. The selective SSM, by contrast, can adapt its
+data-dependent $\bB_t$, $\bC_t$ matrices to regime changes.
+
+% Figure 1 placeholder - will be auto-generated
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=0.9\linewidth]{figures/figure1_windowed_auroc.png}
+%     \caption{Windowed AUROC over time on regime-switching data.
+%     SSM-Causal adapts to the regime change at $t=2000$, while
+%     static methods average over both regimes.}
+%     \label{fig:windowed}
+% \end{figure}
+
+% ── 4.3 Real-world ──
+\subsection{Real-World Data}
+\label{sec:realworld}
+
+\paragraph{Climate teleconnections.}
+We evaluate on 8 climate indices (ENSO, NAO, PDO, AMO, IOD, PNA, SOI,
+SAM) with 720 monthly timesteps (60 years). Ground truth is derived from
+established teleconnection relationships in the climate literature
+(ENSO $\to$ IOD, ENSO $\to$ PNA, PDO $\to$ ENSO, NAO $\to$ AMO).
+
+\paragraph{Brain functional connectivity.}
+We evaluate on 12 brain regions of interest (ROIs) from four functional
+networks (default mode, visual, motor, frontoparietal) with 1200
+timepoints. Ground truth is from known directed connectivity (V1 $\to$ V2
+$\to$ MT, SMA $\to$ M1, mPFC $\leftrightarrow$ PCC).
+
+% Table 3 placeholder
+% \input{table3_realworld}
+
+% ── 4.4 Efficiency ──
+\subsection{Efficiency Analysis}
+\label{sec:efficiency}
+
+A key practical advantage of \methodname{} is computational efficiency.
+Once the Mamba model is trained, causal graph extraction requires only
+reading two weight matrices and performing a single matrix
+multiplication---$O(dK^2)$ operations, typically under 1 millisecond.
+
+We benchmark wall-clock runtime across varying $K$ (number of variables)
+and $T$ (sequence length). The training cost is $O(TdNL)$, which is
+linear in $T$---compared to PCMCI's $O(T^2)$ scaling from pairwise
+conditional independence tests.
+
+% Table 4 placeholder
+% \input{table4_efficiency}
+
+% ── 4.5 Ablation ──
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+\subsection{Why SSM? Architecture Comparison}
+\label{sec:architecture}
+
+A natural question is whether the causal score $\bS = |\bW_{\text{out}}
+\bW_{\text{in}}|$ works specifically because of the SSM architecture, or
+whether any model with input/output projections would suffice. To test
+this, we apply the same weight-projection extraction to four architectures
+trained on identical data with identical projections: Mamba (SSM), MLP,
+LSTM, and a linear model. If \methodname{} outperforms MLP and LSTM on
+this extraction, it demonstrates that the SSM's structured state dynamics
+help the weight matrices encode causal structure more faithfully.
+
+% TODO: Insert architecture comparison table from exp7 results
+
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+We ablate five design choices on VAR(1) chain K=5:
+
+\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+    \item \textbf{Score variant}: Weight-projection vs.\ Jacobian vs.\
+    B$\cdot$C$^\top$ projection.
+    \item \textbf{Model dimension}: $d \in \{32, 64, 128\}$.
+    \item \textbf{State dimension}: $N \in \{8, 16, 32\}$.
+    \item \textbf{Number of layers}: $L \in \{2, 4, 6\}$.
+    \item \textbf{Data length}: $T \in \{500, 1000, 2000, 5000\}$.
+\end{enumerate}
+
+% Table 5 placeholder
+% \input{table5_ablation}

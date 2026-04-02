@@ -1,0 +1,170 @@
+% ============================================================
+% NeurIPS 2026 Submission
+% Paper: Causal Discovery via State Space Model Internals
+% ============================================================
+\documentclass{article}
+
+% NeurIPS 2026 style
+\usepackage[preprint]{neurips_2026}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{multirow}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+% Custom commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bC}{\mathbf{C}}
+\newcommand{\bS}{\mathbf{S}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\methodname}{SSM-Causal}
+
+\title{Causal Discovery via State Space Model Internals}
+
+\author{%
+  Ankit Hemant Lade \\
+  \texttt{ankit@example.com} \\
+  \And
+  Aman Chadha \\
+  \texttt{aman@example.com} \\
+}
+
+\begin{document}
+
+\maketitle
+
+% ── Abstract ──
+\begin{abstract}
+Causal discovery from multivariate time series is a fundamental problem in
+science and engineering, yet existing methods face critical trade-offs:
+classical Granger tests assume linearity and stationarity, constraint-based
+approaches like PCMCI scale poorly with dimensionality, and neural methods
+require causal-specific training objectives with group-lasso regularization.
+We propose \methodname{}, a training-free approach that extracts Granger
+causal structure directly from the learned parameters of a standard Mamba
+state space model trained solely on next-step prediction. We show that the
+input--output weight projections of a trained SSM encode a causal score
+matrix $\bS$ whose sparsity pattern recovers the underlying causal
+graph---a connection we formalize theoretically for linear VAR($p$)
+processes and validate empirically on nonlinear and non-stationary dynamics.
+On synthetic benchmarks spanning linear chains, fork structures,
+regime-switching processes, and chaotic Lorenz dynamics, \methodname{}
+achieves AUROC 0.80--1.00, outperforming both PCMCI and cLSTM across all
+settings while matching classical Granger tests on their design target.
+On real-world climate teleconnection and neuroimaging data, \methodname{}
+recovers known causal links while running orders of magnitude faster than
+PCMCI. Code is available at \url{https://github.com/ankit/ssm-causal}.
+\end{abstract}
+
+% ── Main Sections (modular) ──
+\input{introduction}       % Section 1: Introduction
+\input{background}         % Section 2: Background (SSMs, Granger, cLSTM)
+\input{method}             % Section 3: SSM Causal Score + Theory + Algorithm
+\input{experiments}        % Section 4: Experiments (synthetic, real, ablation)
+\input{related_work}       % Section 5: Related Work
+\input{conclusion}         % Section 6: Discussion and Conclusion
+
+% ── References ──
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+% ── Appendix ──
+\appendix
+
+\section{Full Proof of Theorem~\ref{thm:var_recovery}}
+\label{app:proofs}
+\input{theorem1_proof}
+
+\section{Dataset Details}
+\label{app:datasets}
+
+\subsection{Synthetic Data Generation}
+
+\paragraph{VAR(1).} We generate $\bX_t = \bA \bX_{t-1} + \epsilon_t$ where
+$\epsilon_t \sim \mathcal{N}(0, 0.01 \mathbf{I})$. For the chain structure
+with $K=3$: $A_{i,i} = 0.5$ and $A_{i,i-1} = 0.4$ for $i > 0$. The spectral
+radius of $\bA$ is verified to be $< 0.95$ for stability.
+
+\paragraph{Lorenz system.} We simulate $dx/dt = \sigma(y-x)$, $dy/dt =
+x(\rho-z) - y$, $dz/dt = xy - \beta z$ with $\sigma=10$, $\rho=28$,
+$\beta=8/3$, $dt=0.01$, for 5000 steps with downsampling factor 5.
+
+\paragraph{Regime-switching VAR.} Forward chain ($X_0 \to X_1 \to X_2$) for
+$t < T/2$, reversed chain ($X_2 \to X_1 \to X_0$) for $t \geq T/2$.
+
+\paragraph{Climate indices.} 8 indices (ENSO, NAO, PDO, AMO, IOD, PNA, SOI,
+SAM) with 720 monthly observations. Ground truth from established
+teleconnection literature~\citep{runge2019pcmci}.
+
+\paragraph{fMRI.} 12 ROIs across 4 functional networks (DMN, visual, motor,
+frontoparietal) with 1200 TRs. Ground truth from tractography and effective
+connectivity studies~\citep{seth2015granger}.
+
+\section{Hyperparameter Details}
+\label{app:hyperparams}
+
+\begin{table}[h]
+\centering
+\caption{Hyperparameters for all methods.}
+\begin{tabular}{llc}
+\toprule
+Method & Parameter & Value \\
+\midrule
+\multirow{6}{*}{\methodname{}} & Model dimension ($d$) & 64 \\
+ & State dimension ($N$) & 16 \\
+ & Layers ($L$) & 4 \\
+ & Expand factor & 2 \\
+ & Learning rate & $10^{-3}$ \\
+ & Epochs & 150 \\
+\midrule
+Granger & Max lag & 5 \\
+\midrule
+\multirow{2}{*}{PCMCI} & $\tau_{\max}$ & 5 \\
+ & $\alpha_{\text{PC}}$ & 0.05 \\
+\midrule
+\multirow{3}{*}{cLSTM} & Hidden size & 64 \\
+ & $\lambda_{\text{group}}$ & 0.01 \\
+ & Epochs & 200 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Additional Experimental Results}
+\label{app:additional}
+
+Full per-dataset metrics (AUPRC, F1, precision, recall, Spearman
+correlation) and per-seed confidence intervals are provided in the
+supplementary code repository.
+
+% ── NeurIPS Checklist ──
+\input{checklist}
+
+\end{document}

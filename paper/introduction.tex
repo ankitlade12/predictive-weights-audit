@@ -1,0 +1,91 @@
+% ============================================================
+% INTRODUCTION — Full version for NeurIPS 2026
+% ============================================================
+
+\section{Introduction}
+\label{sec:intro}
+
+Discovering causal relationships from observational time series data is a
+cornerstone problem in science. In climate science, understanding whether
+El Ni\~no drives Indian Ocean Dipole variability informs seasonal
+forecasting~\citep{runge2019pcmci}. In neuroscience, mapping directed
+information flow between brain regions reveals the architecture of
+cognition~\citep{seth2015granger}. In finance, identifying causal
+dependencies between asset returns underpins systemic risk
+analysis~\citep{granger1969investigating}.
+
+The dominant framework for time series causal discovery---Granger
+causality~\citep{granger1969investigating}---formalizes causation as
+predictive utility: variable $X_j$ Granger-causes $X_i$ if the past of
+$X_j$ helps predict $X_i$ beyond what $X_i$'s own past provides. While
+conceptually clean, this framework faces three practical limitations.
+First, the classical bivariate test assumes linearity and stationarity,
+failing on the nonlinear, regime-switching dynamics common in real-world
+systems. Second, multivariate extensions require $O(K^2)$ pairwise tests,
+becoming prohibitively slow for large variable sets. Third, the test
+provides a binary accept/reject decision with no natural way to rank
+causal relationships by strength.
+
+Modern extensions address some of these issues. PCMCI~\citep{runge2019pcmci}
+combines the PC algorithm~\citep{spirtes2000causation} with momentary
+conditional independence (MCI) testing to handle autocorrelation---a
+pervasive challenge in time series. However, PCMCI inherits the
+stationarity assumption, requires expensive conditional independence
+tests, and scales as $O(K^2 \cdot \tau_{\max})$ with the number of lags
+tested. Neural Granger causality~\citep{tank2021neural} replaces the
+linear model with component-wise LSTMs (cLSTM) or MLPs (cMLP), using
+group-lasso regularization on input weights to zero out non-causal
+connections. This approach requires a specialized causal training
+objective---distinct from standard prediction---and careful tuning of the
+regularization parameter $\lambda$.
+
+Concurrently, \emph{state space models} (SSMs) have emerged as a leading
+architecture for sequence modeling. The Mamba
+architecture~\citep{gu2023mamba} processes sequences through explicit
+input-to-state ($\bB$) and state-to-output ($\bC$) projection matrices,
+with the key innovation of making these projections data-dependent
+(selective). This structured computation---distinct from the opaque
+nonlinearities of transformers---raises a natural question: \emph{does a
+Mamba model trained on multivariate time series prediction learn internal
+representations that reflect the causal structure of its training data?}
+
+We answer this question affirmatively and show that the connection is both
+theoretically grounded and practically useful. Our key insight is
+surprisingly simple: the product of the input and output weight matrices
+of a trained Mamba model---$\bS = |\bW_{\text{out}} \cdot \bW_{\text{in}}|$---yields
+a causal score matrix whose sparsity pattern recovers the Granger causal
+graph. This extraction requires \emph{no causal-specific training}, no
+regularization, and no statistical testing---only a single inspection of
+the already-learned weights.
+
+\paragraph{Why does this work?} A model trained to predict $\hat{X}_i(t+1)$
+must learn which input variables $X_j(t)$ carry predictive information for
+each output. The weight matrices encode this routing: $\bW_{\text{in}}$
+determines which inputs the model attends to, and $\bW_{\text{out}}$
+determines which outputs each hidden dimension contributes to. Their
+product captures the net input-to-output information pathway---precisely
+the quantity that Granger causality measures.
+
+\paragraph{Contributions.} We make four contributions:
+\begin{enumerate}
+    \item \textbf{A novel connection} between SSM internals and causal
+    structure. To our knowledge, no prior work has shown that trained SSM
+    weight matrices encode Granger causal relationships
+    (Section~\ref{sec:method}).
+
+    \item \textbf{Theoretical guarantee}: For linear VAR($p$) processes,
+    we prove that the SSM causal score matrix recovers the true Granger
+    causal graph when the model has sufficient capacity
+    (Theorem~\ref{thm:var_recovery}).
+
+    \item \textbf{Comprehensive experiments}: On 5 synthetic benchmarks,
+    \methodname{} achieves AUROC 0.80--1.00, outperforming PCMCI and cLSTM
+    on all settings. On climate teleconnection and brain connectivity data,
+    \methodname{} recovers known causal links while running $10$--$100\times$
+    faster than PCMCI (Section~\ref{sec:experiments}).
+
+    \item \textbf{Training-free extraction}: Unlike cLSTM, our method works
+    on \emph{any} pre-trained Mamba model without retraining, specialized
+    losses, or regularization---enabling post-hoc causal analysis of
+    existing models.
+\end{enumerate}

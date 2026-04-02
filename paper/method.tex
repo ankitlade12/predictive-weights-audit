@@ -1,0 +1,143 @@
+% ============================================================
+% METHOD — Full version for NeurIPS 2026
+% ============================================================
+
+\section{SSM Causal Score}
+\label{sec:method}
+
+\subsection{Definition}
+
+Given a Mamba model $\mathcal{M}$ trained to minimize the next-step
+prediction loss $\mathcal{L} = \frac{1}{T} \sum_t \|\hat{\bX}_{t+1} -
+\bX_{t+1}\|^2$ on a $K$-dimensional time series, we define two causal
+score extraction methods.
+
+\begin{definition}[Weight-Projection Causal Score]
+\label{def:weight_score}
+\begin{equation}
+    \bS^{\text{W}} = |\bW_{\text{out}} \cdot \bW_{\text{in}}| \in \R^{K \times K},
+\end{equation}
+where $\bW_{\text{in}} \in \R^{d \times K}$ is the input projection and
+$\bW_{\text{out}} \in \R^{K \times d}$ is the output projection of the
+trained model, and $|\cdot|$ denotes element-wise absolute value.
+\end{definition}
+
+The entry $\bS^{\text{W}}_{i,j}$ quantifies the magnitude of the learned
+linear pathway from input variable $j$ to output variable $i$ through the
+model's $d$-dimensional hidden space. This score requires only reading two
+weight matrices---no forward pass, no gradient computation.
+
+\begin{definition}[Jacobian Causal Score]
+\label{def:jacobian_score}
+\begin{equation}
+    \bS^{\text{J}}_{i,j} = \frac{1}{T} \sum_{t=1}^{T}
+    \left| \frac{\partial \hat{X}_i(t)}{\partial X_j(t)} \right|.
+    \label{eq:jacobian_score}
+\end{equation}
+\end{definition}
+
+The Jacobian score captures the \emph{full computational graph}, including
+data-dependent $\bB_t$, $\bC_t$ matrices, gating nonlinearities, and
+causal convolution. It requires one forward and backward pass through the
+trained model.
+
+\paragraph{Relationship between the two scores.}
+The weight-projection score captures the \emph{static} information routing
+encoded in $\bW_{\text{in}}$ and $\bW_{\text{out}}$, while the Jacobian
+score captures both static and \emph{dynamic} routing through the
+data-dependent SSM layers. For linear data (VAR), both scores converge to
+the same ranking. For nonlinear data, the Jacobian score is more
+expressive but also noisier.
+
+\paragraph{Practical choice.} We recommend $\bS^{\text{W}}$ as the default
+due to its simplicity and speed ($O(dK)$ computation, no data pass needed).
+We use $\bS^{\text{J}}$ when the Jacobian provides strictly better
+AUROC, as determined on a validation split. In our experiments,
+$\bS^{\text{W}}$ and $\bS^{\text{J}}$ achieve comparable performance on
+all benchmarks (Section~\ref{sec:ablation}).
+
+\subsection{Theoretical Analysis}
+
+\begin{theorem}[SSM Causal Score Recovers VAR($p$) Granger Structure]
+\label{thm:var_recovery}
+Let $\bX_t = \sum_{\tau=1}^{p} \Phi_\tau \bX_{t-\tau} + \epsilon_t$ be
+a stable VAR($p$) process with i.i.d.\ Gaussian noise. Let $\mathcal{M}$
+be a Mamba model with model dimension $d \geq Kp$ that achieves the
+global minimum of the next-step MSE loss. Then:
+\begin{equation}
+    \bS^{\text{W}}_{i,j} = 0 \iff X_j \text{ does not Granger-cause } X_i.
+\end{equation}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+At the global optimum, the model implements the Bayes-optimal predictor
+$\hat{\bX}_{t+1}^* = \sum_\tau \Phi_\tau \bX_{t+1-\tau}$. With $d \geq Kp$,
+the SSM has sufficient capacity to represent the full VAR($p$) impulse
+response. The effective input-to-output mapping factors through
+$\bW_{\text{out}} \bW_{\text{in}}$, which under genericity of the
+internal weights, inherits the sparsity pattern of the coefficient
+matrices: zero signal flow from $j$ to $i$ if and only if
+$[\Phi_\tau]_{i,j} = 0$ for all $\tau$. The full proof, handling
+rank constraints and the factored form, is in
+Appendix~\ref{app:proofs}.
+\end{proof}
+
+\begin{proposition}[Layer Aggregation]
+\label{prop:layer_agg}
+For a multi-layer Mamba model, the per-layer effective mapping
+$\bS^{(\ell)} = |\bW^{(\ell)}_{\text{out}} \bW^{(\ell)}_{\text{in}}|$
+captures causal effects at the timescale determined by layer $\ell$'s
+state dynamics (eigenvalues of $\bar{\bA}^{(\ell)}$). Averaging across
+layers yields a score robust to the unknown lag distribution.
+\end{proposition}
+
+\subsection{Algorithm}
+
+Algorithm~\ref{alg:ssm_causal} summarizes the complete \methodname{}
+pipeline. The method is remarkably simple: train a standard Mamba model,
+read two weight matrices, multiply them.
+
+\begin{algorithm}[t]
+\caption{\methodname{}: Causal Discovery via SSM Internals}
+\label{alg:ssm_causal}
+\begin{algorithmic}[1]
+\REQUIRE Multivariate time series $\bX \in \R^{T \times K}$
+\ENSURE Estimated causal graph $\hat{G}$, strength matrix $\bS$
+\STATE \textbf{Train} (or load) Mamba model $\mathcal{M}$ on next-step
+       prediction: $\min_\theta \frac{1}{T}\sum_t \|\mathcal{M}(\bX_t) -
+       \bX_{t+1}\|^2$
+\STATE \textbf{Extract} $\bW_{\text{in}} \in \R^{d \times K}$ and
+       $\bW_{\text{out}} \in \R^{K \times d}$ from $\mathcal{M}$
+\STATE \textbf{Compute} $\bS = |\bW_{\text{out}} \cdot \bW_{\text{in}}|
+       \in \R^{K \times K}$
+\STATE \textbf{Zero diagonal}: $\bS_{i,i} \leftarrow 0$ for all $i$
+       \hfill \COMMENT{Remove self-loops}
+\STATE \textbf{Normalize}: $\bS \leftarrow \bS / \max(\bS)$
+\STATE \textbf{Threshold}: $\hat{G}_{i,j} = \mathbb{1}[\bS_{i,j} > \tau]$
+       \hfill \COMMENT{$\tau$ via Otsu or validation}
+\RETURN $\hat{G}$, $\bS$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Computational complexity.}
+Steps 2--6 are $O(dK^2)$---a single matrix multiplication and
+element-wise operations. The dominant cost is Step 1 (training),
+which is $O(TdNL)$ for a Mamba model with $L$ layers and state
+dimension $N$. Crucially, this training is \emph{shared}: once trained
+for prediction, the model can be queried for causal structure
+\emph{without retraining}. In contrast, cLSTM requires training $K$
+separate networks with group-lasso, costing $O(K \cdot Td)$ total.
+PCMCI requires $O(K^2 \tau_{\max})$ conditional independence tests,
+each involving regression over the full time series.
+
+\paragraph{Normalization and thresholding.}
+We normalize $\bS$ by its maximum entry to obtain scores in $[0, 1]$,
+ensuring comparability across datasets of different scales. To convert
+the continuous score matrix to a binary causal graph, we use Otsu's
+method~\citep{otsu1979threshold}, which finds the threshold $\tau$ that
+maximizes between-class variance of the score values. This is fully
+unsupervised---no knowledge of the true graph is needed. Alternative
+thresholds (percentile-based, gap heuristic) yield similar results
+(Appendix~\ref{app:additional}). For primary evaluation, we report
+threshold-free metrics (AUROC, AUPRC) that are invariant to the
+threshold choice.

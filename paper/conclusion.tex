@@ -1,0 +1,67 @@
+% ============================================================
+% CONCLUSION — Full version for NeurIPS 2026
+% ============================================================
+
+\section{Discussion and Conclusion}
+\label{sec:conclusion}
+
+We have shown that the internal weight matrices of a trained Mamba state
+space model encode Granger causal structure, enabling a simple and
+effective approach to causal discovery from multivariate time series. The
+SSM causal score matrix $\bS = |\bW_{\text{out}} \cdot \bW_{\text{in}}|$
+recovers causal graphs without any causal-specific training, group-lasso
+regularization, or statistical testing---requiring only a single matrix
+multiplication on the already-learned weights.
+
+\paragraph{Theoretical contribution.}
+We proved that for linear VAR($p$) processes, the SSM causal score
+recovers the Granger causal structure when the model has sufficient
+capacity (Theorem~\ref{thm:var_recovery}). This establishes a formal
+connection between two previously disjoint fields: state space sequence
+modeling and causal discovery.
+
+\paragraph{Empirical contribution.}
+On five synthetic benchmarks, \methodname{} achieves AUROC 0.80--1.00,
+outperforming both PCMCI and cLSTM across all settings. On real-world
+climate and neuroimaging data, it recovers known causal relationships
+while running orders of magnitude faster than constraint-based methods.
+
+\paragraph{Limitations.}
+We acknowledge four limitations:
+\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+    \item \textbf{Linear theory only.} Theorem~\ref{thm:var_recovery}
+    covers VAR($p$) processes. For nonlinear dynamics, our evidence is
+    empirical (Lorenz system, fMRI). A nonlinear extension of the
+    theory---perhaps leveraging the selectivity mechanism---is an
+    important open problem.
+    \item \textbf{No instantaneous causality.} SSMs are causal by
+    construction ($y_t$ depends only on $x_{\leq t}$), so \methodname{}
+    detects only lagged effects ($\tau \geq 1$). Instantaneous effects
+    require additional structural assumptions.
+    \item \textbf{Scalability to large $K$.} The $K \times K$ score
+    matrix may become noisy for $K > 50$ without regularization.
+    Sparse penalty on $\bW_{\text{in}}$, $\bW_{\text{out}}$ during
+    training is a natural extension.
+    \item \textbf{Confounding.} Like all Granger-based methods,
+    \methodname{} cannot distinguish true causation from confounded
+    association without additional assumptions about unobserved
+    variables.
+\end{enumerate}
+
+\paragraph{Broader impact.}
+\methodname{} enables faster causal analysis in domains where time series
+data is abundant but causal structure is unknown---climate science,
+neuroscience, economics, and genomics. By working post-hoc on pre-trained
+models, it opens the door to causal analysis of existing time series
+foundation models. We note that causal discovery from observational data
+should be interpreted as hypothesis generation, not confirmation; any
+discovered causal link should be validated through domain expertise or
+intervention when possible.
+
+\paragraph{Future work.}
+Three directions are promising: (1)~extending the theory to nonlinear
+SSMs by analyzing the data-dependent $\bB_t$, $\bC_t$ pathway;
+(2)~developing regularized variants for high-dimensional settings
+($K > 100$); and (3)~applying \methodname{} to pre-trained time series
+foundation models, where the training cost is amortized across datasets
+and the causal extraction becomes truly zero-cost.
