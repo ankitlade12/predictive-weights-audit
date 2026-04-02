@@ -1,3 +1,7 @@
+from .finance import (
+    generate_synthetic_finance,
+    generate_synthetic_eeg,
+)
 from .synthetic import (
     generate_var1,
     generate_var2,
@@ -28,4 +32,6 @@ __all__ = [
     "get_climate_ground_truth",
     "generate_synthetic_fmri",
     "load_hcp_fmri",
+    "generate_synthetic_finance",
+    "generate_synthetic_eeg",
 ]

@@ -67,6 +67,18 @@ echo "----------------------------------------------"
 uv run python experiments/exp6_ablation.py
 echo ""
 
+# Experiment 7: Architecture comparison (SSM vs MLP vs LSTM)
+echo "[Exp 7] Architecture Comparison — Table 6"
+echo "----------------------------------------------"
+uv run python experiments/exp7_architecture_comparison.py
+echo ""
+
+# Experiment 8: Extended real-world (Finance + EEG)
+echo "[Exp 8] Extended Real-World — Table 3 (extended)"
+echo "----------------------------------------------"
+uv run python experiments/exp8_realworld_extended.py
+echo ""
+
 echo "=============================================="
 echo " All experiments complete!"
 echo " Results saved to results/"
