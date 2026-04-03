@@ -66,17 +66,12 @@ def run_fmri_experiment(device="cpu", save_dir="results/exp4_fmri"):
     trainer.train(X, n_epochs=200, verbose=False)
     X_tensor = torch.FloatTensor(X)
 
-    S_jac = extract_jacobian_score(model, X_tensor, device, seq_len=min(200, T))
-    S_weight = extract_weight_score(model)
+    # Default extractor: weight projection (locked, no oracle selection)
+    S_ssm = extract_weight_score(model)
     ssm_time = time.time() - t0
 
-    # Use better variant
-    m_jac = compute_metrics(S_jac, G_true)
-    m_weight = compute_metrics(S_weight, G_true)
-    if m_jac["auroc"] >= m_weight["auroc"]:
-        S_ssm, m, variant = S_jac, m_jac, "Jacobian"
-    else:
-        S_ssm, m, variant = S_weight, m_weight, "Weight-Proj"
+    m = compute_metrics(S_ssm, G_true)
+    variant = "Weight-Proj"
 
     m["runtime_s"] = ssm_time
     results["SSM-Causal"] = m

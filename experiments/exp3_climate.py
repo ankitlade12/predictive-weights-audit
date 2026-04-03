@@ -80,21 +80,12 @@ def run_climate_experiment(
     trainer.train(X, n_epochs=200, verbose=False)
     X_tensor = torch.FloatTensor(X)
 
-    S_jac = extract_jacobian_score(model, X_tensor, device, seq_len=min(200, T))
-    S_weight = extract_weight_score(model)
+    # Default extractor: weight projection (locked, no oracle selection)
+    S_ssm = extract_weight_score(model)
     ssm_time = time.time() - t0
 
-    # Use the better of the two
-    m_jac = compute_metrics(S_jac, G_true)
-    m_weight = compute_metrics(S_weight, G_true)
-    if m_jac["auroc"] >= m_weight["auroc"]:
-        S_ssm = S_jac
-        m = m_jac
-        variant_used = "Jacobian"
-    else:
-        S_ssm = S_weight
-        m = m_weight
-        variant_used = "Weight-Proj"
+    m = compute_metrics(S_ssm, G_true)
+    variant_used = "Weight-Proj"
 
     m["runtime_s"] = ssm_time
     results["SSM-Causal"] = m

@@ -66,27 +66,28 @@ determines which outputs each hidden dimension contributes to. Their
 product captures the net input-to-output information pathway---precisely
 the quantity that Granger causality measures.
 
-\paragraph{Contributions.} We make four contributions:
+\paragraph{Contributions.} We make three contributions:
 \begin{enumerate}
-    \item \textbf{A novel connection} between SSM internals and causal
-    structure. To our knowledge, no prior work has shown that trained SSM
-    weight matrices encode Granger causal relationships
-    (Section~\ref{sec:method}).
+    \item \textbf{Post hoc dependency extraction from SSMs.} We show that
+    the endpoint projection score $\bS = |\bW_{\text{out}} \bW_{\text{in}}|$
+    of a prediction-trained Mamba model recovers lagged Granger-type
+    dependency structure. We provide a theoretical result characterizing
+    when this holds for VAR($p$) processes
+    (Proposition~\ref{thm:var_recovery}), noting that the result applies
+    to any bottleneck architecture---the SSM-specific advantage is
+    empirical.
 
-    \item \textbf{Theoretical guarantee}: For linear VAR($p$) processes,
-    we prove that the SSM causal score matrix recovers the true Granger
-    causal graph when the model has sufficient capacity
-    (Theorem~\ref{thm:var_recovery}).
+    \item \textbf{Architecture comparison.} We show that the extraction is
+    particularly effective for selective SSMs on non-stationary data, where
+    MLP and LSTM alternatives with identical extraction fail. This suggests
+    that the SSM's selective state dynamics help maintain interpretable
+    weight structure under regime changes
+    (Section~\ref{sec:architecture}).
 
-    \item \textbf{Comprehensive experiments}: On 6 synthetic and 4
-    real-world benchmarks, \methodname{} achieves AUROC 0.70--1.00,
-    outperforming PCMCI and cLSTM on all settings. On climate data,
-    \methodname{} achieves AUROC 0.97, outperforming Granger (0.93);
-    on financial data, it achieves perfect recovery
+    \item \textbf{Practical screening tool.} Once trained for prediction,
+    dependency extraction requires only a single matrix multiplication
+    ($<$1ms), no causal-specific objective, and no hyperparameter tuning.
+    This makes \methodname{} useful for hypothesis generation in
+    exploratory analysis of multivariate time series
     (Section~\ref{sec:experiments}).
-
-    \item \textbf{Training-free extraction}: Unlike cLSTM, our method works
-    on \emph{any} pre-trained Mamba model without retraining, specialized
-    losses, or regularization---enabling post-hoc causal analysis of
-    existing models.
 \end{enumerate}

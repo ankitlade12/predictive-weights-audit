@@ -89,11 +89,15 @@ as its group-lasso regularization enforces a static sparsity pattern
 incompatible with time-varying causal structure.
 
 % ── 4.3 Real-world ──
-\subsection{Real-World Data}
+\subsection{Domain-Inspired Benchmarks}
 \label{sec:realworld}
 
-We evaluate on four real-world-inspired benchmarks spanning climate
-science, neuroscience, and finance (Table~\ref{tab:realworld}).
+We evaluate on four synthetic benchmarks with domain-realistic structure,
+spanning climate science, neuroscience, and finance
+(Table~\ref{tab:realworld}). Ground truth is planted (known by
+construction), enabling exact evaluation. We emphasize that these are
+\emph{not} real observational datasets---they test whether the method
+can recover domain-relevant structure under controlled conditions.
 
 \paragraph{Climate teleconnections (K=8, T=720).}
 Eight climate indices (ENSO, NAO, PDO, AMO, IOD, PNA, SOI, SAM)

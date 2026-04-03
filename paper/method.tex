@@ -60,16 +60,23 @@ all benchmarks (Section~\ref{sec:ablation}).
 
 \subsection{Theoretical Analysis}
 
-\begin{theorem}[SSM Causal Score Recovers VAR($p$) Granger Structure]
+\begin{proposition}[Endpoint Projection Recovers VAR($p$) Granger Structure]
 \label{thm:var_recovery}
 Let $\bX_t = \sum_{\tau=1}^{p} \Phi_\tau \bX_{t-\tau} + \epsilon_t$ be
 a stable VAR($p$) process with i.i.d.\ Gaussian noise. Let $\mathcal{M}$
-be a Mamba model with model dimension $d \geq Kp$ that achieves the
-global minimum of the next-step MSE loss. Then:
+be \emph{any} model with input projection $\bW_{\text{in}} \in \R^{d
+\times K}$ and output projection $\bW_{\text{out}} \in \R^{K \times d}$,
+with $d \geq Kp$, that achieves the global minimum of the next-step MSE
+loss. Under a genericity condition on the internal mapping (Assumption A3
+in Appendix~\ref{app:proofs}):
 \begin{equation}
     \bS^{\text{W}}_{i,j} = 0 \iff X_j \text{ does not Granger-cause } X_i.
 \end{equation}
-\end{theorem}
+\textbf{Remark:} This result applies to any bottleneck architecture,
+not only SSMs. The SSM-specific advantage is empirical: selective state
+dynamics make the internal mapping more favorable for sparsity transfer,
+particularly on non-stationary data (Section~\ref{sec:architecture}).
+\end{proposition}
 
 \begin{proof}[Proof sketch]
 The proof proceeds in four steps. (1)~For VAR($p$), the Bayes-optimal

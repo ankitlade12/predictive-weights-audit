@@ -47,7 +47,7 @@
 \newcommand{\bh}{\mathbf{h}}
 \newcommand{\methodname}{SSM-Causal}
 
-\title{Causal Discovery via State Space Model Internals}
+\title{Post Hoc Granger Graph Extraction from Selective State Space Models}
 
 \author{%
   Ankit Hemant Lade \\
@@ -63,28 +63,26 @@
 
 % ── Abstract ──
 \begin{abstract}
-Causal discovery from multivariate time series is a fundamental problem in
-science and engineering, yet existing methods face critical trade-offs:
-classical Granger tests assume linearity and stationarity, constraint-based
-approaches like PCMCI scale poorly with dimensionality, and neural methods
-require causal-specific training objectives with group-lasso regularization.
-We propose \methodname{}, a training-free approach that extracts Granger
-causal structure directly from the learned parameters of a standard Mamba
-state space model trained solely on next-step prediction. We show that the
-input--output weight projections of a trained SSM encode a causal score
-matrix $\bS$ whose sparsity pattern recovers the underlying causal
-graph---a connection we formalize theoretically for linear VAR($p$)
-processes and validate empirically on nonlinear and non-stationary dynamics.
-On synthetic benchmarks spanning linear, nonlinear, and non-stationary
-dynamics, \methodname{} achieves AUROC 0.70--1.00, outperforming both
-PCMCI and cLSTM across all settings while remaining competitive with
-classical Granger tests. On real-world benchmarks in climate science,
-finance, EEG, and neuroimaging, \methodname{} recovers known causal
-links---achieving AUROC 0.97 on climate teleconnections and 1.00 on
-financial sector returns. Once trained for prediction, causal extraction
-requires only a single matrix multiplication ($<$1ms), enabling causal
-discovery as a free byproduct of any pre-trained SSM.
-Code is available at \url{https://github.com/ankitlade12/ssm-causal}.
+Extracting lagged dependency structure from multivariate time series is
+fundamental to science, yet existing methods face trade-offs between
+statistical assumptions (Granger tests require linearity and stationarity),
+computational cost (PCMCI scales poorly with dimensionality), and training
+complexity (neural methods require causal-specific objectives). We
+investigate whether standard sequence models trained only for next-step
+prediction encode Granger-type dependency structure that can be extracted
+\emph{post hoc}. We propose \methodname{}, which extracts a dependency
+score matrix $\bS = |\bW_{\text{out}} \cdot \bW_{\text{in}}|$ from the
+endpoint projections of a trained Mamba state space model. We provide a
+theoretical result showing when this score recovers VAR($p$) Granger
+structure, and empirically evaluate across synthetic benchmarks spanning
+linear, nonlinear, and non-stationary dynamics. \methodname{} achieves
+AUROC 0.70--1.00, consistently outperforming PCMCI and cLSTM, while
+remaining competitive with classical Granger tests on their design target.
+An architecture comparison reveals that the selective SSM provides a
+specific advantage on non-stationary data, where MLP and LSTM alternatives
+fail. Once trained, dependency extraction requires only a single matrix
+multiplication ($<$1ms). Code is available at
+\url{https://github.com/ankitlade12/ssm-causal}.
 \end{abstract}
 
 % ── Main Sections (modular) ──
