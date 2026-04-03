@@ -24,7 +24,9 @@ trained model, and $|\cdot|$ denotes element-wise absolute value.
 
 The entry $\bS^{\text{W}}_{i,j}$ quantifies the magnitude of the learned
 linear pathway from input variable $j$ to output variable $i$ through the
-model's $d$-dimensional hidden space. This score requires only reading two
+model's $d$-dimensional hidden space. We take absolute values because we
+measure the \emph{magnitude} of information flow, not its sign (positive
+vs.\ negative causal influence). This score requires only reading two
 weight matrices---no forward pass, no gradient computation.
 
 \begin{definition}[Jacobian Causal Score]

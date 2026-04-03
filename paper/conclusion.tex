@@ -21,10 +21,13 @@ connection between two previously disjoint fields: state space sequence
 modeling and causal discovery.
 
 \paragraph{Empirical contribution.}
-On five synthetic benchmarks, \methodname{} achieves AUROC 0.80--1.00,
-outperforming both PCMCI and cLSTM across all settings. On real-world
-climate and neuroimaging data, it recovers known causal relationships
-while running orders of magnitude faster than constraint-based methods.
+On six synthetic and four real-world benchmarks spanning climate
+science, finance, and neuroscience, \methodname{} achieves AUROC
+0.70--1.00, outperforming both PCMCI and cLSTM across all settings.
+On climate data, it outperforms Granger (0.97 vs.\ 0.93); on
+financial data, it achieves perfect recovery (AUROC 1.0). Once
+trained, causal extraction requires only a single matrix
+multiplication ($<$1ms).
 
 \paragraph{Limitations.}
 We acknowledge four limitations:

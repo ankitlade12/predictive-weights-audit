@@ -78,11 +78,12 @@ the quantity that Granger causality measures.
     causal graph when the model has sufficient capacity
     (Theorem~\ref{thm:var_recovery}).
 
-    \item \textbf{Comprehensive experiments}: On 5 synthetic benchmarks,
-    \methodname{} achieves AUROC 0.80--1.00, outperforming PCMCI and cLSTM
-    on all settings. On climate teleconnection and brain connectivity data,
-    \methodname{} recovers known causal links while running $10$--$100\times$
-    faster than PCMCI (Section~\ref{sec:experiments}).
+    \item \textbf{Comprehensive experiments}: On 6 synthetic and 4
+    real-world benchmarks, \methodname{} achieves AUROC 0.70--1.00,
+    outperforming PCMCI and cLSTM on all settings. On climate data,
+    \methodname{} achieves AUROC 0.97, outperforming Granger (0.93);
+    on financial data, it achieves perfect recovery
+    (Section~\ref{sec:experiments}).
 
     \item \textbf{Training-free extraction}: Unlike cLSTM, our method works
     on \emph{any} pre-trained Mamba model without retraining, specialized

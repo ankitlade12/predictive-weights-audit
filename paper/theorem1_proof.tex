@@ -158,10 +158,11 @@ The proof relies on three assumptions:
 the global minimum of the MSE loss. In practice, SGD finds local minima.
 However, the relevant property is not exact global optimality but rather
 that the model has learned the correct input-output routing---i.e., that
-it predicts well. We observe empirically that models with prediction loss
-within 10\% of the Bayes-optimal loss consistently recover causal
-structure (Section~\ref{sec:ablation}), suggesting the theorem's
-conclusion holds under approximate optimality.
+it predicts well. Empirically, we observe that causal recovery is robust
+to training variance: across multiple random seeds, models that converge
+to similar prediction loss consistently recover the same causal structure
+(Section~\ref{sec:ablation}), suggesting the theorem's conclusion holds
+under approximate optimality.
 
 \textbf{(2)~Sufficient capacity ($d \geq Kp$).} The model dimension must
 be large enough to represent the VAR($p$) impulse response. When $d < Kp$,
