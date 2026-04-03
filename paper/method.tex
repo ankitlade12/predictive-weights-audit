@@ -72,25 +72,50 @@ global minimum of the next-step MSE loss. Then:
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-At the global optimum, the model implements the Bayes-optimal predictor
-$\hat{\bX}_{t+1}^* = \sum_\tau \Phi_\tau \bX_{t+1-\tau}$. With $d \geq Kp$,
-the SSM has sufficient capacity to represent the full VAR($p$) impulse
-response. The effective input-to-output mapping factors through
-$\bW_{\text{out}} \bW_{\text{in}}$, which under genericity of the
-internal weights, inherits the sparsity pattern of the coefficient
-matrices: zero signal flow from $j$ to $i$ if and only if
-$[\Phi_\tau]_{i,j} = 0$ for all $\tau$. The full proof, handling
-rank constraints and the factored form, is in
+The proof proceeds in four steps. (1)~For VAR($p$), the Bayes-optimal
+predictor is $\hat{\bX}_{t+1}^* = \sum_\tau \Phi_\tau \bX_{t+1-\tau}$,
+and any MSE-optimal model must implement this mapping. (2)~A Mamba model
+with $d \geq Kp$ can represent any VAR($p$) via a shift-register
+construction in the SSM state. (3)~All information enters through
+$\bW_{\text{in}}$ and exits through $\bW_{\text{out}}$, so the
+influence of input $j$ on output $i$ factors as
+$[\bW_{\text{out}}]_{i,:} \bJ^* [\bW_{\text{in}}]_{:,j}$, where
+$\bJ^*$ is the internal Jacobian. (4)~Under a genericity condition
+on $\bJ^*$ (full rank, which holds almost surely under continuous
+parameter distributions), the sparsity pattern of
+$\bW_{\text{out}} \bW_{\text{in}}$ matches that of the aggregate
+coefficient matrix $\sum_\tau |\Phi_\tau|$. The full proof is in
 Appendix~\ref{app:proofs}.
 \end{proof}
 
+\begin{proposition}[Weight-Jacobian Consistency]
+\label{prop:wj_consistency}
+For a linear data-generating process, the weight-projection score
+$\bS^{\text{W}}$ and the time-averaged Jacobian score $\bS^{\text{J}}$
+recover the same causal ordering. Specifically, if $\bJ_t = \bJ^*$
+is constant (as in the linear case), then:
+\begin{equation}
+    \text{rank}(\bS^{\text{W}}) = \text{rank}(\bS^{\text{J}}).
+\end{equation}
+For nonlinear processes, $\bS^{\text{J}}$ captures additional
+data-dependent effects through the variation of $\bJ_t$ across
+timesteps.
+\end{proposition}
+
+This proposition justifies our practical recommendation of using
+$\bS^{\text{W}}$ (fast, data-independent) as the default, falling
+back to $\bS^{\text{J}}$ (slower, more expressive) for nonlinear
+settings.
+
 \begin{proposition}[Layer Aggregation]
 \label{prop:layer_agg}
-For a multi-layer Mamba model, the per-layer effective mapping
-$\bS^{(\ell)} = |\bW^{(\ell)}_{\text{out}} \bW^{(\ell)}_{\text{in}}|$
-captures causal effects at the timescale determined by layer $\ell$'s
-state dynamics (eigenvalues of $\bar{\bA}^{(\ell)}$). Averaging across
-layers yields a score robust to the unknown lag distribution.
+For a multi-layer Mamba model, each layer $\ell$'s state dynamics
+(controlled by the eigenvalue spectrum of $\bar{\bA}^{(\ell)}$)
+capture causal effects at different timescales: layers with
+eigenvalues near 1 encode long-range dependencies, while layers with
+small eigenvalues encode short-range effects. Averaging the causal
+score across layers yields an estimator robust to the unknown lag
+distribution of the true causal process.
 \end{proposition}
 
 \subsection{Algorithm}
