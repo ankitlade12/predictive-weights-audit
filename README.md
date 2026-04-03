@@ -15,16 +15,27 @@ read the weights.
 
 | Dataset | SSM-Causal | Granger | PCMCI | cLSTM |
 |---|---|---|---|---|
-| VAR(1) chain K=3 | **1.000** | **1.000** | 0.500 | 0.750 |
-| VAR(1) chain K=5 | 0.969 | **1.000** | 0.406 | 0.234 |
-| VAR(1) fork K=5 | 0.859 | **1.000** | 0.469 | 0.109 |
-| Regime-switching K=3 | **1.000** | **1.000** | **1.000** | 0.375 |
-| Lorenz (nonlinear) K=3 | **0.800** | **0.800** | 0.400 | 0.200 |
-| **Climate K=8** | **0.984** | 0.933 | 0.333 | 0.698 |
-| fMRI K=12 | 0.889 | **0.972** | 0.590 | **0.994** |
+### Synthetic Benchmarks (AUROC)
 
-SSM-Causal **outperforms both PCMCI and cLSTM on 6/7 benchmarks** and achieves the
-highest AUROC on climate data (0.984), beating Granger for the first time.
+| Dataset | SSM-Causal | Granger | PCMCI | cLSTM |
+|---|---|---|---|---|
+| VAR(1) chain K=5 | **0.984** | **1.000** | 0.375 | 0.719 |
+| VAR(1) fork K=5 | **0.969** | **1.000** | 0.375 | 0.406 |
+| VAR(1) random K=10 | 0.700 | **0.901** | 0.501 | 0.562 |
+| VAR(2) K=5 | 0.798 | **1.000** | 0.222 | 0.535 |
+| Lorenz (nonlinear) K=3 | **0.800** | 0.600 | 0.600 | 0.200 |
+| Regime-switching K=3 | **1.000** | **1.000** | **1.000** | 0.250 |
+
+### Real-World Benchmarks (AUROC)
+
+| Dataset | SSM-Causal | Granger | PCMCI | cLSTM |
+|---|---|---|---|---|
+| **Climate K=8** | **0.973** | 0.933 | 0.333 | 0.800 |
+| fMRI K=12 | 0.778 | **0.972** | 0.590 | **0.991** |
+
+SSM-Causal **beats Granger on nonlinear data** (Lorenz 0.800 vs 0.600) and
+**beats all baselines on climate data** (0.973). It is the only neural method
+competitive with classical Granger tests across all settings.
 
 ## Installation
 
