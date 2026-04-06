@@ -18,30 +18,33 @@ Usage:
     python experiments/exp_gonogo.py
 """
 
-import sys
-import os
-import time
 import json
+import os
+import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import matplotlib
 import numpy as np
 import torch
 import torch.nn as nn
-import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 from data.synthetic import (
-    generate_var1, generate_var2, generate_lorenz,
-    generate_regime_switching, generate_random_sparse_var,
+    generate_lorenz,
+    generate_random_sparse_var,
+    generate_regime_switching,
+    generate_var1,
 )
+from experiments.exp0_core_validation import (
+    extract_bc_projected_score,
+    extract_jacobian_score,
+)
+from ssm_causal.bottleneck_training import extract_weight_score
 from ssm_causal.mamba_model import MambaForTimeSeries, SSMTrainer
 from ssm_causal.utils import compute_metrics
-from experiments.exp0_core_validation import (
-    extract_jacobian_score, extract_weight_score, extract_bc_projected_score,
-)
-
 
 # ── Helper: matched architectures ──
 
@@ -104,16 +107,6 @@ def train_generic(model, X, n_epochs=150, lr=1e-3, device="cpu"):
     return model
 
 
-def weight_score(model):
-    W_in = model.input_proj.weight.detach().cpu()
-    W_out = model.output_proj.weight.detach().cpu()
-    S = (W_out @ W_in).abs().numpy()
-    np.fill_diagonal(S, 0)
-    if S.max() > 0:
-        S = S / S.max()
-    return S
-
-
 # ══════════════════════════════════════════════════════════
 # EXPERIMENT 1: Architecture Specificity (10 seeds)
 # ══════════════════════════════════════════════════════════
@@ -158,7 +151,7 @@ def exp1_architecture_specificity(device="cpu", n_seeds=10):
                 else:
                     model = train_generic(model, X, n_epochs=150, device=device)
 
-                S = weight_score(model)
+                S = extract_weight_score(model)
                 m = compute_metrics(S, G)
                 aurocs.append(m["auroc"])
 
@@ -215,7 +208,7 @@ def exp2_extractor_comparison(device="cpu", n_seeds=5):
                     S = ext_fn(model, X_t, device)
                     m = compute_metrics(S, G)
                     aurocs.append(m["auroc"])
-                except Exception as e:
+                except Exception:
                     aurocs.append(0.5)
 
             mean_a = np.mean(aurocs)
@@ -244,7 +237,7 @@ def exp3_stronger_baselines(device="cpu"):
     model = MambaForTimeSeries(n_variables=K, d_model=64, d_state=16, n_layers=4)
     trainer = SSMTrainer(model, lr=1e-3, device=device)
     trainer.train(X, n_epochs=150, verbose=False)
-    S = weight_score(model)
+    S = extract_weight_score(model)
     m = compute_metrics(S, G)
     results["SSM-Causal"] = m["auroc"]
     print(f"  SSM-Causal (weight-proj): {m['auroc']:.3f}")
@@ -322,7 +315,7 @@ def exp4_falsification(device="cpu"):
         model = MambaForTimeSeries(n_variables=5, d_model=64, d_state=16, n_layers=4)
         trainer = SSMTrainer(model, lr=1e-3, device=device)
         trainer.train(X, n_epochs=150, verbose=False)
-        S = weight_score(model)
+        S = extract_weight_score(model)
         m = compute_metrics(S, G)
         results[f"density={density}"] = m["auroc"]
         print(f"    density={density}: AUROC={m['auroc']:.3f}")
@@ -334,7 +327,7 @@ def exp4_falsification(device="cpu"):
         model = MambaForTimeSeries(n_variables=5, d_model=64, d_state=16, n_layers=4)
         trainer = SSMTrainer(model, lr=1e-3, device=device)
         trainer.train(X, n_epochs=150, verbose=False)
-        S = weight_score(model)
+        S = extract_weight_score(model)
         m = compute_metrics(S, G)
         results[f"noise={noise}"] = m["auroc"]
         print(f"    noise={noise}: AUROC={m['auroc']:.3f}")
@@ -346,7 +339,7 @@ def exp4_falsification(device="cpu"):
         model = MambaForTimeSeries(n_variables=K, d_model=64, d_state=16, n_layers=4)
         trainer = SSMTrainer(model, lr=1e-3, device=device)
         trainer.train(X, n_epochs=150, verbose=False)
-        S = weight_score(model)
+        S = extract_weight_score(model)
         m = compute_metrics(S, G)
         results[f"K={K}"] = m["auroc"]
         print(f"    K={K}: AUROC={m['auroc']:.3f}")
@@ -358,7 +351,7 @@ def exp4_falsification(device="cpu"):
         model = MambaForTimeSeries(n_variables=5, d_model=64, d_state=16, n_layers=4)
         trainer = SSMTrainer(model, lr=1e-3, device=device)
         trainer.train(X, n_epochs=150, verbose=False)
-        S = weight_score(model)
+        S = extract_weight_score(model)
         m = compute_metrics(S, G)
         results[f"T={T}"] = m["auroc"]
         print(f"    T={T}: AUROC={m['auroc']:.3f}")
@@ -370,7 +363,7 @@ def exp4_falsification(device="cpu"):
         model = MambaForTimeSeries(n_variables=5, d_model=d, d_state=16, n_layers=4)
         trainer = SSMTrainer(model, lr=1e-3, device=device)
         trainer.train(X, n_epochs=150, verbose=False)
-        S = weight_score(model)
+        S = extract_weight_score(model)
         m = compute_metrics(S, G)
         results[f"d_model={d}"] = m["auroc"]
         print(f"    d_model={d}: AUROC={m['auroc']:.3f}")
@@ -414,7 +407,7 @@ def run_all_gonogo(device="cpu", save_dir="results/gonogo"):
         if ssm_mean > best_other + 0.02:  # Meaningful margin
             ssm_wins += 1
     c1 = ssm_wins >= 2
-    print(f"\n  Criterion 1: SSM beats alternatives on >= 2/4 datasets")
+    print("\n  Criterion 1: SSM beats alternatives on >= 2/4 datasets")
     print(f"    SSM wins: {ssm_wins}/4 → {'PASS' if c1 else 'FAIL'}")
 
     # Criterion 2: Weight projection is best or tied-best extractor
@@ -426,7 +419,7 @@ def run_all_gonogo(device="cpu", save_dir="results/gonogo"):
         if wp >= best - 0.03:
             wp_best += 1
     c2 = wp_best >= 2
-    print(f"\n  Criterion 2: Weight-proj is best/tied extractor on >= 2/3")
+    print("\n  Criterion 2: Weight-proj is best/tied extractor on >= 2/3")
     print(f"    Weight-proj best: {wp_best}/3 → {'PASS' if c2 else 'FAIL'}")
 
     # Criterion 3: SSM beats strongest Granger baseline
@@ -434,14 +427,14 @@ def run_all_gonogo(device="cpu", save_dir="results/gonogo"):
     ssm_auroc = bl.get("SSM-Causal", 0)
     best_granger = max(bl.get("Granger-biv", 0), bl.get("Granger-VAR", 0))
     c3 = ssm_auroc >= best_granger - 0.05
-    print(f"\n  Criterion 3: SSM competitive with strongest Granger")
+    print("\n  Criterion 3: SSM competitive with strongest Granger")
     print(f"    SSM={ssm_auroc:.3f} vs Granger={best_granger:.3f} → {'PASS' if c3 else 'FAIL'}")
 
     # Criterion 4: Method works for K >= 10
     fals = all_results["exp4_falsification"]
     k10_auroc = fals.get("K=10", 0)
     c4 = k10_auroc >= 0.70
-    print(f"\n  Criterion 4: Works for K=10 (AUROC >= 0.70)")
+    print("\n  Criterion 4: Works for K=10 (AUROC >= 0.70)")
     print(f"    K=10 AUROC={k10_auroc:.3f} → {'PASS' if c4 else 'FAIL'}")
 
     # Overall

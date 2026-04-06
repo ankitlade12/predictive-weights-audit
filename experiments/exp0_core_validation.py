@@ -17,19 +17,21 @@ Usage:
     python experiments/exp0_core_validation.py
 """
 
-import sys
 import os
+import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import matplotlib
 import numpy as np
 import torch
-import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from data.synthetic import generate_var1
+from ssm_causal.bottleneck_training import extract_weight_score
 from ssm_causal.mamba_model import MambaForTimeSeries, SSMTrainer
 from ssm_causal.utils import compute_metrics, plot_comparison, print_metrics_table
 
@@ -60,27 +62,6 @@ def extract_jacobian_score(model, X_tensor, device="cpu", seq_len=100):
         S[i, :] = X_sub.grad[0].abs().mean(dim=0)
 
     S = S.detach().numpy()
-    np.fill_diagonal(S, 0)
-    if S.max() > 0:
-        S = S / S.max()
-    return S
-
-
-def extract_weight_score(model):
-    """
-    Fast causal score from the model's learned projection weights.
-
-    The effective variable-to-variable mapping is:
-        S = |W_out @ W_in|
-    where W_in: [d_model, K] and W_out: [K, d_model].
-
-    This captures which input variables the model has learned to
-    route to which output variables through the d_model bottleneck.
-    """
-    W_in = model.input_proj.weight.detach().cpu()   # [d_model, K]
-    W_out = model.output_proj.weight.detach().cpu()  # [K, d_model]
-
-    S = (W_out @ W_in).abs().numpy()  # [K, K]
     np.fill_diagonal(S, 0)
     if S.max() > 0:
         S = S / S.max()
@@ -130,7 +111,9 @@ def extract_bc_projected_score(model, X_tensor, device="cpu"):
         W_layer_out = layer.out_proj.weight.detach().cpu()  # [d_model, d_inner]
 
         # Per-layer variable-to-variable contribution through SSM
-        # Path: W_in[d_model,K] -> W_ssm_in[d_inner,d_model] -> B·C -> W_layer_out[d_model,d_inner] -> W_out[K,d_model]
+        # Path:
+        # W_in[d_model,K] -> W_ssm_in[d_inner,d_model] -> B·C
+        # -> W_layer_out[d_model,d_inner] -> W_out[K,d_model]
         # Approximate by: W_out @ W_layer_out @ W_ssm_in @ W_in * bc_strength
         layer_path = W_out @ W_layer_out @ W_ssm_in @ W_in  # [K, K]
         layer_bc_norms.append(layer_path.abs() * bc_strength)
