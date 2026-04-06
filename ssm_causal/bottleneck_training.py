@@ -119,10 +119,136 @@ def evaluate_bottleneck_model(
     return metrics
 
 
+def subsequence_stability_loss(
+    model: nn.Module,
+    X: torch.Tensor,
+    seq_len: int = 100,
+) -> torch.Tensor:
+    """
+    Model C loss: penalize disagreement between extracted scores
+    from two different subsequences of the same time series.
+
+    If the model encodes stable dependency structure, the extracted
+    graph should not change across different windows.
+    """
+    T = X.shape[0]
+    effective_len = min(seq_len, T // 2 - 1)
+    if effective_len < 2:
+        return torch.tensor(0.0, device=X.device)
+
+    # Sample two non-overlapping subsequences
+    mid = T // 2
+    start_a = torch.randint(0, mid - effective_len, (1,)).item()
+    start_b = torch.randint(mid, T - effective_len, (1,)).item()
+
+    sub_a = X[start_a:start_a + effective_len].unsqueeze(0)
+    sub_b = X[start_b:start_b + effective_len].unsqueeze(0)
+
+    # Forward pass on both (populates internal caches)
+    with torch.no_grad():
+        _ = model(sub_a)
+        _ = model(sub_b)
+
+    # Extract scores (same weights, different data context doesn't
+    # affect W_in/W_out — but it may affect B/C caches if we use them later)
+    S = extract_weight_score_tensor(model, normalize=True)
+
+    # For weight projection, the score is deterministic given weights,
+    # so stability across subsequences is automatic.
+    # The real value of this loss is when combined with Jacobian:
+    # compute Jacobian on two subsequences and penalize disagreement.
+
+    # Jacobian-based stability: compute sensitivity on both windows
+    K = X.shape[1]
+    model.eval()
+
+    def _jacobian_score(x_sub):
+        x_sub = x_sub.requires_grad_(True)
+        y = model(x_sub)
+        S_j = torch.zeros(K, K, device=X.device)
+        for i in range(K):
+            model.zero_grad()
+            if x_sub.grad is not None:
+                x_sub.grad.zero_()
+            y[0, :, i].sum().backward(retain_graph=(i < K - 1))
+            S_j[i, :] = x_sub.grad[0].abs().mean(dim=0)
+        return S_j
+
+    S_a = _jacobian_score(sub_a.detach().clone())
+    S_b = _jacobian_score(sub_b.detach().clone())
+
+    # Normalize
+    if S_a.max() > 0:
+        S_a = S_a / S_a.max()
+    if S_b.max() > 0:
+        S_b = S_b / S_b.max()
+
+    # Frobenius disagreement on off-diagonal
+    mask = ~torch.eye(K, dtype=torch.bool, device=X.device)
+    loss = ((S_a[mask] - S_b[mask]) ** 2).mean()
+
+    model.train()
+    return loss
+
+
+def weight_jacobian_consistency_loss(
+    model: nn.Module,
+    X: torch.Tensor,
+    seq_len: int = 50,
+) -> torch.Tensor:
+    """
+    Model D loss: encourage agreement between the cheap weight-projection
+    score and the richer Jacobian score.
+
+    When they agree, the bottleneck is clean.
+    When they disagree, the bottleneck may be entangled.
+    """
+    K = X.shape[1]
+    effective_len = min(seq_len, X.shape[0] - 1)
+    if effective_len < 2:
+        return torch.tensor(0.0, device=X.device)
+
+    # Weight score (cheap, deterministic)
+    S_w = extract_weight_score_tensor(model, normalize=True)
+
+    # Jacobian score on a small window (expensive but informative)
+    start = torch.randint(0, X.shape[0] - effective_len, (1,)).item()
+    x_sub = X[start:start + effective_len].unsqueeze(0).requires_grad_(True)
+
+    model.eval()
+    y = model(x_sub)
+
+    S_j = torch.zeros(K, K, device=X.device)
+    for i in range(K):
+        model.zero_grad()
+        if x_sub.grad is not None:
+            x_sub.grad.zero_()
+        y[0, :, i].sum().backward(retain_graph=(i < K - 1))
+        S_j[i, :] = x_sub.grad[0].abs().mean(dim=0)
+
+    S_j = S_j.detach()
+    S_j.fill_diagonal_(0.0)
+    if S_j.max() > 0:
+        S_j = S_j / S_j.max()
+
+    model.train()
+
+    # L2 disagreement on off-diagonal entries
+    mask = ~torch.eye(K, dtype=torch.bool, device=X.device)
+    loss = ((S_w[mask] - S_j[mask]) ** 2).mean()
+    return loss
+
+
 @dataclass
 class BottleneckTrainingConfig:
     """
-    Lightweight configuration for causality-preserving bottleneck training.
+    Configuration for causality-preserving bottleneck training.
+
+    Supports four model variants:
+        Model A: L = L_pred                                    (lambda_sparse=0, lambda_stable=0, lambda_consist=0)
+        Model B: L = L_pred + lambda_sparse * L_sparse         (lambda_stable=0, lambda_consist=0)
+        Model C: L = L_pred + lambda_stable * L_stable          (lambda_sparse=0, lambda_consist=0)
+        Model D: L = L_pred + all three regularizers
     """
 
     n_epochs: int = 100
@@ -131,16 +257,20 @@ class BottleneckTrainingConfig:
     lr: float = 1e-3
     weight_decay: float = 1e-4
     lambda_sparse: float = 0.0
+    lambda_stable: float = 0.0
+    lambda_consist: float = 0.0
+    consist_every_n: int = 5  # Compute consistency loss every N epochs (expensive)
     print_every: int = 10
 
 
 class CausalBottleneckTrainer:
     """
-    Configurable trainer for baseline and sparse-bottleneck variants.
+    Configurable trainer for all four causality-preserving variants.
 
-    The current implementation covers:
         Model A: L = L_pred
         Model B: L = L_pred + lambda_sparse * L_sparse_weights
+        Model C: L = L_pred + lambda_stable * L_stable
+        Model D: L = L_pred + lambda_sparse * L_sparse + lambda_stable * L_stable + lambda_consist * L_consist
     """
 
     def __init__(
@@ -167,6 +297,8 @@ class CausalBottleneckTrainer:
             "loss": [],
             "prediction_loss": [],
             "sparse_loss": [],
+            "stable_loss": [],
+            "consist_loss": [],
         }
 
     def _sample_batch(
@@ -197,57 +329,88 @@ class CausalBottleneckTrainer:
         verbose: bool = True,
     ) -> Dict[str, list]:
         """
-        Train on next-step forecasting with optional sparse bottleneck regularization.
+        Train with optional causality-preserving regularization.
         """
         X_tensor = _as_float_tensor(X, self.device)
         T = X_tensor.shape[0]
         seq_len = min(self.config.seq_len, T - 1)
         steps_per_epoch = max(1, T // max(self.config.batch_size * max(seq_len, 1), 1))
-        self.history = {
-            "loss": [],
-            "prediction_loss": [],
-            "sparse_loss": [],
-        }
+
+        self.history = {k: [] for k in self.history}
+        use_stable = self.config.lambda_stable > 0
+        use_consist = self.config.lambda_consist > 0
 
         self.model.train()
         for epoch in range(self.config.n_epochs):
-            loss_total = 0.0
-            pred_total = 0.0
-            sparse_total = 0.0
+            ep_total = 0.0
+            ep_pred = 0.0
+            ep_sparse = 0.0
+            ep_stable = 0.0
+            ep_consist = 0.0
 
             for _ in range(steps_per_epoch):
                 batch_x, batch_y = self._sample_batch(
-                    X_tensor,
-                    batch_size=self.config.batch_size,
-                    seq_len=seq_len,
+                    X_tensor, self.config.batch_size, seq_len,
                 )
 
                 predictions = self.model(batch_x)
                 pred_loss = self.loss_fn(predictions, batch_y)
+
+                # Sparsity (Model B, D)
                 sparse_loss = endpoint_weight_l1_penalty(self.model)
-                total_loss = pred_loss + self.config.lambda_sparse * sparse_loss
+
+                # Stability (Model C, D) — every epoch
+                stable_loss = torch.tensor(0.0, device=self.device)
+                if use_stable:
+                    stable_loss = subsequence_stability_loss(
+                        self.model, X_tensor, seq_len=min(50, seq_len),
+                    )
+
+                # Consistency (Model D) — every N epochs (expensive)
+                consist_loss = torch.tensor(0.0, device=self.device)
+                if use_consist and (epoch + 1) % self.config.consist_every_n == 0:
+                    consist_loss = weight_jacobian_consistency_loss(
+                        self.model, X_tensor, seq_len=min(30, seq_len),
+                    )
+
+                total_loss = (
+                    pred_loss
+                    + self.config.lambda_sparse * sparse_loss
+                    + self.config.lambda_stable * stable_loss
+                    + self.config.lambda_consist * consist_loss
+                )
 
                 self.optimizer.zero_grad()
                 total_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                 self.optimizer.step()
 
-                loss_total += float(total_loss.item())
-                pred_total += float(pred_loss.item())
-                sparse_total += float(sparse_loss.item())
+                ep_total += float(total_loss.item())
+                ep_pred += float(pred_loss.item())
+                ep_sparse += float(sparse_loss.item())
+                ep_stable += float(stable_loss.item())
+                ep_consist += float(consist_loss.item())
 
             steps = float(steps_per_epoch)
-            self.history["loss"].append(loss_total / steps)
-            self.history["prediction_loss"].append(pred_total / steps)
-            self.history["sparse_loss"].append(sparse_total / steps)
+            self.history["loss"].append(ep_total / steps)
+            self.history["prediction_loss"].append(ep_pred / steps)
+            self.history["sparse_loss"].append(ep_sparse / steps)
+            self.history["stable_loss"].append(ep_stable / steps)
+            self.history["consist_loss"].append(ep_consist / steps)
             self.scheduler.step()
 
             if verbose and (epoch + 1) % self.config.print_every == 0:
-                print(
-                    f"Epoch {epoch + 1:4d}/{self.config.n_epochs}"
-                    f" | Total: {self.history['loss'][-1]:.6f}"
-                    f" | Pred: {self.history['prediction_loss'][-1]:.6f}"
-                    f" | Sparse: {self.history['sparse_loss'][-1]:.3f}"
-                )
+                parts = [
+                    f"Epoch {epoch + 1:4d}/{self.config.n_epochs}",
+                    f"Total: {self.history['loss'][-1]:.6f}",
+                    f"Pred: {self.history['prediction_loss'][-1]:.6f}",
+                ]
+                if self.config.lambda_sparse > 0:
+                    parts.append(f"Sparse: {self.history['sparse_loss'][-1]:.3f}")
+                if use_stable:
+                    parts.append(f"Stable: {self.history['stable_loss'][-1]:.4f}")
+                if use_consist:
+                    parts.append(f"Consist: {self.history['consist_loss'][-1]:.4f}")
+                print(" | ".join(parts))
 
         return self.history
