@@ -4,6 +4,33 @@ Date: 2026-04-05
 
 Purpose: preserve the full reasoning chain behind the current reset, record what we learned from the first thesis, and define the next research direction in a way that can survive context resets and team handoffs.
 
+## Status Update: 2026-04-06
+
+Phase 2 validation showed that **causality-preserving bottleneck training** should no longer be treated as the active primary direction. The regularized variants did not robustly improve over the plain post hoc bottleneck baseline, and the lambda sensitivity runs suggested that the lightweight regularizers were not meaningfully changing the learned routing structure.
+
+The current empirical backbone remains:
+
+- prediction bottlenecks can encode recoverable dependency structure,
+- `S = |W_out @ W_in|` is a real and useful post hoc extraction signal,
+- but the broad pivot, by itself, risks being a characterization paper rather than a distinctive method contribution.
+
+The next research direction should therefore test two slightly different, more method-shaped extensions of the pivot:
+
+1. **Lag-resolved bottleneck extraction**: move from an aggregate variable graph `S[target, source]` to a lag-specific score `S[lag, target, source]`, so the method tries to recover who influences whom at which lag. This is the highest-priority next hypothesis because it targets a more Granger-native object than the current pivot.
+2. **Intervention-calibrated bottleneck extraction**: use bottleneck scores as cheap candidate edges, then perturb or ablate source-lag inputs and re-rank edges by target prediction damage. This should be treated as a faithfulness or precision-improvement module, not the main novelty hook unless it produces a large effect.
+
+Relationship to the pivot:
+
+- the current pivot asks whether aggregate bottleneck scores recover dependency graphs after forecasting training,
+- lag-resolved extraction asks whether the same bottleneck idea can recover temporal edge structure,
+- intervention calibration asks whether those scores can be behaviorally validated without retraining.
+
+Decision gate:
+
+- first test lag-resolved extraction on VAR(p), delayed sparse systems, and at least one nonlinear delayed setting,
+- add intervention calibration only after the lag-resolved signal is real,
+- do not return to CPB regularization unless a new mechanism is identified.
+
 ## Executive Decision
 
 We are intentionally moving away from the original paper thesis:
