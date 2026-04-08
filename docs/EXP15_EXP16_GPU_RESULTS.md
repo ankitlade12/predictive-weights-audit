@@ -42,6 +42,19 @@ By dataset:
 
 **Verdict:** Lasso dominates all scenarios. Gap widens with K.
 
+Correction note:
+
+- the original Exp 16 summary was directionally useful, but the initial
+  implementation silently fell back to the local VAR generator because of a
+  Tigramite API mismatch,
+- and it scored mainly aggregate graph recovery rather than the lag tensor
+  directly.
+
+This means Exp 16 should be treated as an intermediate negative signal, not the
+final authoritative test of the lag-resolved bottleneck idea.
+
+The corrected final gate is Exp 17 in `EXP17_CAUSEME_LAG_GATE_RESULTS.md`.
+
 ---
 
 ## Combined Decision
@@ -52,7 +65,9 @@ Per Sai's decision memo:
 > the real/semi-real benchmark, stop method-building and write the project
 > as a careful characterization/negative-results story.
 
-Both exp15 and exp16 confirm: **tuned Lasso beats bottleneck everywhere.**
+Exp 15 plus the corrected Exp 17 gate together support the same higher-level
+decision: tuned classical baselines beat or match the bottleneck direction in
+the regimes we tested.
 
 **DECISION: Stop method-building. Write characterization paper.**
 

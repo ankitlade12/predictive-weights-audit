@@ -1,30 +1,14 @@
 """
-Experiment 16: Real/Semi-Real Benchmark Gate
-=============================================
+Experiment 16: Semi-real benchmark gate on CauseMe-style synthetic processes.
 
-Sai's recommended next step: test on data beyond our synthetic generators.
+This experiment is an external-validity stress test beyond our local hand-built
+VAR generators, but it is still not a true real-data benchmark. It uses
+Tigramite structural causal processes when available and falls back to a local
+synthetic VAR otherwise.
 
-Uses tigramite's structural_causal_processes to generate CauseMe-style
-benchmarks with exact ground truth. These are more realistic than our
-hand-crafted VAR generators because they use the same process models
-used in the Causality for Climate competition.
-
-Also tests on a real-data proxy: NOAA monthly climate indices
-(downloaded if available, otherwise synthetic climate proxy).
-
-Decision gate per Sai's memo:
-- If tuned Lasso still beats bottleneck → write characterization paper
-- If bottleneck separates → investigate mechanism
-
-Protocol:
-- Locked extractor: |W_out @ W_in| (weight projection)
-- Fixed baselines: OLS, Ridge, Lasso (validation-tuned), RRR
-- No tuning on graph labels
-- 3 seeds minimum
-
-Usage:
-    python experiments/exp16_real_benchmark.py
-    python experiments/exp16_real_benchmark.py --quick
+Decision gate per the research memo:
+- If tuned Lasso still beats bottleneck -> write characterization paper
+- If bottleneck separates -> investigate mechanism
 """
 
 from __future__ import annotations
@@ -41,118 +25,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import torch
 
+from ssm_causal.bottleneck_training import extract_weight_score
+from ssm_causal.causeme_benchmarks import default_causeme_scenarios
 from ssm_causal.lag_bottleneck import (
     LaggedBottleneckModel,
     LaggedBottleneckTrainer,
     LaggedBottleneckTrainingConfig,
-    evaluate_lagged_scores,
     extract_lagged_weight_score,
-    fit_tuned_lagged_linear_baseline,
     make_lagged_dataset,
     normalize_lagged_score,
 )
 from ssm_causal.mamba_model import MambaForTimeSeries, SSMTrainer
-from ssm_causal.bottleneck_training import extract_weight_score
 from ssm_causal.utils import compute_metrics
-
-
-# ═══════════════════════════════════════════
-# CauseMe-style benchmarks via tigramite
-# ═══════════════════════════════════════════
-
-def generate_causeme_linear(K=5, T=500, max_lag=3, density=0.3, seed=42):
-    """
-    CauseMe-style linear process with tigramite's SCP.
-    More realistic than hand-crafted VAR — uses tigramite's process model.
-    """
-    try:
-        from tigramite.toymodels import structural_causal_processes as scp
-        from tigramite import data_processing as pp
-
-        rng = np.random.RandomState(seed)
-
-        # Build random lagged links
-        links = {}
-        for j in range(K):
-            links[j] = []
-            # Self-dependency
-            links[j].append(((j, -1), 0.5, scp.linear))
-            # Random cross-variable links
-            for i in range(K):
-                if i != j and rng.random() < density:
-                    lag = rng.randint(1, max_lag + 1)
-                    coeff = rng.uniform(0.2, 0.5) * rng.choice([-1, 1])
-                    links[j].append(((i, -lag), coeff, scp.linear))
-
-        data, _ = scp.structural_causal_process(
-            links=links, T=T, seed=seed,
-            noises=None,
-        )
-
-        # Build lag-resolved ground truth
-        G_lag = np.zeros((max_lag, K, K))
-        for target, link_list in links.items():
-            for (source, lag), coeff, _ in link_list:
-                if source != target and 1 <= abs(lag) <= max_lag:
-                    G_lag[abs(lag) - 1, target, source] = 1.0
-
-        # Aggregate ground truth
-        G_agg = (G_lag.sum(axis=0) > 0).astype(float)
-
-        return data, G_agg, G_lag, f"CauseMe-linear K={K} T={T} density={density}"
-
-    except Exception as e:
-        print(f"  tigramite SCP failed ({e}), falling back to VAR")
-        return _fallback_var(K, T, max_lag, density, seed)
-
-
-def generate_causeme_nonlinear(K=5, T=500, max_lag=3, density=0.3, seed=42):
-    """CauseMe-style nonlinear process."""
-    try:
-        from tigramite.toymodels import structural_causal_processes as scp
-
-        rng = np.random.RandomState(seed)
-
-        links = {}
-        for j in range(K):
-            links[j] = []
-            links[j].append(((j, -1), 0.4, scp.linear))
-            for i in range(K):
-                if i != j and rng.random() < density:
-                    lag = rng.randint(1, max_lag + 1)
-                    coeff = rng.uniform(0.2, 0.4) * rng.choice([-1, 1])
-                    # Mix of linear and nonlinear
-                    func = rng.choice([scp.linear, scp.squared])
-                    links[j].append(((i, -lag), coeff, func))
-
-        data, _ = scp.structural_causal_process(
-            links=links, T=T, seed=seed,
-        )
-
-        G_lag = np.zeros((max_lag, K, K))
-        for target, link_list in links.items():
-            for (source, lag), coeff, _ in link_list:
-                if source != target and 1 <= abs(lag) <= max_lag:
-                    G_lag[abs(lag) - 1, target, source] = 1.0
-
-        G_agg = (G_lag.sum(axis=0) > 0).astype(float)
-        data = np.clip(data, -10, 10)  # Safety
-
-        return data, G_agg, G_lag, f"CauseMe-nonlinear K={K} T={T}"
-
-    except Exception as e:
-        print(f"  tigramite SCP nonlinear failed ({e}), falling back")
-        return _fallback_var(K, T, max_lag, density, seed)
-
-
-def _fallback_var(K, T, max_lag, density, seed):
-    """Fallback if tigramite SCP doesn't work."""
-    from data.synthetic import generate_random_sparse_var
-    X, _, G = generate_random_sparse_var(K=K, T=T, density=density, seed=seed)
-    G_lag = np.zeros((max_lag, K, K))
-    G_lag[0] = G
-    return X, G, G_lag, f"Fallback-VAR K={K} T={T}"
-
 
 # ═══════════════════════════════════════════
 # Evaluation methods
@@ -264,13 +148,7 @@ def run_benchmark(
     print("Protocol: locked extractor, no tuning on graph labels")
     print("=" * 72)
 
-    scenarios = {
-        "CauseMe-linear-K5": lambda s: generate_causeme_linear(K=5, T=500, density=0.3, seed=s),
-        "CauseMe-linear-K10": lambda s: generate_causeme_linear(K=10, T=800, density=0.2, seed=s),
-        "CauseMe-linear-K20": lambda s: generate_causeme_linear(K=20, T=1000, density=0.15, seed=s),
-        "CauseMe-nonlinear-K5": lambda s: generate_causeme_nonlinear(K=5, T=500, density=0.3, seed=s),
-        "CauseMe-nonlinear-K10": lambda s: generate_causeme_nonlinear(K=10, T=800, density=0.2, seed=s),
-    }
+    scenarios = default_causeme_scenarios(include_nonlinear=True)
 
     methods = {
         "Weight-Proj (SSM)": lambda X, Ga, Gl: eval_weight_projection(X, Ga, device=device),
@@ -281,9 +159,9 @@ def run_benchmark(
 
     all_results = {}
 
-    for scenario_name, gen_fn in scenarios.items():
+    for scenario in scenarios:
         print(f"\n{'─' * 60}")
-        print(f"Scenario: {scenario_name}")
+        print(f"Scenario: {scenario.name}")
         print(f"{'─' * 60}")
 
         scenario_results = {}
@@ -292,9 +170,8 @@ def run_benchmark(
             aurocs = []
             for seed in range(n_seeds):
                 try:
-                    X, G_agg, G_lag, desc = gen_fn(100 + seed)
-                    X = np.nan_to_num(X, 0)
-                    X = (X - X.mean(0)) / (X.std(0) + 1e-8)
+                    X, G_agg, G_lag, _ = scenario.generate(100 + seed)
+                    X = np.nan_to_num(X, 0.0)
 
                     m = method_fn(X, G_agg, G_lag)
                     aurocs.append(m["auroc"])
@@ -311,7 +188,7 @@ def run_benchmark(
             }
             print(f"  {method_name:25s}: AUROC={mean_a:.3f}±{std_a:.3f}")
 
-        all_results[scenario_name] = scenario_results
+        all_results[scenario.name] = scenario_results
 
     total_time = time.time() - total_start
 
@@ -330,9 +207,15 @@ def run_benchmark(
 
         if delta > 0.02:
             bottleneck_wins += 1
-            print(f"  {scenario:30s}: Bottleneck={best_bottleneck:.3f} Lasso={lasso:.3f} Δ={delta:+.3f} ← BOTTLENECK WINS")
+            print(
+                f"  {scenario:30s}: Bottleneck={best_bottleneck:.3f} "
+                f"Lasso={lasso:.3f} Δ={delta:+.3f} ← BOTTLENECK WINS"
+            )
         else:
-            print(f"  {scenario:30s}: Bottleneck={best_bottleneck:.3f} Lasso={lasso:.3f} Δ={delta:+.3f}")
+            print(
+                f"  {scenario:30s}: Bottleneck={best_bottleneck:.3f} "
+                f"Lasso={lasso:.3f} Δ={delta:+.3f}"
+            )
 
     print(f"\n  Bottleneck wins: {bottleneck_wins}/{len(scenarios)}")
 
@@ -347,10 +230,14 @@ def run_benchmark(
 
     # Save
     def serialize(obj):
-        if isinstance(obj, (np.floating, np.integer)): return float(obj)
-        if isinstance(obj, np.ndarray): return obj.tolist()
-        if isinstance(obj, dict): return {k: serialize(v) for k, v in obj.items()}
-        if isinstance(obj, list): return [serialize(v) for v in obj]
+        if isinstance(obj, (np.floating, np.integer)):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, dict):
+            return {k: serialize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [serialize(v) for v in obj]
         return obj
 
     out_path = Path(save_dir) / "real_benchmark_results.json"

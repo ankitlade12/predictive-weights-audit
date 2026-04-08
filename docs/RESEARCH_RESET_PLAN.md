@@ -4,6 +4,34 @@ Date: 2026-04-05
 
 Purpose: preserve the full reasoning chain behind the current reset, record what we learned from the first thesis, and define the next research direction in a way that can survive context resets and team handoffs.
 
+## Status Update: 2026-04-08
+
+This document is now partly historical.
+
+The method-building branches proposed in the original reset have all been
+tested far enough to support a final wrap-up decision:
+
+- the original SSM-internals-first thesis is no longer active,
+- causality-preserving bottleneck training did not survive robust validation,
+- explicit lag-resolved bottleneck extraction is technically valid but does not
+  show a robust advantage over tuned classical baselines,
+- and the project should no longer be treated as an active methods-paper track.
+
+Current final position:
+
+- keep the project as a documented empirical/negative-result line,
+- keep the code as reusable tooling and benchmark infrastructure,
+- stop new method-building within this bottleneck-method family unless a
+  genuinely new idea appears outside the current search space.
+
+Authoritative wrap-up docs:
+
+- `EXP17_CAUSEME_LAG_GATE_RESULTS.md`
+- `RESEARCH_WRAP_UP_2026-04-08.md`
+
+The remainder of this file is preserved as the reasoning trail that led to the
+reset and the subsequent experiments.
+
 ## Status Update: 2026-04-06
 
 Phase 2 validation showed that **causality-preserving bottleneck training** should no longer be treated as the active primary direction. The regularized variants did not robustly improve over the plain post hoc bottleneck baseline, and the lambda sensitivity runs suggested that the lightweight regularizers were not meaningfully changing the learned routing structure.

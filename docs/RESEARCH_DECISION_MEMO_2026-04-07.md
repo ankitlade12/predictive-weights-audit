@@ -5,6 +5,29 @@ Date: 2026-04-07
 Purpose: record the current decision after CPB, lag probing, explicit lagged
 bottleneck, and tuned-baseline stress tests.
 
+## Addendum: 2026-04-08
+
+This memo should now be read as an intermediate decision point, not the final
+state.
+
+The next gate it recommended was completed:
+
+- Exp 16 aggregate CauseMe-style benchmarking was directionally negative, but
+  its initial implementation used a fallback local VAR path because of a
+  Tigramite API mismatch.
+- Exp 17 corrected that issue and ran the fairer lag-specific gate on
+  CauseMe-style structural causal processes with tuned `OLS`, `Ridge`, `Lasso`,
+  and `RRR`.
+
+Final status after Exp 17:
+
+- the lag-resolved bottleneck idea is technically valid,
+- but it still does not show a robust advantage over tuned classical baselines,
+- so method-building on this branch should be considered closed.
+
+See `EXP17_CAUSEME_LAG_GATE_RESULTS.md` and
+`RESEARCH_WRAP_UP_2026-04-08.md` for the authoritative final wrap-up.
+
 ## Current Decision
 
 Do **not** continue the current explicit linear lagged bottleneck as the primary
