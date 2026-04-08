@@ -31,6 +31,32 @@ Decision gate:
 - add intervention calibration only after the lag-resolved signal is real,
 - do not return to CPB regularization unless a new mechanism is identified.
 
+## Status Update: 2026-04-07
+
+Exp 14 and Exp 15 tested explicit lagged bottleneck extraction:
+
+`S_lag[tau] = |W_out @ W_in_tau|`
+
+The result is useful but not enough to make lagged bottlenecks the primary paper
+method:
+
+- explicit lagged bottlenecks recover lag structure on controlled stable
+  synthetic systems,
+- fixed-baseline stress tests initially suggested a possible low-rank advantage,
+- but validation-tuned `Lasso` and reduced-rank regression remove the clean
+  advantage in the focused K=20 stress grid.
+
+Current decision:
+
+- keep lagged bottleneck code as tooling and supporting evidence,
+- do not run GPU-scale synthetic grids for this linear lagged bottleneck as-is,
+- add a real/semi-real benchmark gate before further method-building,
+- treat real observational results conservatively because clean causal ground
+  truth is rare.
+
+See `EXP15_LAGGED_BOTTLENECK_STRESS_RESULTS.md` and
+`RESEARCH_DECISION_MEMO_2026-04-07.md`.
+
 ## Executive Decision
 
 We are intentionally moving away from the original paper thesis:
