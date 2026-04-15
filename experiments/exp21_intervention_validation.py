@@ -235,7 +235,7 @@ def run_validation(
 
                 print(f"\n  BN mean gain: {np.mean(bn_gains):+.3f} | BL mean gain: {np.mean(bl_gains):+.3f}")
                 print(f"  BN win rate: {bn_win_rate:.0%}")
-                print(f"  Wilcoxon p={p_val:.4f} ({sig})")
+                print(f"  Wilcoxon p={p_val:.2e} ({sig})")
 
     total_time = time.time() - total_start
 
@@ -247,7 +247,7 @@ def run_validation(
     sig_count = 0
     for config, r in all_results.items():
         tag = "✓ VALIDATED" if r["significant"] else "✗ not significant"
-        print(f"  {config:30s}: win_rate={r['bn_win_rate']:.0%} p={r['wilcoxon_p']:.4f} {tag}")
+        print(f"  {config:30s}: win_rate={r['bn_win_rate']:.0%} p={r['wilcoxon_p']:.2e} {tag}")
         if r["significant"]:
             sig_count += 1
 
