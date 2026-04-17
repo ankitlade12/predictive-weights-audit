@@ -1,0 +1,429 @@
+% ICBINB @ NeurIPS 2026 submission
+% "Prediction Bottlenecks Don't Discover Causal Structure (But Here's What
+%  They Do)"
+
+\documentclass{article}
+\usepackage[preprint]{../neurips_2026}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+
+\title{Prediction Bottlenecks Don't Discover Causal Structure\\
+(But Here's What They Actually Do)}
+
+\author{%
+  Ankit Hemant Lade\\
+  \texttt{ankit@example.com}\\
+  \And
+  Sai Krishna\\
+  \texttt{sai@example.com}\\
+  \And
+  Aman Chadha\\
+  \texttt{aman@example.com}\\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A Mamba state-space model trained only for next-step prediction appears,
+at first glance, to recover Granger-causal structure through a strikingly
+simple readout: $\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}|$.
+Early experiments suggested this worked across architectures, converged
+fast, and benefited disproportionately from interventional data with
+$p < 10^{-5}$. We report the result of walking this claim through a
+25-experiment falsification pipeline. The method-level claim does not
+survive: (i) a plain linear bottleneck does it as well or better than
+the SSM, (ii) tuned Lasso beats the bottleneck on graph recovery across
+synthetic and real data (NOAA climate, sector ETFs), and (iii) the
+headline intervention advantage was $\sim$60\% a size-matched-data
+confound plus a target-corruption artifact; when proper do(X=c)
+interventions replace the random-forcing scheme, the effect vanishes,
+and classical Granger shows a \emph{larger} size-matched intervention
+gain than the bottleneck. We document what survives as a narrow
+characterization result: bottlenecks and sparse regression behave
+similarly on lagged dependency recovery, with bottlenecks marginally
+preferred in mild-nonlinearity and target-corruption regimes. We hope
+the falsification scaffold is as useful to the community as the
+positive findings we could not salvage.
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+
+Learned neural networks frequently contain more structure than their
+training objectives explicitly demand. A forecasting model trained on
+multivariate time series, for example, must implicitly route predictive
+information from each input variable to each output variable through
+its learned weights. A natural hope is that this routing structure
+exposes causal or dependency relationships without any causal-specific
+training objective — that is, \emph{causal discovery as a byproduct of
+prediction}. If true, this would be a remarkably cheap and general
+tool: every pretrained time-series forecaster would double as a
+causal-discovery engine.
+
+This paper reports the result of taking that hope seriously, over
+twenty-five controlled experiments. Our starting point was the
+observation that for a Mamba-style selective state-space
+model~\citep{gu2023mamba} trained for next-step MSE prediction, the
+product $\mathbf{S} = |\mathbf{W}_{\text{out}}
+\mathbf{W}_{\text{in}}|$ of the output and input projection matrices
+appears to recover Granger-causal graph structure with striking
+reliability. Initial experiments suggested the phenomenon generalized
+across architectures, that it emerged from training rather than
+random initialization, and, most provocatively, that interventional
+data amplified the bottleneck's advantage over sparse regression
+baselines with highly significant Wilcoxon $p$-values.
+
+Each of these claims turned out to be less robust than it first
+appeared. This paper documents the full falsification chain and what
+ultimately survives. In line with the spirit of ICBINB, our primary
+contribution is \emph{negative}: we show that a natural method
+candidate fails in several subtly different ways, we identify the
+specific controls that caused it to fail, and we report the narrow
+characterization findings that remain valid after those controls are
+applied. Our secondary contribution is a reusable experimental
+scaffold — synthetic generators, baseline harnesses, and
+intervention-control protocols — that future work on post-hoc causal
+extraction from learned models can reuse to avoid the same mistakes
+we made.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+  \item We replicate the empirical observation that prediction-trained
+  bottleneck models produce a $|\mathbf{W}_{\text{out}}
+  \mathbf{W}_{\text{in}}|$ score that correlates with Granger structure
+  on synthetic VAR benchmarks (Section~\ref{sec:observation}).
+  \item We falsify the claim that this effect is specific to
+  selective state-space models. A linear bottleneck matches or beats
+  the SSM at the same extraction under matched capacity and seeds
+  (Section~\ref{sec:arch}).
+  \item We falsify the claim that the bottleneck competes with tuned
+  sparse lagged regression on graph recovery, on both synthetic
+  benchmarks (CauseMe-style structural processes, $K=5$–$30$) and
+  real observational data (NOAA climate, sector ETFs)
+  (Section~\ref{sec:lasso}, Section~\ref{sec:realdata}).
+  \item We show that an apparent interventional-data advantage,
+  initially significant at $p < 10^{-5}$ across twelve
+  $(K, T)$ configurations, dissolves under a size-matched control
+  ($\sim$60\% of the effect) and is specific to a particular
+  random-forcing intervention scheme ($\sim$the remainder), with the
+  residual reproducing as a larger effect under classical Granger
+  (Section~\ref{sec:intervention}).
+  \item We document what does survive: a mild-nonlinearity regime
+  where the bottleneck marginally outperforms Lasso, a
+  sample-efficiency advantage under growing $T$, and robustness to
+  per-step target corruption (Section~\ref{sec:survives}).
+\end{enumerate}
+
+% ============================================================
+\section{Method: The Extraction We Are Falsifying}
+\label{sec:observation}
+% ============================================================
+
+For a $K$-variable multivariate time series $\mathbf{X} \in
+\mathbb{R}^{T \times K}$, we train a model with input projection
+$\mathbf{W}_{\text{in}} \in \mathbb{R}^{d \times K}$ and output
+projection $\mathbf{W}_{\text{out}} \in \mathbb{R}^{K \times d}$ on
+next-step MSE prediction only. No causal-specific loss, no
+group-lasso, no graph-structural prior.
+
+After training, we extract:
+\begin{equation}
+  \mathbf{S} = \left| \mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}} \right|
+  \;\in\; \mathbb{R}^{K \times K},
+  \qquad \mathbf{S}_{i,j} = \text{strength of }j \to i.
+\end{equation}
+We zero the diagonal, normalize by the max entry, and threshold to
+obtain an estimated dependency graph. This is the \emph{entire}
+method candidate.
+
+For architectures with an explicit lagged dependence (e.g.\ Sai's
+lagged bottleneck), we extend this to a lag-indexed tensor
+$\mathbf{S}^{(\tau)} = |\mathbf{W}_{\text{out}}
+\mathbf{W}^{(\tau)}_{\text{in}}|$. Evaluation is done against a
+ground-truth binary adjacency tensor via flat-lag AUROC.
+
+% ============================================================
+\section{Architecture Does Not Matter (Falsification \#1)}
+\label{sec:arch}
+% ============================================================
+
+Our first claim was that the SSM's selective state dynamics were
+responsible for encoding clean dependency structure in its endpoint
+projections. We ran a pre-registered architecture sweep at matched
+parameter counts and seeds over four datasets and five architectures
+(Mamba SSM, Transformer, LSTM, MLP, Linear). The linear bottleneck
+matches or beats the SSM on every dataset (Table~\ref{tab:arch}).
+This result alone kills the ``SSM internals carry unique causal
+signal'' story.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Mean AUROC ($\pm$ std) over 10 seeds. Linear $\ge$ SSM
+everywhere; MLP and LSTM substantially worse.}
+\label{tab:arch}
+\begin{tabular}{lccccc}
+\toprule
+Dataset & SSM (Mamba) & Transformer & LSTM & MLP & \textbf{Linear} \\
+\midrule
+VAR(1) chain $K{=}5$ & $1.00 {\pm} 0.00$ & $0.65 {\pm} 0.14$ & $0.38 {\pm} 0.16$ & $0.55 {\pm} 0.13$ & $\mathbf{1.00 \pm 0.00}$ \\
+VAR(1) random $K{=}10$ & $0.77 {\pm} 0.08$ & $0.60 {\pm} 0.08$ & $0.49 {\pm} 0.08$ & $0.53 {\pm} 0.07$ & $\mathbf{0.99 \pm 0.02}$ \\
+Regime switch $K{=}3$ & $0.98 {\pm} 0.08$ & $0.50 {\pm} 0.31$ & $0.53 {\pm} 0.33$ & $0.25 {\pm} 0.10$ & $\mathbf{1.00 \pm 0.00}$ \\
+Lorenz $K{=}3$ & $0.52 {\pm} 0.24$ & $0.82 {\pm} 0.11$ & $0.74 {\pm} 0.25$ & $0.54 {\pm} 0.28$ & $\mathbf{0.94 \pm 0.09}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why this matters.} The linear bottleneck's
+$\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}$ is, by construction,
+a low-rank linear estimator of the lag-1 regression matrix. The
+``emergence'' we observed is just this estimator doing its job. The
+SSM is a more complex model that achieves the same estimator but no
+better.
+
+% ============================================================
+\section{Tuned Lasso Beats The Bottleneck (Falsification \#2)}
+\label{sec:lasso}
+% ============================================================
+
+A natural follow-up: maybe the bottleneck outperforms classical
+sparse regression in some specific regime (small samples, high
+dimension, non-linearity). We ran the bottleneck head-to-head against
+validation-tuned Lasso and reduced-rank regression across a focused
+grid ($K \in \{10, 20\}, T \in \{150, 300\}$, max-lag 8) and then on
+domain-realistic tigramite structural processes at $K \in \{10, 20,
+30\}$. With untuned OLS/Ridge/Lasso baselines, the bottleneck looked
+promising. With \emph{tuned} Lasso and RRR, the advantage evaporates
+(Table~\ref{tab:lasso}).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Focused stress grid (Exp 15): once baselines are tuned,
+bottleneck wins only 12\% of graph-recovery runs and 0\% of
+prediction-MSE runs.}
+\label{tab:lasso}
+\begin{tabular}{lrr}
+\toprule
+Metric vs.\ best tuned baseline & Mean flat-lag AUROC delta & Win rate \\
+\midrule
+Bottleneck vs.\ \{OLS, Ridge, Lasso, RRR\} & $-0.050$ & $0.12$ \\
+Bottleneck prediction MSE & $+0.286$ & $0.00$ \\
+\midrule
+Best baseline by AUROC & Lasso ($38/48$), RRR ($10/48$) & \\
+Best baseline by MSE & Lasso ($48/48$) & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On tigramite CauseMe-style benchmarks, the gap widens with $K$:
+tuned Lasso reaches AUROC 0.98 at $K=20$ while the bottleneck sits at
+0.73. No dimension or sample-size regime we found flips the result.
+
+% ============================================================
+\section{Real-World Data: Competitive, Not Superior}
+\label{sec:realdata}
+% ============================================================
+
+On real data, the story is less dramatic but no more encouraging.
+We downloaded 63 years of NOAA monthly climate indices
+(ENSO, NAO, PDO, AMO, SOI, PNA) and 7.5 years of Yahoo Finance
+SPDR sector ETF log returns ($K=10$). Ground truth edges come from
+the climate teleconnection literature~\citep{runge2019causal} and
+from finance sector lead-lag relationships. All six methods cluster
+tightly on climate (0.73–0.82 AUROC) and weakly on finance
+(0.50–0.70 AUROC), with \emph{no clear winner}
+(Table~\ref{tab:real}). Classical Granger ties for the top spot on
+climate. Ridge wins on finance, where all methods are close to
+chance.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Real data AUROC. Bottleneck is neither best nor worst;
+all methods are in the same performance band.}
+\label{tab:real}
+\begin{tabular}{lcc}
+\toprule
+Method & Climate (NOAA, $K{=}6, T{=}757$) & Finance (ETFs, $K{=}10, T{=}1893$) \\
+\midrule
+Bivariate Granger & $\mathbf{0.819}$ & $0.498$ \\
+Lagged Bottleneck & $0.813$ & $0.552$ \\
+Tuned Lasso & $0.799$ & $0.500$ \\
+Weight-Proj (SSM) & $0.792$ & $0.631$ \\
+PCMCI & $0.771$ & $0.510$ \\
+Tuned Ridge & $0.729$ & $\mathbf{0.696}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{Interventions: A Confound Story}
+\label{sec:intervention}
+% ============================================================
+
+Advisor feedback on an earlier version of this work suggested that if
+observational data yielded parity, \emph{interventional} data might
+amplify differences between learned bottlenecks and sparse
+regression. We took this seriously. The initial experiment (Exp 19)
+compared $\text{AUROC}(\mathbf{X}_{\text{obs}})$ against
+$\text{AUROC}(\mathbf{X}_{\text{obs}} \cup \mathbf{X}_{\text{int}})$
+for both bottleneck and Lasso, on four graph types.
+
+We reported $12 / 12$ $(K, T)$ configs significant at
+$p < 10^{-5}$ in favor of the bottleneck, with win rates of
+$80\%$–$100\%$. This looked like our one real positive result.
+
+It does not survive two controls.
+
+\paragraph{Control 1 (Exp 22): sample size.}
+Exp 19 compared an observational set of size $T$ against a combined
+set of size $T + K \cdot T_{\text{int/target}}$. The
+``intervention gain'' conflated \emph{more data} with
+\emph{intervention content}. Exp 22 adds a third arm,
+$\mathbf{X}_{\text{obs,big}}$, a fresh observational draw of the same
+total size as the combined set. The intervention-specific gain is
+then $\text{AUROC}(\text{combined}) -
+\text{AUROC}(\text{obs,big})$. The resulting size-matched gain is
+about $\sim$40\% of the raw effect.
+
+\paragraph{Control 2 (Exp 23): intervention type.}
+Exp 21's ``intervention'' was a per-step random forcing
+$x_{i,t} \leftarrow s \cdot \epsilon_{i,t}$, which is not a standard
+$\text{do}$-intervention. Exp 23 swaps in proper constant clamps
+$\text{do}(X_i = c)$ and soft (added-noise) interventions, and adds
+Ridge and RRR baselines. Results are in Table~\ref{tab:int_type}.
+At $K=30$ with constant interventions, Ridge \emph{beats} the
+bottleneck (size-matched gap $-0.021$, $p = 1.00$). Only the
+random-forcing scheme produces a stable bottleneck gain, and that
+gain is best explained as robustness to corrupted target rows, not
+as causal-structure exposure.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Intervention-specific gap vs.\ the best tuned baseline,
+by intervention type (mean over $K \in \{20, 30\}$, 12 seeds).}
+\label{tab:int_type}
+\begin{tabular}{lcc}
+\toprule
+Intervention type & Significant configs & Mean gap (AUROC) \\
+\midrule
+\texttt{random} (Exp 21 scheme) & $12/12$ & $+0.116$ \\
+\texttt{constant} ($\text{do}(X_i = c)$) & $3/12$ & $+0.002$ \\
+\texttt{soft} (exogenous noise) & $6/12$ & $+0.008$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Control 3 (Exp 25): method-agnosticity.}
+The residual effect is not unique to the bottleneck. When we add
+PCMCI and bivariate Granger to the same size-matched control, the
+bottleneck shows a significant size-matched intervention gain
+($+0.026$ to $+0.054$, $p < 10^{-3}$ across $K \in \{10, 20, 30\}$),
+\emph{but so does Granger}, with larger effect sizes at higher $K$
+($+0.040$ at $K=20$, $+0.095$ at $K=30$, same significance).
+Lasso uniquely does not benefit and is hurt at low $K$, consistent
+with per-equation regression breaking under target corruption.
+PCMCI hovers near random. Bottom line: the intervention effect,
+insofar as it survives controls, is method-agnostic and matches a
+target-corruption-robustness story rather than a
+causal-structure-extraction one.
+
+% ============================================================
+\section{What Survives}
+\label{sec:survives}
+% ============================================================
+
+After five falsifications, three narrow positives remain:
+
+\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+  \item \textbf{Mild-nonlinearity regime.} In a regime sweep over
+  noise, density, and nonlinearity strength (Exp 18), the bottleneck
+  outperforms Lasso at \texttt{nonlinear=0.3} (78\% win rate over 3
+  seeds and 9 hyperparameter cells). At stronger nonlinearity,
+  both methods fail equally.
+  \item \textbf{Sample-efficiency under growing $T$.} Bottleneck
+  gains from additional observational data exceed Lasso's by
+  $\sim 0.07$ AUROC at $K \in \{20, 30\}$ (Exp 22, size-matched
+  control arms). This is a useful but modest result for settings
+  where collecting more observations is cheap.
+  \item \textbf{Target-corruption robustness.} The bottleneck's
+  shared $\mathbf{W}_{\text{out}}$ absorbs per-step random
+  forcing better than Lasso's per-equation fits (Exp 21--23, 25).
+  This explains the residual intervention effect but is not a causal
+  discovery result — it is a reliability result.
+\end{enumerate}
+
+These are characterization claims, not method claims. We do not
+propose the bottleneck as a causal discovery method.
+
+% ============================================================
+\section{Lessons}
+% ============================================================
+
+Three methodological points stand out from this falsification chain,
+beyond the specific negative results themselves.
+
+\paragraph{Size-matched controls matter more than seed counts.}
+Exp 19 had 5 seeds. Exp 21 had 20 seeds and reported $p < 10^{-5}$
+across 12 configs. Both found the same effect. Neither would have
+told us that the effect was largely a sample-size confound. Adding
+seeds tightens a noisy measurement; it cannot diagnose a structural
+control that the comparison omits.
+
+\paragraph{Pre-register the intervention scheme.}
+The gap between ``random forcing'' (per-step clamp to
+$s \cdot \epsilon$) and proper $\text{do}(X_i = c)$ is the
+difference between a significant effect and a null, and the gap is
+not obvious from the code. We should have written down which
+intervention semantics counted as ``interventional data'' before
+running the experiment.
+
+\paragraph{Prediction baselines are not causal baselines.}
+Exps 15–23 compared the bottleneck only against prediction-fit
+baselines (OLS, Ridge, Lasso, RRR). It was natural to miss that
+classical \emph{causal} discovery methods (Granger, PCMCI) would
+benefit from the same intervention scheme by the same mechanism.
+Exp 25 added them and killed the method-specificity story. Any
+future ``neural causal discovery'' claim should include at least
+one classical causal baseline in the intervention control arm.
+
+% ============================================================
+\section{Conclusion}
+% ============================================================
+
+We set out to find a free causal discovery method hiding inside
+prediction bottlenecks and could not. The headline effects that
+initially looked promising either do not replicate under size-matched
+controls, are specific to a non-standard intervention scheme, or are
+method-agnostic once real causal baselines are tested. What survives
+is a narrow set of characterization findings about when bottleneck
+and sparse regression behave similarly versus when they diverge, and
+a reusable experimental scaffold for others who want to try the same
+project without repeating the same confounds.
+
+We have deliberately left the positive framing out of the title.
+The contribution is the falsification, honestly reported.
+
+\paragraph{Code.} All experiments, data loaders, and a one-line
+reproduction script are available at
+\texttt{https://github.com/ankitlade12/ssm-causal}.
+
+\bibliographystyle{plainnat}
+\bibliography{../references}
+
+\end{document}
