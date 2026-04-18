@@ -1,9 +1,12 @@
 """
-Real data loaders for ICBINB benchmark.
+Data loaders for the ICBINB benchmark.
 
-Actual observational time series with literature-derived ground truth:
-    1. NOAA monthly climate indices (1948-present, real)
-    2. Yahoo Finance sector ETFs (daily returns, real)
+    1. NOAA monthly climate indices (real, 1960-2024) — literature-derived
+       ground truth with ENSO↔SOI excluded as definitionally coupled.
+    2. Yahoo Finance sector ETFs (real, 2018-2025) — finance-literature
+       lead-lag edges; weak ground truth, used as a null-check.
+    3. Lorenz-96 (synthetic, but with unambiguous ground truth) — standard
+       causal-discovery benchmark (Tank et al. 2022, Nauta et al. 2019).
 """
 
 from __future__ import annotations
@@ -22,15 +25,18 @@ NOAA_URLS = {
     "PNA": "https://psl.noaa.gov/data/correlation/pna.data",
 }
 
-# Ground truth teleconnections from Runge et al. (2019) and climate literature.
-# Format: graph[target, source] = 1 means source Granger-causes target.
+# Ground truth teleconnections from the climate dynamics literature.
+# Format: (target, source) — meaning source Granger-causes target.
+#
+# We deliberately exclude ENSO↔SOI because those two indices are
+# definitionally the same signal with opposite sign (Southern Oscillation
+# Index is a surface-pressure analog of the Niño 3.4 SST index). Including
+# them inflates every method's AUROC on what is really a near-instantaneous
+# coupling, not a causal edge.
 NOAA_GROUND_TRUTH_EDGES = [
-    ("ENSO", "SOI"),      # ENSO and SOI are definitionally coupled (opposite sign)
-    ("SOI", "ENSO"),
-    ("ENSO", "PNA"),      # ENSO drives PNA pattern
-    ("ENSO", "PDO"),      # Known coupling
-    ("PDO", "ENSO"),
-    ("NAO", "AMO"),       # NAO influences Atlantic SST
+    ("PNA", "ENSO"),   # ENSO teleconnection drives PNA (Trenberth & Hurrell 1994)
+    ("PDO", "ENSO"),   # ENSO modulates PDO phase transitions (Newman et al. 2016)
+    ("AMO", "NAO"),    # NAO drives Atlantic SST patterns (Delworth & Mann 2000)
 ]
 
 
@@ -99,12 +105,12 @@ def load_noaa_climate(
         names: variable names
     """
     files = {
-        "ENSO": "nino34.txt",
-        "NAO": "nao.txt",
-        "PDO": "pdo.txt",
-        "AMO": "amo.txt",
-        "SOI": "soi.txt",
-        "PNA": "pna.txt",
+        "ENSO": "nina34.data",
+        "NAO": "nao.data",
+        "PDO": "pdo.data",
+        "AMO": "amon.us.data",
+        "SOI": "soi.data",
+        "PNA": "pna.data",
     }
 
     series_dict = {}
@@ -188,6 +194,69 @@ def load_sector_etfs(
     return X, G, names
 
 
+# ─── Lorenz-96 (standard causal-discovery benchmark) ───
+
+def load_lorenz96(
+    K: int = 10,
+    T: int = 1500,
+    F: float = 10.0,
+    dt: float = 0.01,
+    subsample: int = 10,
+    seed: int = 0,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    """
+    Discrete-time Lorenz-96 dataset with unambiguous Granger ground truth.
+
+    System:  dx_i/dt = (x_{i+1} - x_{i-2}) * x_{i-1} - x_i + F   (cyclic i)
+
+    Following Tank et al. (2022, Neural Granger Causality) and Nauta et al.
+    (2019, TCDF), ground truth edges are the four variables appearing on the
+    RHS of the equation for each x_i: itself, and x_{i-2}, x_{i-1}, x_{i+1}.
+    We exclude the self-loop when scoring (diagonal is zeroed by convention).
+
+    Args:
+        K: number of oscillators
+        T: number of kept timesteps after subsampling
+        F: forcing term (8 = chaotic; 10 = strongly chaotic, Tank et al.'s setting)
+        dt: integration step
+        subsample: keep every nth integration step
+        seed: RNG seed for initialization
+
+    Returns:
+        X: (T, K) standardized time series
+        G: (K, K) binary adjacency with G[i, j]=1 iff j ∈ {i-2, i-1, i+1}
+        names: generic ["x0", "x1", ...]
+    """
+    rng = np.random.default_rng(seed)
+    x = F * np.ones(K) + rng.standard_normal(K) * 0.01
+
+    def deriv(xp: np.ndarray) -> np.ndarray:
+        return (np.roll(xp, -1) - np.roll(xp, 2)) * np.roll(xp, 1) - xp + F
+
+    n_steps = T * subsample + 500
+    traj = np.zeros((n_steps, K), dtype=np.float64)
+    traj[0] = x
+    for t in range(1, n_steps):
+        xp = traj[t - 1]
+        k1 = deriv(xp)
+        k2 = deriv(xp + 0.5 * dt * k1)
+        k3 = deriv(xp + 0.5 * dt * k2)
+        k4 = deriv(xp + dt * k3)
+        traj[t] = xp + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+
+    traj = traj[500::subsample][:T]
+    X = (traj - traj.mean(axis=0)) / (traj.std(axis=0) + 1e-8)
+
+    G = np.zeros((K, K), dtype=np.float32)
+    for i in range(K):
+        for offset in (-2, -1, 1):
+            j = (i + offset) % K
+            G[i, j] = 1.0
+
+    names = [f"x{i}" for i in range(K)]
+    return X.astype(np.float32), G, names
+
+
 if __name__ == "__main__":
     import sys
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -205,3 +274,8 @@ if __name__ == "__main__":
     print(f"Sector ETFs: T={X.shape[0]}, K={X.shape[1]}")
     print(f"  Variables: {names}")
     print(f"  Ground truth edges: {int(G.sum())}")
+    print()
+
+    X, G, names = load_lorenz96()
+    print(f"Lorenz-96: T={X.shape[0]}, K={X.shape[1]}")
+    print(f"  Ground truth edges: {int(G.sum())} (exactly 3*K expected)")

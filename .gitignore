@@ -27,6 +27,8 @@ results/
 # Data (downloaded, not committed)
 data/climate_raw/
 data/fmri_raw/
+# ETF CSV is re-downloadable via scripts/download_etfs.py
+data/real/sector_etfs.csv
 
 # LaTeX build artifacts
 paper/*.aux

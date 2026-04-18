@@ -92,6 +92,15 @@ def load_dream3_gene() -> tuple[np.ndarray, np.ndarray, list[str]] | None:
     return None
 
 
+def load_lorenz96_bench(K: int = 10, T: int = 1500) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    """Lorenz-96 with unambiguous ground truth (Tank et al., 2022)."""
+    from data.real_loaders import load_lorenz96
+    X, G, names = load_lorenz96(K=K, T=T, F=10.0, dt=0.01, subsample=10, seed=0)
+    print(f"  Loaded Lorenz-96: T={X.shape[0]} steps, K={X.shape[1]}, F=10 (chaotic)")
+    print(f"  Ground truth edges: {int(G.sum())} (each node driven by 3 neighbors)")
+    return X, G, names
+
+
 # ═══════════════════════════════════════════
 # Evaluation methods
 # ═══════════════════════════════════════════
@@ -243,6 +252,9 @@ def run_real_benchmark(
         result = load_dream3_gene()
         if result is not None:
             loaded["dream3"] = result
+    if "lorenz96" in datasets:
+        X, G, names = load_lorenz96_bench(K=10, T=1500)
+        loaded["lorenz96"] = (X, G, names)
 
     methods = {
         "Weight-Proj (SSM)": lambda X, G: eval_weight_projection(X, G, epochs=epochs, device=device),
@@ -314,8 +326,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--datasets",
         nargs="+",
-        default=["climate", "finance"],
-        choices=["climate", "finance", "dream3"],
+        default=["climate", "finance", "lorenz96"],
+        choices=["climate", "finance", "dream3", "lorenz96"],
     )
     parser.add_argument("--climate-data-dir", default="data/real")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")

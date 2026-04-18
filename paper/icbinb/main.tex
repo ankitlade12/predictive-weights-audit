@@ -42,7 +42,9 @@ simple readout: $\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}|$.
 Early experiments suggested this worked across architectures, converged
 fast, and benefited disproportionately from interventional data with
 $p < 10^{-5}$. We report the result of walking this claim through a
-25-experiment falsification pipeline. The method-level claim does not
+staged falsification pipeline covering five hypothesis layers
+(architecture, sparse-regression parity, real-data recovery, intervention
+amplification, and method-specificity). The method-level claim does not
 survive: (i) a plain linear bottleneck does it as well or better than
 the SSM, (ii) tuned Lasso beats the bottleneck on graph recovery across
 synthetic and real data (NOAA climate, sector ETFs), and (iii) the
@@ -73,8 +75,9 @@ prediction}. If true, this would be a remarkably cheap and general
 tool: every pretrained time-series forecaster would double as a
 causal-discovery engine.
 
-This paper reports the result of taking that hope seriously, over
-twenty-five controlled experiments. Our starting point was the
+This paper reports the result of taking that hope seriously, across
+a staged sequence of falsification experiments that tested five
+distinct variants of the claim at progressively stronger controls. Our starting point was the
 observation that for a Mamba-style selective state-space
 model~\citep{gu2023mamba} trained for next-step MSE prediction, the
 product $\mathbf{S} = |\mathbf{W}_{\text{out}}
@@ -234,38 +237,66 @@ tuned Lasso reaches AUROC 0.98 at $K=20$ while the bottleneck sits at
 0.73. No dimension or sample-size regime we found flips the result.
 
 % ============================================================
-\section{Real-World Data: Competitive, Not Superior}
+\section{Real-World Data and Benchmarks: Bottleneck Is Not Competitive}
 \label{sec:realdata}
 % ============================================================
 
-On real data, the story is less dramatic but no more encouraging.
-We downloaded 63 years of NOAA monthly climate indices
-(ENSO, NAO, PDO, AMO, SOI, PNA) and 7.5 years of Yahoo Finance
-SPDR sector ETF log returns ($K=10$). Ground truth edges come from
-the climate teleconnection literature~\citep{runge2019causal} and
-from finance sector lead-lag relationships. All six methods cluster
-tightly on climate (0.73–0.82 AUROC) and weakly on finance
-(0.50–0.70 AUROC), with \emph{no clear winner}
-(Table~\ref{tab:real}). Classical Granger ties for the top spot on
-climate. Ridge wins on finance, where all methods are close to
-chance.
+We evaluate the same six methods on three datasets of progressively
+cleaner ground truth (Table~\ref{tab:real}):
+(i) 63 years of NOAA monthly climate indices
+(ENSO, NAO, PDO, AMO, SOI, PNA) with teleconnection edges from the
+climate dynamics literature~\citep{trenberth1994decadal,delworth2000observed,newman2016pdo};
+(ii) 7.5 years of daily Yahoo Finance SPDR sector ETF log returns
+($K{=}10$) with sector lead-lag edges from finance commentary (treated
+as soft ground truth);
+(iii) Lorenz-96 ($K{=}10$, $F{=}10$, chaotic) with mathematically
+unambiguous ground truth (each variable is driven by its two left
+and one right neighbor)~\citep{tank2021neural,nauta2019causal}.
+
+\paragraph{Ground-truth choices matter.} On the climate data we
+deliberately \emph{exclude} the ENSO$\leftrightarrow$SOI pair from
+ground truth even though it is often counted in the literature. The
+Southern Oscillation Index is a surface-pressure analog of the Niño
+3.4 SST anomaly: they are the same signal with opposite sign, not a
+causal edge. Including them inflates every method's AUROC and, as we
+show below, changes the ranking: under the inflated ground truth,
+bivariate Granger ties for the top spot on climate; under the
+honest ground truth, \emph{Granger drops to the bottom} and the
+bottleneck drops to the middle.
+
+\paragraph{Results.} On climate the SSM bottleneck is, surprisingly,
+the top method (0.864) — but this is against soft ground truth
+with only 3 edges over $K{=}6$, where small changes move AUROC
+substantially; we do not read this as a causal-discovery claim. On
+finance, Ridge wins decisively (0.696) and all other methods are at
+or below chance (including the bottleneck at 0.514), consistent with
+sector-ETF returns admitting no straightforward lagged causal
+structure. On Lorenz-96, where the ground truth is unambiguous,
+\emph{PCMCI and bivariate Granger dominate} (0.986, 0.979), tuned
+Lasso and Ridge essentially match them (0.974), and the lagged
+bottleneck trails at 0.920 while the SSM bottleneck is worst at
+0.802. The bottleneck is not the best method on any dataset with
+clean ground truth.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Real data AUROC. Bottleneck is neither best nor worst;
-all methods are in the same performance band.}
+\caption{AUROC on three real/benchmark datasets. The bottleneck is
+top only on climate, where ground truth is weak (3 edges, $K{=}6$)
+and AUROC is sensitive to individual edge choices; on the clean
+Lorenz-96 benchmark, classical causal methods lead by a wide margin.}
 \label{tab:real}
-\begin{tabular}{lcc}
+\begin{tabular}{lccc}
 \toprule
-Method & Climate (NOAA, $K{=}6, T{=}757$) & Finance (ETFs, $K{=}10, T{=}1893$) \\
+Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
+ & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
 \midrule
-Bivariate Granger & $\mathbf{0.819}$ & $0.498$ \\
-Lagged Bottleneck & $0.813$ & $0.552$ \\
-Tuned Lasso & $0.799$ & $0.500$ \\
-Weight-Proj (SSM) & $0.792$ & $0.631$ \\
-PCMCI & $0.771$ & $0.510$ \\
-Tuned Ridge & $0.729$ & $\mathbf{0.696}$ \\
+Weight-Proj (SSM) & $\mathbf{0.864}$ & $0.438$ & $0.802$ \\
+PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
+Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
+Lagged Bottleneck & $0.617$ & $0.514$ & $0.920$ \\
+Tuned Ridge & $0.617$ & $\mathbf{0.696}$ & $0.974$ \\
+Bivariate Granger & $0.605$ & $0.498$ & $0.979$ \\
 \bottomrule
 \end{tabular}
 \end{table}

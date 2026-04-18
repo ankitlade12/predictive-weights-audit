@@ -7,8 +7,8 @@
 
 ## Overview
 
-This paper reports a 25-experiment falsification chain on the claim
-that prediction-trained bottleneck models encode causal structure in
+This paper reports a staged falsification of the claim that
+prediction-trained bottleneck models encode causal structure in
 `|W_out @ W_in|`. The method-level claim does not survive. What
 survives is a narrow characterization result.
 
