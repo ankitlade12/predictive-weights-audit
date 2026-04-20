@@ -182,6 +182,48 @@ Bivariate Granger & $0.605$ & $0.498$ & $0.979$ \\
 \end{tabular}
 \end{table}
 
+\paragraph{Ground-truth choices reverse the climate ranking.} The
+ENSO$\leftrightarrow$SOI exclusion is not a cosmetic filter. In an
+initial run of this benchmark we included those two edges as part of
+the teleconnection ground truth — the form in which they most commonly
+appear in climate-literature edge lists. Under that inflated ground
+truth, bivariate Granger \emph{led} the climate column at AUROC
+$0.819$, with the lagged bottleneck second at $0.813$ and tuned Lasso
+third at $0.799$. Removing the two definitional edges drops Granger
+to $0.605$ (last place) and promotes the SSM bottleneck from $0.792$
+to first at $0.864$. Table~\ref{tab:gt_flip} shows the full re-ranking.
+The reason is mechanical: the ENSO and SOI series are the same
+physical signal with opposite sign, so any method that captures their
+strong contemporaneous correlation — Granger and linear regressions in
+particular — picks up the two ``edges'' essentially for free. Once
+those free points are removed, there are only three positive edges
+over $K{=}6$, the signal is small, and the remaining variance across
+methods is dominated by dataset-specific quirks rather than by any
+causal-discovery capability. We report the corrected numbers but
+caution readers that even the corrected ranking should not be read
+as a causal-discovery claim; it is a sensitivity analysis.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Climate AUROC before and after excluding the definitional
+ENSO$\leftrightarrow$SOI edges. Removing two of six edges drops
+Granger from first to last and promotes the SSM bottleneck to first.}
+\label{tab:gt_flip}
+\begin{tabular}{lcc}
+\toprule
+Method & 6 edges (incl.\ ENSO$\leftrightarrow$SOI) & 3 edges (honest) \\
+\midrule
+Bivariate Granger & $\mathbf{0.819}$ & $0.605$ \\
+Lagged Bottleneck & $0.813$ & $0.617$ \\
+Tuned Lasso & $0.799$ & $0.630$ \\
+Weight-Proj (SSM) & $0.792$ & $\mathbf{0.864}$ \\
+PCMCI & $0.771$ & $0.704$ \\
+Tuned Ridge & $0.729$ & $0.617$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{F4. Interventions: a confound story.} An earlier experiment
 (Exp 19) compared $\text{AUROC}(\mathbf{X}_{\text{obs}})$ versus
 $\text{AUROC}(\mathbf{X}_{\text{obs}} \cup \mathbf{X}_{\text{int}})$ for
@@ -253,6 +295,16 @@ miss that classical causal methods (Granger, PCMCI) would benefit from
 the same intervention scheme by the same mechanism. Any future
 ``neural causal discovery'' claim should include at least one classical
 causal baseline in the intervention control arm.
+
+\paragraph{Audit ground truth for definitional couplings.} On soft
+observational benchmarks with few positive edges, rankings are
+sensitive to which edges are included in ground truth. Our climate
+comparison flipped Granger from first to last by removing two edges
+that are definitionally the same signal (Table~\ref{tab:gt_flip}).
+Before claiming a method ``wins'' on such a benchmark, authors
+should state explicitly which edges are included, whether any pair
+is tautologically coupled, and what the ranking looks like if the
+tautological edges are removed.
 
 % ============================================================
 \section{Conclusion}
