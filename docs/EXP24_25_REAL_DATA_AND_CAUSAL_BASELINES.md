@@ -1,9 +1,9 @@
 # Exp 24 + 25: Real Data Benchmark and Causal Baselines
 
 **Dates:** 2026-04-16 (initial), 2026-04-17 (updated with revised ground truth and Lorenz-96)
-**Purpose:** Fill the two gaps Sai identified before ICBINB submission —
-(1) real observational data with clean ground truth, (2) proper causal
-discovery baselines.
+**Purpose:** Fill the two gaps Sai identified before workshop/journal
+submission — (1) real observational data with clean ground truth,
+(2) proper causal discovery baselines.
 
 ---
 
@@ -143,10 +143,10 @@ actual causal discovery baselines alongside Bottleneck and Lasso.
 
 ---
 
-## Combined Verdict for ICBINB
+## Combined Verdict for the Paper
 
-The updated evidence strengthens rather than weakens the ICBINB story.
-The full arc:
+The updated evidence strengthens rather than weakens the negative-results
+story. The full arc:
 
 1. **Initial excitement:** `|W_out @ W_in|` recovers dependency
    structure without causal training.

@@ -37,7 +37,7 @@ result.
 ## Building
 
 ```bash
-cd paper/icbinb
+cd paper/draft
 pdflatex main_arxiv.tex
 bibtex main_arxiv
 pdflatex main_arxiv.tex
