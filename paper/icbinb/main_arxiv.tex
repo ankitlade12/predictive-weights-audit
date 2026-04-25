@@ -35,7 +35,9 @@ experiments suggested this generalized across architectures and benefited
 from interventional data with $p < 10^{-5}$. We walk this claim through a
 five-stage falsification pipeline. The method-level claim does not survive:
 (i) a plain linear bottleneck does as well or better, (ii) tuned Lasso
-beats it on synthetic and real data (NOAA climate, ETFs, Lorenz-96), and
+beats it on synthetic CauseMe-style benchmarks, and on the only real
+benchmark with unambiguous ground truth (Lorenz-96) classical methods
+lead a tight cluster in which the bottleneck trails, and
 (iii) the headline intervention advantage is $\sim$60\% a size-matched-data
 confound and $\sim$40\% a target-corruption artifact specific to a
 non-standard random-forcing scheme. What survives is a narrow
@@ -51,7 +53,10 @@ A natural hope in time-series modelling is that a forecaster trained only
 on next-step prediction will, as a byproduct, expose causal or dependency
 structure through its learned weights — \emph{causal discovery as a
 byproduct of prediction}. If true, every pretrained forecaster would
-double as a causal-discovery engine.
+double as a causal-discovery engine, sidestepping the dedicated
+machinery developed by classical causal discovery
+(PCMCI~\citep{runge2019pcmci}, DYNOTEARS~\citep{pamfil2020dynotears},
+neural Granger~\citep{tank2021neural,nauta2019causal}).
 
 This paper reports the result of taking that hope seriously. Our starting
 point was the observation that for a Mamba selective state-space
@@ -75,8 +80,10 @@ findings that remain valid.
   \item We falsify architecture specificity: a linear bottleneck matches
   or beats the SSM under matched capacity and seeds.
   \item We falsify competitiveness with sparse regression: tuned Lasso
-  beats the bottleneck on synthetic CauseMe-style benchmarks and on real
-  observational data (NOAA climate, sector ETFs, Lorenz-96).
+  beats the bottleneck on synthetic CauseMe-style benchmarks, and on
+  the only real benchmark with unambiguous ground truth (Lorenz-96)
+  classical PCMCI and Granger lead a tight cluster in which the
+  bottleneck trails.
   \item We falsify the headline intervention advantage: under a
   size-matched control and proper $\text{do}(X = c)$ interventions, the
   effect collapses; the residual reproduces (and is larger) under
@@ -109,9 +116,9 @@ ground-truth adjacency.
 \label{sec:falsifications}
 % ============================================================
 
-\paragraph{F1. Architecture does not matter.} A pre-registered sweep at
-matched parameter counts and seeds across four datasets and five
-architectures (Mamba SSM, Transformer, LSTM, MLP, Linear) finds the
+\paragraph{F1. Architecture does not matter.} A matched-capacity,
+matched-seed sweep across four datasets and five architectures
+(Mamba SSM, Transformer, LSTM, MLP, Linear) finds the
 linear bottleneck matches or beats the SSM on every dataset (mean
 AUROC: VAR(1)-chain $K{=}5$: SSM $1.00$, Linear $1.00$;
 VAR(1)-random $K{=}10$: SSM $0.77$, Linear $\mathbf{0.99}$;
@@ -144,21 +151,25 @@ Best baseline by MSE:   Lasso ($48/48$)              & & \\
 \end{tabular}
 \end{table}
 
-\paragraph{F3. Real data: not competitive.} We evaluate six methods on
-three datasets of progressively cleaner ground truth (Table~\ref{tab:real}):
-63 years of NOAA monthly climate indices (ENSO, NAO, PDO, AMO, SOI, PNA)
-with teleconnection edges from the climate
-literature~\citep{trenberth1994decadal,delworth2000observed,newman2016pdo};
+\paragraph{F3. Real data: not competitive on the clean benchmark.} We
+evaluate six methods on three datasets of progressively cleaner ground
+truth (Table~\ref{tab:real}): 63 years of NOAA monthly climate indices
+(ENSO, NAO, PDO, AMO, SOI, PNA) with teleconnection edges from the
+climate dynamics literature~\citep{trenberth1994decadal,delworth2000observed,newman2016pdo};
 7.5 years of daily SPDR sector ETF log returns ($K{=}10$, soft labels);
 and Lorenz-96 ($K{=}10$, $F{=}10$) with mathematically unambiguous
-ground truth~\citep{tank2021neural,nauta2019causal}. We deliberately
+ground truth~\citep{lorenz1996predictability}; the latter has been used
+as a standard benchmark in the recent neural-causal-discovery
+literature~\citep{tank2021neural,nauta2019causal}. We deliberately
 exclude the ENSO$\leftrightarrow$SOI pair from climate ground truth
 because SOI and the Niño 3.4 SST anomaly are the same physical signal
-with opposite sign, not a causal edge. On Lorenz-96, where ground truth
-is unambiguous, \emph{PCMCI and bivariate Granger dominate} (0.986,
-0.979); the lagged bottleneck trails at $0.920$ and the SSM bottleneck
-is worst at $0.802$. The bottleneck is not the best method on any
-dataset with clean ground truth.
+with opposite sign, not a causal edge. The SSM bottleneck \emph{does}
+top the climate column at $0.864$, but as we show in the next paragraph
+that ranking is unstable: with only three positive edges over $K{=}6$,
+small ground-truth choices reorder the entire column. On Lorenz-96,
+where ground truth is unambiguous, \emph{PCMCI and bivariate Granger
+dominate} (0.986, 0.979); the lagged bottleneck trails at $0.920$ and
+the SSM bottleneck is worst at $0.802$.
 
 \begin{table}[t]
 \centering
@@ -230,8 +241,10 @@ $\text{AUROC}(\mathbf{X}_{\text{obs}} \cup \mathbf{X}_{\text{int}})$ for
 both bottleneck and Lasso, reporting $12/12$ configs significant at
 $p < 10^{-5}$ in favor of the bottleneck. Two controls dissolve it.
 \emph{Size-match (Exp 22):} Exp 19 conflated more data with intervention
-content; adding a fresh observational arm of equal total size collapses
-the effect to $\sim$40\% of the raw gap. \emph{Intervention type
+content; adding a fresh observational arm of equal total size shrinks
+the bottleneck-vs-Lasso gap to $\sim$40\% of the raw value (mean
+$+0.03$ to $+0.05$ AUROC, still $p < 10^{-3}$ at $n{=}15$ seeds, but
+roughly a third of the headline). \emph{Intervention type
 (Exp 23):} the original ``intervention'' was a per-step random forcing
 $x_{i,t} \leftarrow s\cdot \epsilon_{i,t}$, not a standard
 $\text{do}$-intervention. Replacing it with constant clamps
@@ -256,21 +269,28 @@ story rather than causal-structure extraction.
 % ============================================================
 
 After five falsifications, three narrow positives remain.
-\textbf{(i) Mild-nonlinearity regime:} in a regime sweep over noise,
-density, and nonlinearity strength, the bottleneck outperforms Lasso at
-\texttt{nonlinear=0.3} ($78\%$ win rate over 3 seeds and 9 hyperparameter
-cells). At stronger nonlinearity, both methods fail equally.
-\textbf{(ii) Sample efficiency:} bottleneck gains from additional
-observational data exceed Lasso's by $\sim 0.07$ AUROC at $K \in \{20,
-30\}$ under size-matched control arms — modest but useful where collecting
-more observations is cheap.
-\textbf{(iii) Target-corruption robustness:} the bottleneck's shared
-$\mathbf{W}_{\text{out}}$ absorbs per-step random forcing better than
-Lasso's per-equation fits. This explains the residual intervention
-effect, but is a reliability result, not a causal-discovery one.
 
-These are characterization claims. We do not propose the bottleneck as a
-causal discovery method.
+\begin{itemize}[leftmargin=1.5em, topsep=2pt, itemsep=2pt]
+  \item \textbf{Mild-nonlinearity regime.} At $K{=}20$, $T{=}300$,
+  with mild nonlinearity in the data-generating process
+  (\texttt{nonlinear=0.3}), the bottleneck beats the best tuned
+  baseline (Lasso/RRR) on $87\%$ of $(d_{\text{bottleneck}},
+  \lambda_{\text{sparse}})$ cells over 10 seeds, with mean AUROC
+  improvement $+0.121$. At stronger nonlinearity both methods fail
+  equally; at zero nonlinearity Lasso is preferred.
+  \item \textbf{Sample efficiency.} Bottleneck gains from additional
+  observational data exceed Lasso's by $\sim 0.07$ AUROC at
+  $K \in \{20, 30\}$ under size-matched control arms — modest but
+  useful where collecting more observations is cheap.
+  \item \textbf{Target-corruption robustness.} The bottleneck's shared
+  $\mathbf{W}_{\text{out}}$ absorbs per-step random forcing better
+  than Lasso's per-equation fits. This explains the residual
+  intervention effect, but is a reliability result, not a
+  causal-discovery one.
+\end{itemize}
+
+These are characterization claims. We do not propose the bottleneck as
+a causal discovery method.
 
 % ============================================================
 \section{Lessons}
