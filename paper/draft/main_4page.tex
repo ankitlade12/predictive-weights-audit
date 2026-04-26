@@ -176,29 +176,30 @@ work~\citep{tank2021neural,nauta2019causal}. We exclude the
 ENSO$\leftrightarrow$SOI pair from climate ground truth because SOI
 and the Niño 3.4 SST anomaly are the same physical signal with opposite
 sign. The SSM bottleneck \emph{does} top the climate column at
-$0.864$, but with only three positive edges over $K{=}6$ the ranking
-is fragile: in an earlier run that included the definitional
-ENSO$\leftrightarrow$SOI edges, Granger ranked first and the SSM
-was fourth (full sensitivity in the arXiv version). On Lorenz-96,
-where ground truth is unambiguous, \emph{PCMCI and bivariate Granger
-dominate} (0.986, 0.979); the lagged bottleneck trails at $0.920$ and
-the SSM bottleneck is worst at $0.802$.
+$0.827 \pm 0.015$ (5 seeds), but with only three positive edges over
+$K{=}6$ the ranking is fragile: in an earlier run that included the
+definitional ENSO$\leftrightarrow$SOI edges, Granger ranked first and
+the SSM was fourth (full sensitivity in the arXiv version). On
+Lorenz-96, where ground truth is unambiguous, \emph{PCMCI and
+bivariate Granger dominate} (0.986, 0.979); the lagged bottleneck
+trails at $0.920$ and the SSM bottleneck is worst at
+$0.722 \pm 0.026$ (5 seeds).
 
 \begin{table}[t]
 \centering
 \small
-\caption{AUROC on three real/benchmark datasets. SSM and lagged
-bottleneck use a single training seed (seed 42); other methods are
-deterministic. The bottleneck tops only climate, where ground truth
-is weak (3 edges, $K{=}6$) and rankings are unstable; on Lorenz-96
-classical causal methods lead by a wide margin.}
+\caption{AUROC on three real/benchmark datasets. SSM row reports
+mean $\pm$ std over 5 training seeds; lagged bottleneck uses a single
+seed; the four classical methods are deterministic. The bottleneck
+tops only climate, where ground truth is weak (3 edges, $K{=}6$); on
+Lorenz-96 classical causal methods lead by a wide margin.}
 \label{tab:real}
 \begin{tabular}{lccc}
 \toprule
 Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
  & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
 \midrule
-Weight-Proj (SSM) & $\mathbf{0.864}$ & $0.438$ & $0.802$ \\
+Weight-Proj (SSM, 5 seeds) & $\mathbf{0.827 \pm 0.015}$ & $0.444 \pm 0.046$ & $0.722 \pm 0.026$ \\
 PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
 Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
 Lagged Bottleneck & $0.617$ & $0.514$ & $0.920$ \\

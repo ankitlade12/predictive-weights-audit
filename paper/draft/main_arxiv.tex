@@ -181,30 +181,31 @@ literature~\citep{tank2021neural,nauta2019causal}. We deliberately
 exclude the ENSO$\leftrightarrow$SOI pair from climate ground truth
 because SOI and the Niño 3.4 SST anomaly are the same physical signal
 with opposite sign, not a causal edge. The SSM bottleneck \emph{does}
-top the climate column at $0.864$, but as we show in the next paragraph
-that ranking is unstable: with only three positive edges over $K{=}6$,
-small ground-truth choices reorder the entire column. On Lorenz-96,
-where ground truth is unambiguous, \emph{PCMCI and bivariate Granger
-dominate} (0.986, 0.979); the lagged bottleneck trails at $0.920$ and
-the SSM bottleneck is worst at $0.802$.
+top the climate column at $0.827 \pm 0.015$ (5 seeds), but as we show
+in the next paragraph that ranking is unstable: with only three
+positive edges over $K{=}6$, small ground-truth choices reorder the
+entire column. On Lorenz-96, where ground truth is unambiguous,
+\emph{PCMCI and bivariate Granger dominate} (0.986, 0.979); the lagged
+bottleneck trails at $0.920$ and the SSM bottleneck is worst at
+$0.722 \pm 0.026$ (5 seeds).
 
 \begin{table}[t]
 \centering
 \small
-\caption{AUROC on three real/benchmark datasets. Deterministic methods
-(Lasso, Ridge, PCMCI, Granger) are reported once; SSM and lagged
-bottleneck use a single training seed (seed 42), with the SSM column
-the only one sensitive to seed choice. On the clean Lorenz-96
-benchmark, classical causal methods lead by a wide margin; the
-bottleneck tops only the climate column, which has weak ground truth
-(3 edges, $K{=}6$) and unstable rankings (Table~\ref{tab:gt_flip}).}
+\caption{AUROC on three real/benchmark datasets. The Weight-Proj (SSM)
+row reports mean $\pm$ std over 5 training seeds; the lagged
+bottleneck row uses a single seed; the four classical methods are
+deterministic. On the clean Lorenz-96 benchmark, classical causal
+methods lead by a wide margin; the bottleneck tops only the climate
+column, which has weak ground truth (3 edges, $K{=}6$) and unstable
+rankings (Table~\ref{tab:gt_flip}).}
 \label{tab:real}
 \begin{tabular}{lccc}
 \toprule
 Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
  & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
 \midrule
-Weight-Proj (SSM) & $\mathbf{0.864}$ & $0.438$ & $0.802$ \\
+Weight-Proj (SSM, 5 seeds) & $\mathbf{0.827 \pm 0.015}$ & $0.444 \pm 0.046$ & $0.722 \pm 0.026$ \\
 PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
 Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
 Lagged Bottleneck & $0.617$ & $0.514$ & $0.920$ \\
@@ -222,8 +223,10 @@ appear in climate-literature edge lists. Under that inflated ground
 truth, bivariate Granger \emph{led} the climate column at AUROC
 $0.819$, with the lagged bottleneck second at $0.813$ and tuned Lasso
 third at $0.799$. Removing the two definitional edges drops Granger
-to $0.605$ (last place) and promotes the SSM bottleneck from $0.792$
-to first at $0.864$. Table~\ref{tab:gt_flip} shows the full re-ranking.
+to $0.605$ (last place) and promotes the SSM bottleneck to first at
+$0.827 \pm 0.015$. Table~\ref{tab:gt_flip} shows the full re-ranking
+(both columns are single-seed for direct comparability; Table~\ref{tab:real}
+reports the multi-seed value for the corrected ground truth).
 The reason is mechanical: the ENSO and SOI series are the same
 physical signal with opposite sign, so any method that captures their
 strong contemporaneous correlation — Granger and linear regressions in
