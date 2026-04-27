@@ -10,13 +10,12 @@
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{amsfonts}
-\usepackage{nicefrac}
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{enumitem}
+
 
 \title{Prediction Bottlenecks Don't Discover Causal Structure (But Here's What They Actually Do)}
 
@@ -80,7 +79,7 @@ identify the controls that caused the failures, and report the narrow
 findings that remain valid.
 
 \paragraph{Contributions.}
-\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+\begin{enumerate}
   \item We falsify architecture specificity: a linear bottleneck matches
   or beats the SSM under matched capacity and seeds.
   \item We falsify competitiveness with sparse regression: tuned Lasso
@@ -255,7 +254,7 @@ classical method shows it more strongly than the learned bottleneck.
 
 After five falsifications, three narrow positives remain.
 
-\begin{itemize}[leftmargin=1.5em, topsep=2pt, itemsep=2pt]
+\begin{itemize}
   \item \textbf{Mild-nonlinearity configuration.} At a single
   $(K, T) = (20, 300)$ with mild nonlinearity in the data-generating
   process (\texttt{nonlinear=0.3}), the bottleneck beats the best
@@ -319,7 +318,6 @@ falsification scaffold.
 reproduction script will be released upon acceptance (anonymous URL
 provided to reviewers).
 
-\bibliographystyle{plainnat}
 \bibliography{../references}
 
 \end{document}

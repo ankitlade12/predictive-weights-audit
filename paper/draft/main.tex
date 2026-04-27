@@ -10,7 +10,6 @@
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{amsfonts}
-\usepackage{nicefrac}
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{xcolor}
@@ -103,7 +102,7 @@ extraction from learned models can reuse to avoid the same mistakes
 we made.
 
 \paragraph{Contributions.}
-\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+\begin{enumerate}
   \item We replicate the empirical observation that prediction-trained
   bottleneck models produce a $|\mathbf{W}_{\text{out}}
   \mathbf{W}_{\text{in}}|$ score that correlates with Granger structure
@@ -381,7 +380,7 @@ causal-structure-extraction one.
 
 After five falsifications, three narrow positives remain:
 
-\begin{enumerate}[leftmargin=1.5em, topsep=0pt, itemsep=0pt]
+\begin{enumerate}
   \item \textbf{Mild-nonlinearity regime.} In a regime sweep over
   noise, density, and nonlinearity strength (Exp 18), the bottleneck
   outperforms Lasso at \texttt{nonlinear=0.3} (78\% win rate over 3
@@ -454,7 +453,6 @@ The contribution is the falsification, honestly reported.
 reproduction script are available at
 \texttt{https://github.com/ankitlade12/ssm-causal}.
 
-\bibliographystyle{plainnat}
 \bibliography{../references}
 
 \end{document}
