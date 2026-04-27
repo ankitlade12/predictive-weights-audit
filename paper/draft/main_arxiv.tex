@@ -171,9 +171,12 @@ Prediction MSE          & $+0.286$ & $0\%$   ($0/48$) \\
 evaluate six methods on three datasets of progressively cleaner ground
 truth (Table~\ref{tab:real}): NOAA monthly climate indices
 (ENSO, NAO, PDO, AMO, SOI, PNA) for 1962--2024 ($T{=}757$ months,
-downloaded from NOAA PSL), with three teleconnection edges from the
-climate dynamics literature: ENSO$\to$PNA~\citep{trenberth1994decadal},
-ENSO$\to$PDO~\citep{newman2016pdo}, and NAO$\to$AMO~\citep{delworth2000observed};
+downloaded from NOAA PSL), with three teleconnection edges drawn
+from the climate-dynamics
+literature~\citep{trenberth1994decadal,newman2016pdo,delworth2000observed} —
+specifically ENSO$\to$PNA, ENSO$\to$PDO, and NAO$\to$AMO, encoded
+verbatim in \texttt{data/real\_loaders.py} of the released
+repository;
 daily log returns of ten SPDR sector ETFs from 2018-06 to 2025-12
 ($K{=}10$, $T{=}1893$, downloaded via yfinance) with six finance
 lead-lag edges treated as soft labels; and Lorenz-96 ($K{=}10$,
@@ -272,10 +275,15 @@ original comparison conflated more data with intervention content,
 since the combined arm has $T + K\,T_{\text{int}}$ samples while the
 observational arm has $T$. Adding a third arm
 $\mathbf{X}_{\text{obs,big}}$ of the same total size as the combined
-arm shrinks the bottleneck-vs-Lasso gap to roughly $40\%$ of the raw
-value (mean $+0.03$ to $+0.05$ AUROC at $K \in \{10, 20, 30\}$,
-$p < 10^{-4}$ at $n{=}15$ seeds; the missing $\sim$60\% was
-the data-size confound). \emph{Intervention type (Exp 23):} the
+arm reveals that the bottleneck's own intervention-specific AUROC
+gain (over the size-matched observational baseline) is only
+$+0.03$ to $+0.05$ at $K \in \{10, 20, 30\}$, with
+$p < 10^{-4}$ at $n{=}15$ seeds — a small fraction of the original
+Exp~21 effect, the rest of which was the data-size confound. The
+paired BN-vs-Lasso gap remains larger ($+0.21$ at $K{=}10$) because
+Lasso's per-equation regression degrades sharply under target
+corruption ($-0.19$ at $K{=}10$); F5 shows that this residual is
+method-agnostic, not bottleneck-specific. \emph{Intervention type (Exp 23):} the
 original ``intervention'' was a per-step random forcing
 $x_{i,t} \leftarrow s \cdot \epsilon_{i,t}$, not a standard
 $\text{do}$-intervention. Replacing it with constant clamps

@@ -190,7 +190,7 @@ We **deliberately exclude** the ENSO↔SOI pair — SOI and Niño 3.4 SST anomal
 |---|---|
 | Same data | Identical train/test splits, identical synthetic seeds |
 | Same evaluation | Flat-lag AUROC against ground-truth adjacency tensor |
-| Same intervention semantics | Pre-registered `do(X=c)`, soft, and random-forcing variants |
+| Same intervention semantics | Three explicitly-distinguished variants — `do(X=c)`, soft (added-noise), random-forcing — evaluated on the same data and same control arms (see Lessons §10.2 for why we report three variants rather than one) |
 | Matched capacity | Architecture-specific parameter counts logged; F1 reports matched runs |
 | Multi-seed reporting | All headline numbers report mean ± std where stochastic |
 
