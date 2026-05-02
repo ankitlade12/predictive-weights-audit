@@ -129,6 +129,9 @@ The baselines change across the five falsifications because each stage tests a d
 |---|---|---|
 | Bivariate Granger | `statsmodels.tsa.stattools.grangercausalitytests` | Pairwise lag-`L` F-test |
 | PCMCI | `tigramite.PCMCI` with `ParCorr` test | Conditional independence testing |
+| PCMCI+ | `tigramite.PCMCI.run_pcmciplus` | Optional modern baseline via `--modern-baselines` |
+| DYNOTEARS | optional `causalnex` wrapper | Skips with clear dependency message if unavailable |
+| VAR-LiNGAM | optional `lingam` wrapper | Skips with clear dependency message if unavailable |
 | Tuned Lasso | as F2 | Group-Lasso variant for multi-lag |
 | Tuned Ridge | as F2 | |
 | Lagged Bottleneck | our method, lag-indexed `S^(τ)` | Single seed (deterministic except training) |
@@ -136,7 +139,7 @@ The baselines change across the five falsifications because each stage tests a d
 
 ### 5.3 F5 — Intervention Control Suite
 
-Same six methods as F3 (PCMCI, Granger, Lasso, Ridge, Bottleneck variants), evaluated on the size-matched intervention protocol from F4 to test method-agnosticity.
+Default six methods from F3 (PCMCI, Granger, Lasso, Ridge, Bottleneck variants), evaluated on the size-matched intervention protocol from F4 to test method-agnosticity. Modern optional baselines are exposed for the real-data benchmark via `--modern-baselines`.
 
 ---
 
@@ -168,6 +171,12 @@ Climate indices: ENSO (Niño 3.4), NAO, PDO, AMO, SOI, PNA. Edges:
 - NAO → AMO (Delworth & Mann, 2000)
 
 We **deliberately exclude** the ENSO↔SOI pair — SOI and Niño 3.4 SST anomaly are the same physical signal with opposite sign, not a causal edge. Including them inflates every method's AUROC and reorders the entire ranking (see Table 3 below).
+
+Ground-truth edges are now represented as structured provenance records in
+`data/real_loaders.py` using `EdgeProvenance(label={causal, definitional, proxy, soft})`.
+Running Exp 24 writes `results/real_data_benchmark/edge_provenance_cards.json`,
+and `ssm_causal.benchmark_metadata.leave_one_group_out` provides the reusable
+leave-one-group-out sensitivity audit used for ENSO-SOI style checks.
 
 ---
 
@@ -374,6 +383,7 @@ pip install -e ".[baselines,dev]"
 ```bash
 make help            # List available targets
 make test            # Run test suite
+make smoke           # Run bounded CPU-friendly empirical verification
 make experiments     # Run the full experiment grid (long; see reproduce_all.sh)
 make paper           # Compile the arXiv draft
 ```
@@ -389,6 +399,7 @@ uv run python experiments/exp15_lagged_bottleneck_stress_grid.py
 
 # F3: Real-data benchmark (NOAA, ETFs, Lorenz-96)
 uv run python experiments/exp24_real_data_benchmark.py
+uv run python experiments/exp24_real_data_benchmark.py --modern-baselines
 uv run python experiments/exp26_ssm_multiseed.py   # multi-seed SSM
 
 # F4: Intervention size-matched control

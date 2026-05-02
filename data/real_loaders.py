@@ -12,9 +12,15 @@ Data loaders for the ICBINB benchmark.
 from __future__ import annotations
 
 import os
+
 import numpy as np
 import pandas as pd
 
+from ssm_causal.benchmark_metadata import (
+    EdgeProvenance,
+    build_adjacency_from_edges,
+    edge_provenance_cards,
+)
 
 NOAA_URLS = {
     "ENSO": "https://psl.noaa.gov/data/correlation/nina34.data",
@@ -33,11 +39,64 @@ NOAA_URLS = {
 # Index is a surface-pressure analog of the Niño 3.4 SST index). Including
 # them inflates every method's AUROC on what is really a near-instantaneous
 # coupling, not a causal edge.
-NOAA_GROUND_TRUTH_EDGES = [
-    ("PNA", "ENSO"),   # ENSO teleconnection drives PNA (Trenberth & Hurrell 1994)
-    ("PDO", "ENSO"),   # ENSO modulates PDO phase transitions (Newman et al. 2016)
-    ("AMO", "NAO"),    # NAO drives Atlantic SST patterns (Delworth & Mann 2000)
+NOAA_EDGE_PROVENANCE = [
+    EdgeProvenance(
+        target="PNA",
+        source="ENSO",
+        label="causal",
+        rationale="ENSO teleconnection drives PNA variability.",
+        reference="Trenberth & Hurrell 1994",
+        group="teleconnection",
+    ),
+    EdgeProvenance(
+        target="PDO",
+        source="ENSO",
+        label="causal",
+        rationale="ENSO modulates PDO phase transitions.",
+        reference="Newman et al. 2016",
+        group="teleconnection",
+    ),
+    EdgeProvenance(
+        target="AMO",
+        source="NAO",
+        label="causal",
+        rationale="NAO drives Atlantic SST patterns.",
+        reference="Delworth & Mann 2000",
+        group="teleconnection",
+    ),
+    EdgeProvenance(
+        target="SOI",
+        source="ENSO",
+        label="definitional",
+        rationale="SOI and Nino 3.4 index the same ENSO signal with opposite sign.",
+        group="enso_soi",
+    ),
+    EdgeProvenance(
+        target="ENSO",
+        source="SOI",
+        label="definitional",
+        rationale="SOI and Nino 3.4 index the same ENSO signal with opposite sign.",
+        group="enso_soi",
+    ),
 ]
+
+NOAA_GROUND_TRUTH_EDGES = [
+    (edge.target, edge.source)
+    for edge in NOAA_EDGE_PROVENANCE
+    if edge.label == "causal"
+]
+
+
+def load_noaa_edge_provenance(include_definitional: bool = False) -> list[EdgeProvenance]:
+    """Return NOAA edge provenance records used for benchmark audits."""
+    if include_definitional:
+        return list(NOAA_EDGE_PROVENANCE)
+    return [edge for edge in NOAA_EDGE_PROVENANCE if edge.label == "causal"]
+
+
+def load_noaa_edge_cards(include_definitional: bool = False) -> dict[str, list[dict[str, str]]]:
+    """Return NOAA edge provenance cards grouped by provenance label."""
+    return edge_provenance_cards(load_noaa_edge_provenance(include_definitional))
 
 
 def _parse_noaa_file(path: str) -> pd.Series:
@@ -130,28 +189,59 @@ def load_noaa_climate(
     # Standardize
     X = (X - X.mean(axis=0)) / (X.std(axis=0) + 1e-8)
 
-    # Build ground-truth adjacency
-    K = len(names)
-    name_idx = {n: i for i, n in enumerate(names)}
-    G = np.zeros((K, K), dtype=np.float32)
-    for target, source in NOAA_GROUND_TRUTH_EDGES:
-        if target in name_idx and source in name_idx:
-            G[name_idx[target], name_idx[source]] = 1.0
+    G = build_adjacency_from_edges(
+        names,
+        load_noaa_edge_provenance(include_definitional=False),
+        include_labels={"causal"},
+    )
 
     return X, G, names
 
 
 # ─── Finance ───
 
-SECTOR_GROUND_TRUTH = [
-    # Source -> Target, based on sector lead-lag literature
-    ("XLE", "XLB"),    # Energy drives Materials input costs
-    ("XLE", "XLI"),    # Energy drives Industrial costs
-    ("XLF", "XLRE"),   # Financials drive Real Estate (rates)
-    ("XLF", "XLU"),    # Financials drive Utilities (rates)
-    ("XLK", "XLC"),    # Tech leads Communication Services
-    ("XLY", "XLP"),    # Consumer Discretionary -> Staples (spending shifts)
+SECTOR_EDGE_PROVENANCE = [
+    EdgeProvenance(
+        "XLB", "XLE", "soft", "Energy affects materials input costs.", group="sector_lead_lag"
+    ),
+    EdgeProvenance(
+        "XLI", "XLE", "soft", "Energy affects industrial input costs.", group="sector_lead_lag"
+    ),
+    EdgeProvenance(
+        "XLRE",
+        "XLF",
+        "soft",
+        "Financials proxy rate conditions for real estate.",
+        group="sector_lead_lag",
+    ),
+    EdgeProvenance(
+        "XLU",
+        "XLF",
+        "soft",
+        "Financials proxy rate conditions for utilities.",
+        group="sector_lead_lag",
+    ),
+    EdgeProvenance(
+        "XLC", "XLK", "soft", "Technology can lead communication services.", group="sector_lead_lag"
+    ),
+    EdgeProvenance(
+        "XLP",
+        "XLY",
+        "soft",
+        "Discretionary spending shifts can lead staples.",
+        group="sector_lead_lag",
+    ),
 ]
+
+SECTOR_GROUND_TRUTH = [
+    (edge.source, edge.target)
+    for edge in SECTOR_EDGE_PROVENANCE
+]
+
+
+def load_sector_edge_cards() -> dict[str, list[dict[str, str]]]:
+    """Return sector ETF edge provenance cards grouped by provenance label."""
+    return edge_provenance_cards(SECTOR_EDGE_PROVENANCE)
 
 
 def load_sector_etfs(
@@ -184,12 +274,7 @@ def load_sector_etfs(
     # Standardize
     X = (X - X.mean(axis=0)) / (X.std(axis=0) + 1e-8)
 
-    K = len(names)
-    name_idx = {n: i for i, n in enumerate(names)}
-    G = np.zeros((K, K), dtype=np.float32)
-    for source, target in SECTOR_GROUND_TRUTH:
-        if source in name_idx and target in name_idx:
-            G[name_idx[target], name_idx[source]] = 1.0
+    G = build_adjacency_from_edges(names, SECTOR_EDGE_PROVENANCE, include_labels={"soft"})
 
     return X, G, names
 

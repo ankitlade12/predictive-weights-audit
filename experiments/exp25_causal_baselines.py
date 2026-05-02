@@ -19,9 +19,9 @@ Methods evaluated:
     - PCMCI (actual causal discovery)
     - Bivariate Granger (classical causal discovery)
 
-Key question: Do PCMCI/Granger show any advantage with interventional data?
-Expected answer (per Sai's final wrap-up): No. The "intervention advantage"
-vanishes for all methods under proper size-matching.
+Key question: Is the residual size-matched intervention effect unique to
+the bottleneck? Expected answer: no. Granger reproduces the effect, often
+with larger gains, so the residual is method-agnostic.
 
 Usage:
     python experiments/exp25_causal_baselines.py --device cuda
@@ -47,14 +47,11 @@ from ssm_causal.lag_bottleneck import (
     LaggedBottleneckModel,
     LaggedBottleneckTrainer,
     LaggedBottleneckTrainingConfig,
+    evaluate_lagged_scores,
     extract_lagged_weight_score,
     fit_tuned_lagged_linear_baseline,
     normalize_lagged_score,
-    evaluate_lagged_scores,
 )
-from ssm_causal.lag_extraction import lag_score_to_aggregate
-from ssm_causal.utils import compute_metrics
-
 
 # ═══════════════════════════════════════════
 # Data generation (mirrors Exp 22)
@@ -309,7 +306,10 @@ def run_causal_baselines(
             all_results[cfg] = cfg_result
 
             print(f"\n  Summary for {cfg}:")
-            print(f"  {'Method':<12} {'small':>8} {'big':>8} {'comb':>8} {'raw_gain':>10} {'matched':>10} {'p':>10}")
+            print(
+                f"  {'Method':<12} {'small':>8} {'big':>8} {'comb':>8} "
+                f"{'raw_gain':>10} {'matched':>10} {'p':>10}"
+            )
             for m in methods:
                 r = cfg_result[m]
                 tag = "✓" if r["significant"] else " "

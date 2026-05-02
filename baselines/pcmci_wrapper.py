@@ -5,8 +5,8 @@ PCMCI (Runge et al., 2019) is the gold-standard method for causal discovery
 from time series. It handles autocorrelation and is designed for climate data.
 """
 
+
 import numpy as np
-from typing import Optional
 
 
 def pcmci_causality_matrix(
@@ -70,6 +70,51 @@ def pcmci_causality_matrix(
     return S
 
 
+def pcmci_plus_causality_matrix(
+    X: np.ndarray,
+    tau_max: int = 5,
+    tau_min: int = 1,
+    pc_alpha: float = 0.05,
+    method: str = "parcorr",
+) -> np.ndarray:
+    """
+    Run PCMCI+ and return an aggregate lagged causal score matrix.
+
+    PCMCI+ extends PCMCI with contemporaneous orientation rules. For this
+    benchmark we keep the same lagged scoring convention as PCMCI: aggregate
+    absolute test statistics over strictly positive lags.
+    """
+    try:
+        from tigramite import data_processing as pp
+        from tigramite.pcmci import PCMCI
+
+        if method == "parcorr":
+            from tigramite.independence_tests.parcorr import ParCorr
+            cond_ind_test = ParCorr(significance="analytic")
+        elif method == "gpdc":
+            from tigramite.independence_tests.gpdc import GPDC
+            cond_ind_test = GPDC(significance="analytic")
+        else:
+            raise ValueError(f"Unknown method: {method}")
+
+    except ImportError:
+        raise ImportError(
+            "tigramite is required for PCMCI+ baseline. "
+            "Install it with: uv sync --extra baselines"
+        )
+
+    dataframe = pp.DataFrame(X)
+    pcmci = PCMCI(dataframe=dataframe, cond_ind_test=cond_ind_test, verbosity=0)
+    results = pcmci.run_pcmciplus(tau_min=tau_min, tau_max=tau_max, pc_alpha=pc_alpha)
+    val_matrix = results["val_matrix"]
+
+    S = np.abs(val_matrix[:, :, 1:]).max(axis=2)
+    np.fill_diagonal(S, 0.0)
+    if S.max() > 0:
+        S = S / S.max()
+    return S
+
+
 def pcmci_with_details(
     X: np.ndarray,
     tau_max: int = 5,
@@ -84,8 +129,8 @@ def pcmci_with_details(
     """
     try:
         from tigramite import data_processing as pp
-        from tigramite.pcmci import PCMCI
         from tigramite.independence_tests.parcorr import ParCorr
+        from tigramite.pcmci import PCMCI
     except ImportError:
         raise ImportError("tigramite required. pip install tigramite")
 

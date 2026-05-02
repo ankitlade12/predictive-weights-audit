@@ -1,85 +1,69 @@
 #!/bin/bash
 # ============================================================
-# Reproduce All Experiments
-# Paper: "Causal Discovery via State Space Model Internals"
+# Reproduce the F1-F5 falsification pipeline for:
+# "Prediction Bottlenecks Don't Discover Causal Structure"
 # ============================================================
 #
 # Prerequisites:
 #   uv sync
-#   uv sync --extra baselines   # for PCMCI
+#   uv sync --extra baselines --extra dev
 #
 # Usage:
-#   chmod +x reproduce_all.sh
 #   ./reproduce_all.sh
 #
-# Results are saved to results/ directory.
+# Results are saved under results/.
 # ============================================================
 
-set -e
+set -euo pipefail
 
 echo "=============================================="
-echo " SSM-Causal: Full Experiment Reproduction"
+echo " SSM-Causal: F1-F5 Falsification Reproduction"
 echo "=============================================="
 
-# Create results directory
 mkdir -p results
 
-# Experiment 0: Core validation (MUST PASS)
 echo ""
-echo "[Exp 0] Core Validation — Day 3 Test"
-echo "----------------------------------------------"
-uv run python experiments/exp0_core_validation.py
-echo ""
-
-# Experiment 1: Full synthetic benchmark (Table 1)
-echo "[Exp 1] Synthetic Benchmark — Table 1"
-echo "----------------------------------------------"
-uv run python experiments/exp1_synthetic.py
-echo ""
-
-# Experiment 2: Non-stationary data (Table 2 + Figure 1)
-echo "[Exp 2] Regime-Switching — Table 2 + Figure 1"
-echo "----------------------------------------------"
-uv run python experiments/exp2_nonstationary.py
-echo ""
-
-# Experiment 3: Climate teleconnections (Figure 2 + Table 3)
-echo "[Exp 3] Climate Teleconnections — Figure 2"
-echo "----------------------------------------------"
-uv run python experiments/exp3_climate.py
-echo ""
-
-# Experiment 4: fMRI brain connectivity (Figure 3 + Table 3)
-echo "[Exp 4] fMRI Brain Connectivity — Figure 3"
-echo "----------------------------------------------"
-uv run python experiments/exp4_fmri.py
-echo ""
-
-# Experiment 5: Efficiency & scalability (Table 4 + Figure 4)
-echo "[Exp 5] Efficiency & Scalability — Table 4"
-echo "----------------------------------------------"
-uv run python experiments/exp5_efficiency.py
-echo ""
-
-# Experiment 6: Ablation study (Table 5)
-echo "[Exp 6] Ablation Study — Table 5"
-echo "----------------------------------------------"
-uv run python experiments/exp6_ablation.py
-echo ""
-
-# Experiment 7: Architecture comparison (SSM vs MLP vs LSTM)
-echo "[Exp 7] Architecture Comparison — Table 6"
+echo "[F1] Architecture comparison"
 echo "----------------------------------------------"
 uv run python experiments/exp7_architecture_comparison.py
-echo ""
 
-# Experiment 8: Extended real-world (Finance + EEG)
-echo "[Exp 8] Extended Real-World — Table 3 (extended)"
+echo ""
+echo "[F2] Lagged bottleneck stress grid"
 echo "----------------------------------------------"
-uv run python experiments/exp8_realworld_extended.py
-echo ""
+uv run python experiments/exp15_lagged_bottleneck_stress_grid.py
 
+echo ""
+echo "[F2] CauseMe lag gate"
+echo "----------------------------------------------"
+uv run python experiments/exp17_causeme_lag_gate.py
+
+echo ""
+echo "[F3] Real-data benchmark"
+echo "----------------------------------------------"
+uv run python experiments/exp24_real_data_benchmark.py
+
+echo ""
+echo "[F3] SSM multi-seed real benchmark"
+echo "----------------------------------------------"
+uv run python experiments/exp26_ssm_multiseed.py
+
+echo ""
+echo "[F4] Size-matched intervention control"
+echo "----------------------------------------------"
+uv run python experiments/exp22_intervention_control.py
+
+echo ""
+echo "[F4] Intervention type sweep"
+echo "----------------------------------------------"
+uv run python experiments/exp23_intervention_sweep.py
+
+echo ""
+echo "[F5] Classical causal baselines on intervention protocol"
+echo "----------------------------------------------"
+uv run python experiments/exp25_causal_baselines.py
+
+echo ""
 echo "=============================================="
-echo " All experiments complete!"
+echo " F1-F5 reproduction complete"
 echo " Results saved to results/"
 echo "=============================================="

@@ -93,7 +93,9 @@ findings that remain valid.
   classical Granger.
   \item We document what survives — mild-nonlinearity, sample-efficiency,
   target-corruption robustness — as characterization, not method, claims,
-  and release a reusable falsification scaffold.
+  and release a reusable falsification benchmark scaffold with standardized
+  generators, intervention protocols, edge-provenance metadata, and
+  size-matched controls.
 \end{enumerate}
 
 % ============================================================
@@ -312,11 +314,12 @@ of controls, is no. The headline effects either fail under
 size-matched controls, are specific to a non-standard intervention
 scheme, or reproduce as larger effects in classical causal methods. What
 survives is a narrow set of characterization findings and a reusable
-falsification scaffold.
+falsification benchmark scaffold.
 
-\paragraph{Code.} All experiments, data loaders, and a one-line
-reproduction script will be released upon acceptance (anonymous URL
-provided to reviewers).
+\paragraph{Code.} The released artifact includes all experiments, data
+loaders, edge-provenance cards, optional modern baselines (PCMCI+,
+DYNOTEARS, VAR-LiNGAM), fixed seeds, and lockfile-pinned reproduction
+targets (anonymous URL provided to reviewers).
 
 \bibliography{../references}
 

@@ -54,7 +54,6 @@ from ssm_causal.bottleneck_training import extract_weight_score
 from ssm_causal.mamba_model import MambaForTimeSeries, SSMTrainer
 from ssm_causal.utils import compute_metrics
 
-
 # ═══════════════════════════════════════════
 # Real data loaders
 # ═══════════════════════════════════════════
@@ -129,7 +128,10 @@ def eval_lagged_bottleneck(X, G, max_lag=3, d_bottleneck=16, epochs=100, device=
     K = X.shape[1]
     torch.manual_seed(42)
     model = LaggedBottleneckModel(n_variables=K, max_lag=max_lag, d_bottleneck=d_bottleneck)
-    config = LaggedBottleneckTrainingConfig(n_epochs=epochs, batch_size=min(64, X.shape[0] - max_lag))
+    config = LaggedBottleneckTrainingConfig(
+        n_epochs=epochs,
+        batch_size=min(64, X.shape[0] - max_lag),
+    )
     trainer = LaggedBottleneckTrainer(model, config=config, device=device)
     trainer.train(X)
 
@@ -209,6 +211,17 @@ def eval_pcmci(X, G, tau_max=5):
         return {"auroc": 0.5, "auprc": 0.5, "f1": 0.0}
 
 
+def eval_pcmci_plus(X, G, tau_max=5):
+    try:
+        from baselines.pcmci_wrapper import pcmci_plus_causality_matrix
+        S = pcmci_plus_causality_matrix(X, tau_max=tau_max, pc_alpha=0.05)
+        S = np.nan_to_num(S, 0)
+        return compute_metrics(S, G)
+    except Exception as e:
+        print(f"    PCMCI+ failed: {e}")
+        return {"auroc": 0.5, "auprc": 0.5, "f1": 0.0}
+
+
 def eval_granger(X, G, max_lag=5):
     try:
         from baselines.granger import granger_causality_matrix
@@ -218,6 +231,63 @@ def eval_granger(X, G, max_lag=5):
     except Exception as e:
         print(f"    Granger failed: {e}")
         return {"auroc": 0.5, "auprc": 0.5, "f1": 0.0}
+
+
+def eval_dynotears(X, G, max_lag=3):
+    try:
+        from baselines.dynotears import dynotears_causality_matrix
+        S = dynotears_causality_matrix(X, max_lag=max_lag)
+        S = np.nan_to_num(S, 0)
+        return compute_metrics(S, G)
+    except Exception as e:
+        print(f"    DYNOTEARS failed: {e}")
+        return {"auroc": 0.5, "auprc": 0.5, "f1": 0.0}
+
+
+def eval_var_lingam(X, G, max_lag=3):
+    try:
+        from baselines.lingam_wrapper import var_lingam_causality_matrix
+        S = var_lingam_causality_matrix(X, max_lag=max_lag)
+        S = np.nan_to_num(S, 0)
+        return compute_metrics(S, G)
+    except Exception as e:
+        print(f"    VAR-LiNGAM failed: {e}")
+        return {"auroc": 0.5, "auprc": 0.5, "f1": 0.0}
+
+
+def build_method_registry(device: str, epochs: int, include_modern_baselines: bool = False):
+    methods = {
+        "Weight-Proj (SSM)": lambda X, G: eval_weight_projection(
+            X, G, epochs=epochs, device=device
+        ),
+        "Lagged-Bottleneck": lambda X, G: eval_lagged_bottleneck(
+            X, G, epochs=100, device=device
+        ),
+        "Tuned-Lasso": lambda X, G: eval_lasso(X, G),
+        "Tuned-Ridge": lambda X, G: eval_ridge(X, G),
+        "PCMCI": lambda X, G: eval_pcmci(X, G),
+        "Granger": lambda X, G: eval_granger(X, G),
+    }
+    if include_modern_baselines:
+        methods.update(
+            {
+                "PCMCI+": lambda X, G: eval_pcmci_plus(X, G),
+                "DYNOTEARS": lambda X, G: eval_dynotears(X, G),
+                "VAR-LiNGAM": lambda X, G: eval_var_lingam(X, G),
+            }
+        )
+    return methods
+
+
+def collect_edge_cards(datasets: list[str]) -> dict[str, dict[str, list[dict[str, str]]]]:
+    cards = {}
+    if "climate" in datasets:
+        from data.real_loaders import load_noaa_edge_cards
+        cards["climate"] = load_noaa_edge_cards(include_definitional=True)
+    if "finance" in datasets:
+        from data.real_loaders import load_sector_edge_cards
+        cards["finance"] = load_sector_edge_cards()
+    return cards
 
 
 # ═══════════════════════════════════════════
@@ -230,6 +300,7 @@ def run_real_benchmark(
     save_dir: str = "results/real_data_benchmark",
     climate_data_dir: str | None = None,
     epochs: int = 150,
+    include_modern_baselines: bool = False,
 ):
     os.makedirs(save_dir, exist_ok=True)
     total_start = time.time()
@@ -256,14 +327,11 @@ def run_real_benchmark(
         X, G, names = load_lorenz96_bench(K=10, T=1500)
         loaded["lorenz96"] = (X, G, names)
 
-    methods = {
-        "Weight-Proj (SSM)": lambda X, G: eval_weight_projection(X, G, epochs=epochs, device=device),
-        "Lagged-Bottleneck": lambda X, G: eval_lagged_bottleneck(X, G, epochs=100, device=device),
-        "Tuned-Lasso": lambda X, G: eval_lasso(X, G),
-        "Tuned-Ridge": lambda X, G: eval_ridge(X, G),
-        "PCMCI": lambda X, G: eval_pcmci(X, G),
-        "Granger": lambda X, G: eval_granger(X, G),
-    }
+    methods = build_method_registry(
+        device=device,
+        epochs=epochs,
+        include_modern_baselines=include_modern_baselines,
+    )
 
     all_results = {}
 
@@ -290,7 +358,11 @@ def run_real_benchmark(
                     "f1": float(metrics.get("f1", 0.0)),
                     "runtime_s": elapsed,
                 }
-                print(f"  {method_name:22s}: AUROC={metrics['auroc']:.3f}  AUPRC={metrics.get('auprc', 0):.3f}  F1={metrics.get('f1', 0):.3f}  ({elapsed:.1f}s)")
+                print(
+                    f"  {method_name:22s}: AUROC={metrics['auroc']:.3f}  "
+                    f"AUPRC={metrics.get('auprc', 0):.3f}  "
+                    f"F1={metrics.get('f1', 0):.3f}  ({elapsed:.1f}s)"
+                )
             except Exception as e:
                 ds_results[method_name] = {"auroc": 0.5, "error": str(e)}
                 print(f"  {method_name:22s}: FAILED ({e})")
@@ -318,6 +390,13 @@ def run_real_benchmark(
         json.dump(all_results, f, indent=2)
     print(f"Saved to {out_path}")
 
+    cards = collect_edge_cards(datasets)
+    if cards:
+        cards_path = Path(save_dir) / "edge_provenance_cards.json"
+        with cards_path.open("w") as f:
+            json.dump(cards, f, indent=2)
+        print(f"Saved edge provenance cards to {cards_path}")
+
     return all_results
 
 
@@ -333,6 +412,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--save-dir", default="results/real_data_benchmark")
     parser.add_argument("--epochs", type=int, default=150)
+    parser.add_argument("--modern-baselines", action="store_true")
     parser.add_argument("--quick", action="store_true")
     args = parser.parse_args()
 
@@ -346,4 +426,5 @@ if __name__ == "__main__":
         save_dir=args.save_dir,
         climate_data_dir=args.climate_data_dir,
         epochs=args.epochs,
+        include_modern_baselines=args.modern_baselines,
     )

@@ -423,7 +423,7 @@ The next phase does not require huge-scale training, but it does require discipl
 Recommended practical setup:
 
 - Use a single reproducible GPU environment on RunPod, Clore.ai, or a similar service.
-- Prefer one container image with pinned dependencies and fixed seeds.
+- Prefer `uv.lock`, fixed seeds, and checked-in `make` targets for reproduction.
 - Save all raw JSON outputs, not just summary tables.
 - Budget for repeated medium-scale runs rather than one giant expensive benchmark.
 
