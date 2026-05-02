@@ -42,6 +42,15 @@ def test_reproduction_does_not_require_docker():
     assert "make smoke" in readme
 
 
+def test_full_real_data_targets_download_missing_finance_data():
+    makefile = Path("Makefile").read_text()
+
+    assert "data/real/sector_etfs.csv:" in makefile
+    assert "uv run --with yfinance python scripts/download_etfs.py" in makefile
+    assert "exp24: data/real/sector_etfs.csv" in makefile
+    assert "exp26: data/real/sector_etfs.csv" in makefile
+
+
 def test_package_import_tolerates_notebook_matplotlib_backend():
     env = os.environ.copy()
     env["MPLBACKEND"] = "module://matplotlib_inline.backend_inline"

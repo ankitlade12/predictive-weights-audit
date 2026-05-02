@@ -24,6 +24,9 @@ install:
 	uv sync
 	uv sync --extra baselines --extra dev
 
+data/real/sector_etfs.csv:
+	uv run --with yfinance python scripts/download_etfs.py
+
 test:
 	uv run pytest tests/ -v
 
@@ -52,13 +55,13 @@ exp22:
 exp23:
 	uv run python experiments/exp23_intervention_sweep.py
 
-exp24:
+exp24: data/real/sector_etfs.csv
 	uv run python experiments/exp24_real_data_benchmark.py
 
 exp25:
 	uv run python experiments/exp25_causal_baselines.py
 
-exp26:
+exp26: data/real/sector_etfs.csv
 	uv run python experiments/exp26_ssm_multiseed.py
 
 falsification: exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26
