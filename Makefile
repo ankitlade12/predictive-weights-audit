@@ -2,8 +2,10 @@
 
 UV_CACHE_DIR ?= /tmp/uv-cache
 MPLCONFIGDIR ?= /tmp/matplotlib-cache
+MPLBACKEND := Agg
 export UV_CACHE_DIR
 export MPLCONFIGDIR
+export MPLBACKEND
 
 .PHONY: help install test smoke exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 falsification experiments tables figures paper paper-arxiv paper-workshop all clean
 

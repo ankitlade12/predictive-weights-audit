@@ -1,11 +1,18 @@
-"""
-Visualization and evaluation utilities for SSM causal discovery.
-"""
+"""Visualization and evaluation utilities for SSM causal discovery."""
+# ruff: noqa: E402, I001
+
+import os
+from typing import Dict, List, Optional, Tuple
+
+# Kaggle notebooks can export an inline backend missing from the uv environment.
+os.environ["MPLBACKEND"] = "Agg"
+
+import matplotlib  # noqa: E402
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-from typing import Dict, List, Optional, Tuple
+
+matplotlib.use("Agg", force=True)
+import matplotlib.pyplot as plt  # noqa: E402
 from sklearn.metrics import (
     roc_auc_score,
     precision_recall_curve,
@@ -14,9 +21,6 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
 )
-
-# Use non-interactive backend for saving figures without display
-matplotlib.use("Agg")
 
 
 def compute_metrics(

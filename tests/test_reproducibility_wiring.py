@@ -1,3 +1,6 @@
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -24,6 +27,7 @@ def test_makefile_exposes_help_and_paper_pipeline_targets():
 
     assert "help:" in makefile
     assert "smoke:" in makefile
+    assert "MPLBACKEND := Agg" in makefile
     assert "falsification:" in makefile
     assert "paper-arxiv:" in makefile
     assert "main_arxiv.tex" in makefile
@@ -36,3 +40,15 @@ def test_reproduction_does_not_require_docker():
     assert not Path("Dockerfile").exists()
     assert "docker build" not in readme
     assert "make smoke" in readme
+
+
+def test_package_import_tolerates_notebook_matplotlib_backend():
+    env = os.environ.copy()
+    env["MPLBACKEND"] = "module://matplotlib_inline.backend_inline"
+    env.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-cache")
+
+    subprocess.run(
+        [sys.executable, "-c", "import ssm_causal.utils"],
+        check=True,
+        env=env,
+    )
