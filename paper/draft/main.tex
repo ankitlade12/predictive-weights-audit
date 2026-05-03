@@ -264,36 +264,38 @@ honest ground truth, \emph{Granger drops to the bottom} and the
 bottleneck drops to the middle.
 
 \paragraph{Results.} On climate the SSM bottleneck is, surprisingly,
-the top method (0.864) — but this is against soft ground truth
+the top method ($0.820 \pm 0.021$ over five seeds) — but this is against soft ground truth
 with only 3 edges over $K{=}6$, where small changes move AUROC
 substantially; we do not read this as a causal-discovery claim. On
 finance, Ridge wins decisively (0.696) and all other methods are at
-or below chance (including the bottleneck at 0.514), consistent with
+or below chance (including the SSM bottleneck at $0.447 \pm 0.033$), consistent with
 sector-ETF returns admitting no straightforward lagged causal
 structure. On Lorenz-96, where the ground truth is unambiguous,
 \emph{PCMCI and bivariate Granger dominate} (0.986, 0.979), tuned
 Lasso and Ridge essentially match them (0.974), and the lagged
-bottleneck trails at 0.920 while the SSM bottleneck is worst at
-0.802. The bottleneck is not the best method on any dataset with
+bottleneck trails at 0.916 while the SSM bottleneck is worst at
+$0.722 \pm 0.031$. The bottleneck is not the best method on any dataset with
 clean ground truth.
 
 \begin{table}[t]
 \centering
 \small
-\caption{AUROC on three real/benchmark datasets. The bottleneck is
-top only on climate, where ground truth is weak (3 edges, $K{=}6$)
-and AUROC is sensitive to individual edge choices; on the clean
-Lorenz-96 benchmark, classical causal methods lead by a wide margin.}
+\caption{AUROC on three real/benchmark datasets. The Weight-Proj (SSM)
+row reports mean $\pm$ std over 5 training seeds; the lagged bottleneck
+row uses a single seed. The bottleneck tops only climate, where ground
+truth is weak (3 edges, $K{=}6$) and AUROC is sensitive to individual
+edge choices; on the clean Lorenz-96 benchmark, classical causal
+methods lead by a wide margin.}
 \label{tab:real}
 \begin{tabular}{lccc}
 \toprule
 Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
  & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
 \midrule
-Weight-Proj (SSM) & $\mathbf{0.864}$ & $0.438$ & $0.802$ \\
+Weight-Proj (SSM, 5 seeds) & $\mathbf{0.820 \pm 0.021}$ & $0.447 \pm 0.033$ & $0.722 \pm 0.031$ \\
 PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
 Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
-Lagged Bottleneck & $0.617$ & $0.514$ & $0.920$ \\
+Lagged Bottleneck & $0.617$ & $0.484$ & $0.916$ \\
 Tuned Ridge & $0.617$ & $\mathbf{0.696}$ & $0.974$ \\
 Bivariate Granger & $0.605$ & $0.498$ & $0.979$ \\
 \bottomrule

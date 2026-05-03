@@ -37,7 +37,7 @@ A natural hope in time-series modelling is that a forecaster trained only for ne
 
 - **Architecture is irrelevant.** A plain linear bottleneck matches or beats the SSM under matched capacity and seeds.
 - **Tuned Lasso wins on synthetic graph recovery.** The bottleneck wins only **12% (6/48)** of cells against tuned `{OLS, Ridge, Lasso, RRR}`.
-- **Classical methods dominate the only clean real benchmark.** On Lorenz-96, PCMCI (**0.986**) and bivariate Granger (**0.979**) lead; the SSM bottleneck trails at **0.722 ± 0.026**.
+- **Classical methods dominate the only clean real benchmark.** On Lorenz-96, PCMCI (**0.986**) and bivariate Granger (**0.979**) lead; the SSM bottleneck trails at **0.722 ± 0.031**.
 - **The headline intervention advantage is a confound.** Roughly 60% data-size, ~40% target-corruption artifact specific to a non-standard random-forcing scheme. Under proper `do(X=c)` interventions, the effect collapses.
 - **The residual is method-agnostic.** Bivariate Granger reproduces the same effect with *larger* effect sizes at high K (+0.095 at K=30 vs +0.054 for the bottleneck).
 
@@ -265,10 +265,10 @@ AUROC on three datasets of progressively cleaner ground truth. Weight-Proj (SSM)
 
 | Method | Climate (NOAA, K=6, T=757) | Finance (ETFs, K=10, T=1893) | Lorenz-96 (K=10, T=1500) |
 |---|---:|---:|---:|
-| **Weight-Proj (SSM, 5 seeds)** | **0.827 ± 0.015** | 0.444 ± 0.046 | 0.722 ± 0.026 |
+| **Weight-Proj (SSM, 5 seeds)** | **0.820 ± 0.021** | 0.447 ± 0.033 | 0.722 ± 0.031 |
 | PCMCI | 0.704 | 0.510 | **0.986** |
 | Tuned Lasso | 0.630 | 0.500 | 0.974 |
-| Lagged Bottleneck | 0.617 | 0.514 | 0.920 |
+| Lagged Bottleneck | 0.617 | 0.484 | 0.916 |
 | Tuned Ridge | 0.617 | **0.696** | 0.974 |
 | Bivariate Granger | 0.605 | 0.498 | 0.979 |
 
