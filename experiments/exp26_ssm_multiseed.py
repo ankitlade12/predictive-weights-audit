@@ -66,7 +66,7 @@ def main():
                         default=["climate", "finance", "lorenz96"])
     parser.add_argument("--seeds", type=int, default=5)
     parser.add_argument("--epochs", type=int, default=40)
-    parser.add_argument("--device", default="cpu")
+    parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--save-dir", default="results/ssm_multiseed")
     args = parser.parse_args()
 
@@ -74,8 +74,9 @@ def main():
     started = time.time()
 
     print("=" * 72)
-    print(f"EXP 26: Multi-seed SSM weight-projection")
+    print("EXP 26: Multi-seed SSM weight-projection")
     print(f"Datasets: {args.datasets} | Seeds: {args.seeds} | Epochs: {args.epochs}")
+    print(f"Device: {args.device}")
     print("=" * 72)
 
     all_results = {}

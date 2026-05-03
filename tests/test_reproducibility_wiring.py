@@ -51,6 +51,13 @@ def test_full_real_data_targets_download_missing_finance_data():
     assert "exp26: data/real/sector_etfs.csv" in makefile
 
 
+def test_exp26_uses_cuda_when_available_by_default():
+    script = Path("experiments/exp26_ssm_multiseed.py").read_text()
+
+    assert 'default="cuda" if torch.cuda.is_available() else "cpu"' in script
+    assert 'print(f"Device: {args.device}")' in script
+
+
 def test_package_import_tolerates_notebook_matplotlib_backend():
     env = os.environ.copy()
     env["MPLBACKEND"] = "module://matplotlib_inline.backend_inline"
