@@ -34,20 +34,24 @@ to recover Granger-causal structure through a simple readout
 $\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}|$, with
 early experiments suggesting the phenomenon generalized across
 architectures and benefited from interventional data at $p < 10^{-5}$.
-We walk this claim through a five-stage falsification pipeline. The
-method-level claim does not survive: (i) a plain linear bottleneck
-does as well or better; (ii) tuned Lasso beats the bottleneck on
-synthetic CauseMe-style benchmarks, and on Lorenz-96 (the only real
-benchmark with unambiguous ground truth) classical PCMCI and Granger
-lead a tight cluster in which the bottleneck trails; (iii) the
-headline intervention advantage is roughly $60\%$ a sample-size
-confound, and the residual disappears under standard
-$\text{do}(X = c)$ interventions, surviving only under a non-standard
-random-forcing scheme; (iv) even that residual reproduces, with a
-larger effect, in classical bivariate Granger — the effect is
-method-agnostic. What survives is a narrow characterization result.
-We hope the falsification scaffold is as useful to the community as
-the positive findings we could not salvage.
+We package the protocol used to test that claim --- standardized
+synthetic generators (VAR/Lorenz/CauseMe-style), three intervention
+semantics ($\text{do}(X = c)$, soft-noise, random-forcing),
+edge-provenance cards on three real datasets, and size-matched control
+arms --- as a reusable falsification benchmark, and walk the claim
+through it in five stages. The method-level claim does not survive:
+(i) a plain linear bottleneck does as well or better; (ii) tuned Lasso
+beats the bottleneck on synthetic CauseMe-style benchmarks, and on
+Lorenz-96 (the only real benchmark with unambiguous ground truth)
+classical PCMCI and Granger lead a tight cluster in which the
+bottleneck trails; (iii) the headline intervention advantage is
+roughly $60\%$ a sample-size confound, and the residual disappears
+under standard $\text{do}(X = c)$ interventions, surviving only under
+a non-standard random-forcing scheme; (iv) even that residual
+reproduces, with a larger effect, in classical bivariate Granger ---
+the effect is method-agnostic. What survives is a narrow
+characterization result; the benchmark is the lasting artifact, and
+each stage above is one of its control arms.
 \end{abstract}
 
 % ============================================================
@@ -82,8 +86,19 @@ findings that remain valid.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item We falsify architecture specificity: a linear bottleneck matches
-  or beats the SSM under matched capacity and seeds.
+  \item \textbf{A falsification benchmark for prediction-as-causal-discovery
+  claims.} We release the five-stage protocol used in this paper as a
+  reusable suite: standardized synthetic generators (VAR, Lorenz-96,
+  CauseMe-style), three intervention semantics
+  ($\text{do}(X = c)$, soft-noise, random-forcing) under matched
+  control arms, edge-provenance cards on three real datasets, fixed
+  seeds, a Dockerfile, and a single-command \texttt{make all}
+  reproduction target. The five sections below are also the
+  benchmark's five control arms; we encourage future
+  ``method-discovers-causality'' papers to pre-register against them.
+  \item Using the benchmark, we falsify architecture specificity: a
+  linear bottleneck matches or beats the SSM under matched capacity
+  and seeds.
   \item We falsify competitiveness with sparse regression: tuned Lasso
   beats the bottleneck on synthetic CauseMe-style benchmarks, and on
   the only real benchmark with unambiguous ground truth (Lorenz-96)
@@ -93,11 +108,9 @@ findings that remain valid.
   size-matched control and proper $\text{do}(X = c)$ interventions, the
   effect collapses; the residual reproduces (and is larger) under
   classical Granger.
-  \item We document what survives — mild-nonlinearity, sample-efficiency,
-  target-corruption robustness — as characterization, not method, claims,
-  and release a reusable falsification benchmark scaffold with standardized
-  generators, intervention protocols, edge-provenance metadata, and
-  size-matched controls.
+  \item We document what survives --- mild-nonlinearity,
+  sample-efficiency, target-corruption robustness --- as
+  characterization, not method, claims.
 \end{enumerate}
 
 % ============================================================
@@ -122,6 +135,26 @@ ground-truth adjacency.
 \section{Five Falsifications}
 \label{sec:falsifications}
 % ============================================================
+
+\paragraph{Stress regimes covered.} Each falsification stresses the
+extraction along an axis the original claim was silent on, and these
+axes form the benchmark's stress-regime matrix.
+\textbf{Architecture/capacity} (F1): five model classes at matched
+capacity over six generators.
+\textbf{Sparsity and dimensionality} (F2): a focused stress grid over
+$K \in \{10, 20\}$, $T \in \{150, 300\}$, max-lag~8 (48 cells), plus
+a CauseMe-style nonlinear sweep at $K \in \{5, 10, 20\}$.
+\textbf{Real-world ground truth} (F3): three datasets ranging from
+soft (climate, $K{=}6$, $T{=}757$, 3 causal edges) to weak
+(finance, $K{=}10$, $T{=}1893$, 6 soft edges) to clean (Lorenz-96,
+$K{=}10$, $T{=}1500$, 90 edges), each shipped with an edge-provenance
+card. \textbf{Intervention semantics} (F4): $\text{do}(X_i = c)$
+clamps, soft additive noise, and per-step random forcing, each at
+$K \in \{10, 20, 30\}$ with size-matched observational control arms.
+\textbf{Method-agnosticity} (F5): the same intervention protocol
+applied to bottleneck, Lasso, PCMCI, and bivariate Granger.
+Wrappers for DYNOTEARS, VAR-LiNGAM, and PCMCI+ ship with the
+benchmark as optional baseline plug-ins.
 
 \paragraph{F1. Architecture does not matter.} A 10-seed, matched-capacity
 sweep across six synthetic datasets and five architectures (Linear,
@@ -391,10 +424,13 @@ reproduce as larger effects in classical causal methods. What
 survives is a narrow set of characterization findings and a reusable
 falsification benchmark scaffold.
 
-\paragraph{Code.} All experiments, data loaders, edge-provenance cards,
-optional modern baselines (PCMCI+, DYNOTEARS, VAR-LiNGAM), fixed seeds,
-and lockfile-pinned reproduction targets are available at
-\url{https://github.com/ankitlade12/ssm-causal}.
+\paragraph{Code and reproduction.} All experiments, data loaders,
+edge-provenance cards, optional modern baselines (PCMCI+, DYNOTEARS,
+VAR-LiNGAM), fixed seeds, lockfile-pinned dependencies, a
+\texttt{Dockerfile}, and a single-command \texttt{make all}
+reproduction target (which runs \texttt{install}, \texttt{test}, the
+F1--F5 falsification pipeline, and rebuilds this PDF) are available
+at \url{https://github.com/ankitlade12/ssm-causal}.
 
 \bibliography{../references}
 

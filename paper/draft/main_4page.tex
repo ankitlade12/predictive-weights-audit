@@ -35,17 +35,21 @@ to recover Granger-causal structure through a simple readout
 $\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}|$, with
 early experiments suggesting the phenomenon generalized across
 architectures and benefited from interventional data at $p < 10^{-5}$.
-We walk this claim through a five-stage falsification pipeline. The
-method-level claim does not survive: (i) a plain linear bottleneck
-does as well or better; (ii) tuned Lasso beats the bottleneck on
-synthetic CauseMe-style benchmarks, and on Lorenz-96 (the only real
-benchmark with unambiguous ground truth) classical PCMCI and Granger
-lead a tight cluster in which the bottleneck trails; (iii) the
-headline intervention advantage is roughly $60\%$ a sample-size
-confound, with the residual disappearing under standard
+We package the protocol used to test that claim --- standardized
+synthetic generators, three intervention semantics, edge-provenance
+cards on three real datasets, and size-matched control arms --- as a
+reusable falsification benchmark, and walk the claim through it in
+five stages. The method-level claim does not survive: (i) a plain
+linear bottleneck does as well or better; (ii) tuned Lasso beats the
+bottleneck on synthetic CauseMe-style benchmarks, and on Lorenz-96
+(the only real benchmark with unambiguous ground truth) classical
+PCMCI and Granger lead a tight cluster in which the bottleneck
+trails; (iii) the headline intervention advantage is roughly $60\%$
+a sample-size confound, with the residual disappearing under standard
 $\text{do}(X = c)$ interventions and reproducing with a larger
-effect in classical bivariate Granger — the effect is
-method-agnostic. What survives is a narrow characterization result.
+effect in classical bivariate Granger --- the effect is
+method-agnostic. What survives is a narrow characterization result;
+the benchmark is the lasting artifact.
 \end{abstract}
 
 % ============================================================
@@ -80,22 +84,29 @@ findings that remain valid.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item We falsify architecture specificity: a linear bottleneck matches
-  or beats the SSM under matched capacity and seeds.
+  \item \textbf{A falsification benchmark for prediction-as-causal-discovery
+  claims.} We release the five-stage protocol used in this paper as a
+  reusable suite: standardized synthetic generators (VAR, Lorenz-96,
+  CauseMe-style), three intervention semantics
+  ($\text{do}(X = c)$, soft-noise, random-forcing) under matched
+  control arms, edge-provenance cards on three real datasets, fixed
+  seeds, a Dockerfile, and a single-command \texttt{make all}
+  reproduction target.
+  \item Using the benchmark, we falsify architecture specificity: a
+  linear bottleneck matches or beats the SSM under matched capacity
+  and seeds.
   \item We falsify competitiveness with sparse regression: tuned Lasso
   beats the bottleneck on synthetic CauseMe-style benchmarks, and on
   the only real benchmark with unambiguous ground truth (Lorenz-96)
   classical PCMCI and Granger lead a tight cluster in which the
   bottleneck trails.
   \item We falsify the headline intervention advantage: under a
-  size-matched control and proper $\text{do}(X = c)$ interventions, the
-  effect collapses; the residual reproduces (and is larger) under
+  size-matched control and proper $\text{do}(X = c)$ interventions,
+  the effect collapses; the residual reproduces (and is larger) under
   classical Granger.
-  \item We document what survives — mild-nonlinearity, sample-efficiency,
-  target-corruption robustness — as characterization, not method, claims,
-  and release a reusable falsification benchmark scaffold with standardized
-  generators, intervention protocols, edge-provenance metadata, and
-  size-matched controls.
+  \item We document what survives --- mild-nonlinearity,
+  sample-efficiency, target-corruption robustness --- as
+  characterization, not method, claims.
 \end{enumerate}
 
 % ============================================================
@@ -316,10 +327,12 @@ scheme, or reproduce as larger effects in classical causal methods. What
 survives is a narrow set of characterization findings and a reusable
 falsification benchmark scaffold.
 
-\paragraph{Code.} The released artifact includes all experiments, data
-loaders, edge-provenance cards, optional modern baselines (PCMCI+,
-DYNOTEARS, VAR-LiNGAM), fixed seeds, and lockfile-pinned reproduction
-targets (anonymous URL provided to reviewers).
+\paragraph{Code and reproduction.} The released artifact includes all
+experiments, data loaders, edge-provenance cards, optional modern
+baselines (PCMCI+, DYNOTEARS, VAR-LiNGAM), fixed seeds, lockfile-pinned
+dependencies, a \texttt{Dockerfile}, and a single-command
+\texttt{make all} reproduction target (anonymous URL provided to
+reviewers).
 
 \bibliography{../references}
 

@@ -190,6 +190,52 @@ def eval_granger(X, G_lag, max_lag=3):
         return 0.5
 
 
+def _broadcast_aggregate_to_lag(S_agg, max_lag):
+    S_agg = np.nan_to_num(S_agg, 0)
+    S_lag = np.broadcast_to(S_agg, (max_lag, *S_agg.shape)).copy()
+    for tau in range(max_lag):
+        np.fill_diagonal(S_lag[tau], 0)
+        if S_lag[tau].max() > 0:
+            S_lag[tau] = S_lag[tau] / S_lag[tau].max()
+    return S_lag
+
+
+def eval_pcmci_plus(X, G_lag, max_lag=3):
+    try:
+        from baselines.pcmci_wrapper import pcmci_plus_causality_matrix
+        S_agg = pcmci_plus_causality_matrix(X, tau_max=max_lag, pc_alpha=0.05)
+        return evaluate_lagged_scores(
+            _broadcast_aggregate_to_lag(S_agg, max_lag), G_lag
+        ).get("flat_lag_auroc", 0.5)
+    except Exception as e:
+        print(f"      PCMCI+ error: {e}")
+        return 0.5
+
+
+def eval_dynotears(X, G_lag, max_lag=3):
+    try:
+        from baselines.dynotears import dynotears_causality_matrix
+        S_agg = dynotears_causality_matrix(X, max_lag=max_lag)
+        return evaluate_lagged_scores(
+            _broadcast_aggregate_to_lag(S_agg, max_lag), G_lag
+        ).get("flat_lag_auroc", 0.5)
+    except Exception as e:
+        print(f"      DYNOTEARS error: {e}")
+        return 0.5
+
+
+def eval_var_lingam(X, G_lag, max_lag=3):
+    try:
+        from baselines.lingam_wrapper import var_lingam_causality_matrix
+        S_agg = var_lingam_causality_matrix(X, max_lag=max_lag)
+        return evaluate_lagged_scores(
+            _broadcast_aggregate_to_lag(S_agg, max_lag), G_lag
+        ).get("flat_lag_auroc", 0.5)
+    except Exception as e:
+        print(f"      VAR-LiNGAM error: {e}")
+        return 0.5
+
+
 # ═══════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════
@@ -206,6 +252,7 @@ def run_causal_baselines(
     epochs=80,
     device="cpu",
     save_dir="results/causal_baselines",
+    include_modern_baselines=False,
 ):
     os.makedirs(save_dir, exist_ok=True)
     total_start = time.time()
@@ -223,6 +270,12 @@ def run_causal_baselines(
         "PCMCI": lambda X, G: eval_pcmci(X, G, max_lag),
         "Granger": lambda X, G: eval_granger(X, G, max_lag),
     }
+    if include_modern_baselines:
+        methods.update({
+            "PCMCI+": lambda X, G: eval_pcmci_plus(X, G, max_lag),
+            "DYNOTEARS": lambda X, G: eval_dynotears(X, G, max_lag),
+            "VAR-LiNGAM": lambda X, G: eval_var_lingam(X, G, max_lag),
+        })
 
     all_results = {}
 
@@ -354,6 +407,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--save-dir", default="results/causal_baselines")
     parser.add_argument("--quick", action="store_true")
+    parser.add_argument("--modern-baselines", action="store_true")
     args = parser.parse_args()
 
     if args.quick:
@@ -373,4 +427,5 @@ if __name__ == "__main__":
         epochs=args.epochs,
         device=args.device,
         save_dir=args.save_dir,
+        include_modern_baselines=args.modern_baselines,
     )
