@@ -219,37 +219,42 @@ a standard benchmark in the recent neural-causal-discovery
 literature~\citep{tank2021neural,nauta2019causal}. We deliberately
 exclude the ENSO$\leftrightarrow$SOI pair from climate ground truth
 because SOI and the Niño 3.4 SST anomaly are the same physical signal
-with opposite sign, not a causal edge. The SSM bottleneck \emph{does}
-top the climate column at $0.820 \pm 0.021$ (5 seeds), but as we show
-in the next paragraph that ranking is unstable: with only three
-positive edges over $K{=}6$, small ground-truth choices reorder the
-entire column. On Lorenz-96, where ground truth is unambiguous,
-\emph{PCMCI and bivariate Granger dominate} (0.986, 0.979); the lagged
-bottleneck trails at $0.916$ and the SSM bottleneck is worst at
-$0.722 \pm 0.031$ (5 seeds).
+with opposite sign, not a causal edge. Climate rankings are unstable:
+VAR-LiNGAM tops the expanded table at $0.901$, while the SSM
+bottleneck remains near the top at $0.820 \pm 0.021$ (5 seeds). As we
+show in the next paragraph, with only three positive edges over
+$K{=}6$, small ground-truth choices reorder the entire column. On
+Lorenz-96, where ground truth is unambiguous, \emph{PCMCI, DYNOTEARS,
+bivariate Granger, VAR-LiNGAM, and tuned linear models dominate}
+(0.986, 0.983, 0.979, 0.968, and 0.974); the lagged bottleneck trails
+at $0.916$ and the SSM bottleneck is worst at $0.722 \pm 0.031$ (5
+seeds).
 
 \begin{table}[t]
 \centering
 \small
 \caption{AUROC on three real/benchmark datasets. The Weight-Proj (SSM)
 row reports mean $\pm$ std over 5 training seeds; the lagged
-bottleneck row uses a single seed; the four classical methods are
-deterministic. On the clean Lorenz-96 benchmark, classical causal
-methods lead by a wide margin; the bottleneck tops only the climate
-column, which has weak ground truth (3 edges, $K{=}6$) and unstable
-rankings (Table~\ref{tab:gt_flip}).}
+bottleneck row uses a single seed; non-SSM baselines use deterministic
+or default runs. On the clean Lorenz-96 benchmark, classical and modern
+causal baselines lead by a wide margin; the climate column has weak
+ground truth (3 edges, $K{=}6$) and unstable rankings
+(Table~\ref{tab:gt_flip}).}
 \label{tab:real}
 \begin{tabular}{lccc}
 \toprule
 Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
  & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
 \midrule
-Weight-Proj (SSM, 5 seeds) & $\mathbf{0.820 \pm 0.021}$ & $0.447 \pm 0.033$ & $0.722 \pm 0.031$ \\
+Weight-Proj (SSM, 5 seeds) & $0.820 \pm 0.021$ & $0.447 \pm 0.033$ & $0.722 \pm 0.031$ \\
 PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
 Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
 Lagged Bottleneck & $0.617$ & $0.484$ & $0.916$ \\
 Tuned Ridge & $0.617$ & $\mathbf{0.696}$ & $0.974$ \\
 Bivariate Granger & $0.605$ & $0.498$ & $0.979$ \\
+PCMCI+ & $0.432$ & $0.413$ & $0.669$ \\
+DYNOTEARS & $0.722$ & $0.591$ & $0.983$ \\
+VAR-LiNGAM & $\mathbf{0.901}$ & $0.552$ & $0.968$ \\
 \bottomrule
 \end{tabular}
 \end{table}

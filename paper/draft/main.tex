@@ -263,10 +263,11 @@ bivariate Granger ties for the top spot on climate; under the
 honest ground truth, \emph{Granger drops to the bottom} and the
 bottleneck drops to the middle.
 
-\paragraph{Results.} On climate the SSM bottleneck is, surprisingly,
-the top method ($0.820 \pm 0.021$ over five seeds) — but this is against soft ground truth
+\paragraph{Results.} On climate, VAR-LiNGAM tops the expanded table
+at $0.901$ while the SSM bottleneck remains near the top at
+$0.820 \pm 0.021$ over five seeds — but this is against soft ground truth
 with only 3 edges over $K{=}6$, where small changes move AUROC
-substantially; we do not read this as a causal-discovery claim. On
+substantially; we do not read either as a causal-discovery claim. On
 finance, Ridge wins decisively (0.696) and all other methods are at
 or below chance (including the SSM bottleneck at $0.447 \pm 0.033$), consistent with
 sector-ETF returns admitting no straightforward lagged causal
@@ -282,22 +283,25 @@ clean ground truth.
 \small
 \caption{AUROC on three real/benchmark datasets. The Weight-Proj (SSM)
 row reports mean $\pm$ std over 5 training seeds; the lagged bottleneck
-row uses a single seed. The bottleneck tops only climate, where ground
-truth is weak (3 edges, $K{=}6$) and AUROC is sensitive to individual
-edge choices; on the clean Lorenz-96 benchmark, classical causal
-methods lead by a wide margin.}
+row uses a single seed; non-SSM baselines use deterministic/default
+runs. Climate ground truth is weak (3 edges, $K{=}6$) and AUROC is
+sensitive to individual edge choices; on the clean Lorenz-96 benchmark,
+classical and modern causal methods lead by a wide margin.}
 \label{tab:real}
 \begin{tabular}{lccc}
 \toprule
 Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
  & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
 \midrule
-Weight-Proj (SSM, 5 seeds) & $\mathbf{0.820 \pm 0.021}$ & $0.447 \pm 0.033$ & $0.722 \pm 0.031$ \\
+Weight-Proj (SSM, 5 seeds) & $0.820 \pm 0.021$ & $0.447 \pm 0.033$ & $0.722 \pm 0.031$ \\
 PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
 Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
 Lagged Bottleneck & $0.617$ & $0.484$ & $0.916$ \\
 Tuned Ridge & $0.617$ & $\mathbf{0.696}$ & $0.974$ \\
 Bivariate Granger & $0.605$ & $0.498$ & $0.979$ \\
+PCMCI+ & $0.432$ & $0.413$ & $0.669$ \\
+DYNOTEARS & $0.722$ & $0.591$ & $0.983$ \\
+VAR-LiNGAM & $\mathbf{0.901}$ & $0.552$ & $0.968$ \\
 \bottomrule
 \end{tabular}
 \end{table}

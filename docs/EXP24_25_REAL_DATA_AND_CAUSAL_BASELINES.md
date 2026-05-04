@@ -48,32 +48,37 @@ benchmark used by Tank et al.~(2022) and Nauta et al.~(2019).
 ### Results (AUROC, 40-epoch SSM, deterministic non-SSM methods)
 
 The Weight-Proj (SSM) row reports mean ± std over 5 training seeds.
-The lagged bottleneck row uses a single seed.
+The lagged bottleneck row uses a single seed. Non-SSM baselines are
+deterministic/default runs; PCMCI+, DYNOTEARS, and VAR-LiNGAM require
+the optional modern-baseline dependencies.
 
 | Method | Climate (K=6, T=757, 3 edges) | Finance (K=10, T=1893, 6 edges) | Lorenz-96 (K=10, T=1500, 30 edges) |
 |---|---|---|---|
-| Weight-Proj (SSM, 5 seeds) | **0.820 ± 0.021** | 0.447 ± 0.033 | 0.722 ± 0.031 |
+| Weight-Proj (SSM, 5 seeds) | 0.820 ± 0.021 | 0.447 ± 0.033 | 0.722 ± 0.031 |
 | PCMCI | 0.704 | 0.510 | **0.986** |
 | Tuned Lasso | 0.630 | 0.500 | 0.974 |
 | Lagged Bottleneck | 0.617 | 0.484 | 0.916 |
 | Tuned Ridge | 0.617 | **0.696** | 0.974 |
 | Bivariate Granger | 0.605 | 0.498 | 0.979 |
+| PCMCI+ | 0.432 | 0.413 | 0.669 |
+| DYNOTEARS | 0.722 | 0.591 | 0.983 |
+| VAR-LiNGAM | **0.901** | 0.552 | 0.968 |
 
 ### Interpretation
 
-1. **Climate with honest ground truth**: all methods sit in a narrow
-   band (0.60-0.86 AUROC) and rankings are unstable because there
-   are only 3 positive edges over $K=6$. The SSM bottleneck tops the
-   table but we do not read this as a causal-discovery claim; it is
-   likely sensitive to the particular three edges we chose.
+1. **Climate with honest ground truth**: rankings are unstable because
+   there are only 3 positive edges over $K=6$. VAR-LiNGAM tops the
+   expanded table, while the SSM bottleneck remains near the top; we do
+   not read either as a causal-discovery claim.
 2. **Finance**: Ridge wins (0.696); most methods are at or below
    chance. ETF daily returns admit no clean lagged causal structure,
    consistent with efficient-markets behavior at the daily scale.
 3. **Lorenz-96 with clean ground truth**: classical causal methods
-   (PCMCI 0.986, Granger 0.979) dominate; tuned Lasso/Ridge nearly
-   match them (0.974); the lagged bottleneck trails at 0.916 and the
-   SSM bottleneck is worst at 0.722 ± 0.031. **On the only dataset where
-   ground truth is unambiguous, the bottleneck is not competitive.**
+   (PCMCI 0.986, DYNOTEARS 0.983, Granger 0.979, VAR-LiNGAM 0.968)
+   dominate; tuned Lasso/Ridge nearly match them (0.974); the lagged
+   bottleneck trails at 0.916 and the SSM bottleneck is worst at
+   0.722 ± 0.031. **On the only dataset where ground truth is
+   unambiguous, the bottleneck is not competitive.**
 
 ### Effect of the 2026-04-16 → 2026-04-17 ground-truth correction on climate
 

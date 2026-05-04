@@ -261,18 +261,21 @@ On tigramite CauseMe-style processes the gap **widens** with K: tuned Lasso reac
 
 ### 8.3 F3 — Real Data: Not Competitive on the Clean Benchmark
 
-AUROC on three datasets of progressively cleaner ground truth. Weight-Proj (SSM) reports mean ± std over 5 training seeds; the Lagged Bottleneck row uses a single seed; the four classical methods are deterministic.
+AUROC on three datasets of progressively cleaner ground truth. Weight-Proj (SSM) reports mean ± std over 5 training seeds; Lagged Bottleneck uses a single seed; non-SSM baselines are deterministic/default runs.
 
 | Method | Climate (NOAA, K=6, T=757) | Finance (ETFs, K=10, T=1893) | Lorenz-96 (K=10, T=1500) |
 |---|---:|---:|---:|
-| **Weight-Proj (SSM, 5 seeds)** | **0.820 ± 0.021** | 0.447 ± 0.033 | 0.722 ± 0.031 |
+| Weight-Proj (SSM, 5 seeds) | 0.820 ± 0.021 | 0.447 ± 0.033 | 0.722 ± 0.031 |
 | PCMCI | 0.704 | 0.510 | **0.986** |
 | Tuned Lasso | 0.630 | 0.500 | 0.974 |
 | Lagged Bottleneck | 0.617 | 0.484 | 0.916 |
 | Tuned Ridge | 0.617 | **0.696** | 0.974 |
 | Bivariate Granger | 0.605 | 0.498 | 0.979 |
+| PCMCI+ | 0.432 | 0.413 | 0.669 |
+| DYNOTEARS | 0.722 | 0.591 | 0.983 |
+| VAR-LiNGAM | **0.901** | 0.552 | 0.968 |
 
-**Reading:** the bottleneck tops only the climate column, where ground truth is weak (3 edges, K=6). On the clean Lorenz-96 benchmark — the only one with mathematically unambiguous ground truth — classical PCMCI and Granger lead a tight cluster in which the bottleneck **trails by ~0.25 AUROC**.
+**Reading:** the climate column is unstable enough that VAR-LiNGAM moves ahead of the bottleneck once modern optional baselines are included. On the clean Lorenz-96 benchmark — the only one with mathematically unambiguous ground truth — classical/modern causal baselines lead a tight cluster in which the bottleneck **trails by ~0.25 AUROC**.
 
 ### 8.4 F3 sensitivity — Ground-Truth Choices Reverse the Climate Ranking
 
