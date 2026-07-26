@@ -21,8 +21,10 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Results (regenerable)
-results/
+# Results (regenerable), except compact corrected workshop evidence.
+results/*
+!results/corrected_workshop/
+!results/corrected_workshop/**
 
 # Data (downloaded, not committed)
 data/climate_raw/

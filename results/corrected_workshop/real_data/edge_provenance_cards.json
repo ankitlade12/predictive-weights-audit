@@ -1,0 +1,103 @@
+{
+  "climate": {
+    "causal": [
+      {
+        "edge": "ENSO -> PNA",
+        "target": "PNA",
+        "source": "ENSO",
+        "label": "causal",
+        "group": "teleconnection",
+        "rationale": "ENSO teleconnection drives PNA variability.",
+        "reference": "Trenberth & Hurrell 1994"
+      },
+      {
+        "edge": "ENSO -> PDO",
+        "target": "PDO",
+        "source": "ENSO",
+        "label": "causal",
+        "group": "teleconnection",
+        "rationale": "ENSO modulates PDO phase transitions.",
+        "reference": "Newman et al. 2016"
+      },
+      {
+        "edge": "NAO -> AMO",
+        "target": "AMO",
+        "source": "NAO",
+        "label": "causal",
+        "group": "teleconnection",
+        "rationale": "NAO drives Atlantic SST patterns.",
+        "reference": "Delworth & Mann 2000"
+      }
+    ],
+    "definitional": [
+      {
+        "edge": "ENSO -> SOI",
+        "target": "SOI",
+        "source": "ENSO",
+        "label": "definitional",
+        "group": "enso_soi",
+        "rationale": "SOI and Nino 3.4 index the same ENSO signal with opposite sign."
+      },
+      {
+        "edge": "SOI -> ENSO",
+        "target": "ENSO",
+        "source": "SOI",
+        "label": "definitional",
+        "group": "enso_soi",
+        "rationale": "SOI and Nino 3.4 index the same ENSO signal with opposite sign."
+      }
+    ]
+  },
+  "finance": {
+    "soft": [
+      {
+        "edge": "XLE -> XLB",
+        "target": "XLB",
+        "source": "XLE",
+        "label": "soft",
+        "group": "sector_lead_lag",
+        "rationale": "Energy affects materials input costs."
+      },
+      {
+        "edge": "XLE -> XLI",
+        "target": "XLI",
+        "source": "XLE",
+        "label": "soft",
+        "group": "sector_lead_lag",
+        "rationale": "Energy affects industrial input costs."
+      },
+      {
+        "edge": "XLF -> XLRE",
+        "target": "XLRE",
+        "source": "XLF",
+        "label": "soft",
+        "group": "sector_lead_lag",
+        "rationale": "Financials proxy rate conditions for real estate."
+      },
+      {
+        "edge": "XLF -> XLU",
+        "target": "XLU",
+        "source": "XLF",
+        "label": "soft",
+        "group": "sector_lead_lag",
+        "rationale": "Financials proxy rate conditions for utilities."
+      },
+      {
+        "edge": "XLK -> XLC",
+        "target": "XLC",
+        "source": "XLK",
+        "label": "soft",
+        "group": "sector_lead_lag",
+        "rationale": "Technology can lead communication services."
+      },
+      {
+        "edge": "XLY -> XLP",
+        "target": "XLP",
+        "source": "XLY",
+        "label": "soft",
+        "group": "sector_lead_lag",
+        "rationale": "Discretionary spending shifts can lead staples."
+      }
+    ]
+  }
+}

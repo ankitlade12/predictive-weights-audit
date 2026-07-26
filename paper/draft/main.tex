@@ -365,19 +365,13 @@ Intervention type & Significant configs & Mean gap (AUROC) \\
 \end{tabular}
 \end{table}
 
-\paragraph{Control 3 (Exp 25): method-agnosticity.}
-The residual effect is not unique to the bottleneck. When we add
-PCMCI and bivariate Granger to the same size-matched control, the
-bottleneck shows a significant size-matched intervention gain
-($+0.026$ to $+0.054$, $p < 10^{-3}$ across $K \in \{10, 20, 30\}$),
-\emph{but so does Granger}, with larger effect sizes at higher $K$
-($+0.040$ at $K=20$, $+0.095$ at $K=30$, same significance).
-Lasso uniquely does not benefit and is hurt at low $K$, consistent
-with per-equation regression breaking under target corruption.
-PCMCI hovers near random. Bottom line: the intervention effect,
-insofar as it survives controls, is method-agnostic and matches a
-target-corruption-robustness story rather than a
-causal-structure-extraction one.
+\paragraph{Control 3 (Exp 25): method contrast.}
+The corrected target-aware, size-matched analysis finds positive
+within-method gains for Bottleneck, Lasso, PCMCI, and Granger at
+$K\in\{10,20\}$. A direct exploratory Granger-minus-Bottleneck paired
+contrast is null at $K=10$ and positive at $K=20$ after Holm correction.
+Thus the effect is not bottleneck-specific, but the evidence also does not
+support method invariance or the earlier target-corruption story.
 
 % ============================================================
 \section{What Survives}
@@ -446,11 +440,11 @@ We set out to find a free causal discovery method hiding inside
 prediction bottlenecks and could not. The headline effects that
 initially looked promising either do not replicate under size-matched
 controls, are specific to a non-standard intervention scheme, or are
-method-agnostic once real causal baselines are tested. What survives
-is a narrow set of characterization findings about when bottleneck
-and sparse regression behave similarly versus when they diverge, and
-a reusable experimental scaffold for others who want to try the same
-project without repeating the same confounds.
+shared by multiple methods without being invariant across them. What
+survives is a narrow set of characterization findings about when
+bottleneck and sparse regression behave similarly versus when they
+diverge, and a reusable experimental scaffold for others who want to
+try the same project without repeating the same confounds.
 
 We have deliberately left the positive framing out of the title.
 The contribution is the falsification, honestly reported.

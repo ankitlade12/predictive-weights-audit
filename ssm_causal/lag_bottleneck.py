@@ -15,6 +15,7 @@ where tau=0 corresponds to lag 1.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -22,7 +23,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.linear_model import LinearRegression, MultiTaskLasso, Ridge
+from sklearn.linear_model import Lasso, LinearRegression, MultiTaskLasso, Ridge
 from sklearn.metrics import auc, precision_recall_curve, roc_auc_score
 
 from .lag_extraction import lag_score_to_aggregate
@@ -41,10 +42,38 @@ def _as_float_tensor(X: ArrayLike, device: str) -> torch.Tensor:
     return tensor.to(device)
 
 
+def _validate_segment_lengths(
+    segment_lengths: Sequence[int],
+    total_length: int,
+    max_lag: int,
+) -> list[int]:
+    lengths_array = np.asarray(segment_lengths)
+    if lengths_array.ndim != 1:
+        raise ValueError("segment_lengths must be one-dimensional.")
+    if (
+        np.issubdtype(lengths_array.dtype, np.bool_)
+        or not np.issubdtype(lengths_array.dtype, np.number)
+        or np.issubdtype(lengths_array.dtype, np.complexfloating)
+        or not np.all(np.isfinite(lengths_array))
+        or not np.all(lengths_array == np.floor(lengths_array))
+    ):
+        raise ValueError("segment_lengths must contain integer-like values.")
+
+    lengths = lengths_array.astype(np.int64).tolist()
+    if any(length <= 0 for length in lengths):
+        raise ValueError("segment_lengths must contain positive lengths.")
+    if sum(lengths) != total_length:
+        raise ValueError("segment_lengths must sum to T.")
+    if any(length <= max_lag for length in lengths):
+        raise ValueError("Each segment must have more rows than max_lag.")
+    return lengths
+
+
 def make_lagged_dataset(
     X: ArrayLike,
     max_lag: int,
     device: str = "cpu",
+    segment_lengths: Sequence[int] | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Convert a time series into supervised lagged examples.
@@ -52,9 +81,13 @@ def make_lagged_dataset(
     Feature order is lag-major:
         [x[t-1], x[t-2], ..., x[t-max_lag]]
 
+    When segment_lengths is provided, each segment is windowed independently.
+
     Returns:
-        features: [T - max_lag, max_lag * K]
-        targets: [T - max_lag, K]
+        features: [N, max_lag * K]
+        targets: [N, K]
+        where N is T - max_lag for one trajectory, or the sum of
+        (segment_length - max_lag) across segments.
     """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1.")
@@ -67,13 +100,63 @@ def make_lagged_dataset(
     if T <= max_lag:
         raise ValueError("Need more timesteps than max_lag.")
 
-    lagged_blocks = [
-        X_tensor[max_lag - lag - 1 : T - lag - 1]
-        for lag in range(max_lag)
-    ]
-    features = torch.cat(lagged_blocks, dim=1)
-    targets = X_tensor[max_lag:T]
-    return features, targets
+    if segment_lengths is None:
+        lengths = [T]
+    else:
+        lengths = _validate_segment_lengths(segment_lengths, T, max_lag)
+
+    feature_chunks = []
+    target_chunks = []
+    start = 0
+    for length in lengths:
+        segment = X_tensor[start : start + length]
+        lagged_blocks = [segment[max_lag - lag - 1 : length - lag - 1] for lag in range(max_lag)]
+        feature_chunks.append(torch.cat(lagged_blocks, dim=1))
+        target_chunks.append(segment[max_lag:length])
+        start += length
+
+    return torch.cat(feature_chunks, dim=0), torch.cat(target_chunks, dim=0)
+
+
+def _validate_target_valid_mask(
+    target_valid_mask: ArrayLike,
+    total_length: int,
+    n_variables: int,
+) -> np.ndarray:
+    mask = np.asarray(target_valid_mask)
+    if mask.dtype != np.bool_ or mask.shape != (total_length, n_variables):
+        raise ValueError("target_valid_mask must be boolean with shape [T, K].")
+    if not np.all(mask.any(axis=0)):
+        raise ValueError("Each target must have at least one valid outcome.")
+    return mask
+
+
+def make_lagged_target_mask(
+    target_valid_mask: ArrayLike,
+    max_lag: int,
+    device: str = "cpu",
+    segment_lengths: Sequence[int] | None = None,
+) -> torch.Tensor:
+    """Align a full-length target-valid mask to segment-safe prediction rows."""
+    mask = np.asarray(target_valid_mask)
+    if mask.ndim != 2:
+        raise ValueError("target_valid_mask must have shape [T, K].")
+    validated = _validate_target_valid_mask(mask, mask.shape[0], mask.shape[1])
+    lengths = (
+        [len(mask)]
+        if segment_lengths is None
+        else _validate_segment_lengths(segment_lengths, len(mask), max_lag)
+    )
+    chunks = []
+    start = 0
+    for length in lengths:
+        chunks.append(validated[start + max_lag : start + length])
+        start += length
+    return torch.as_tensor(
+        np.concatenate(chunks),
+        dtype=torch.bool,
+        device=device,
+    )
 
 
 def normalize_lagged_score(
@@ -234,6 +317,10 @@ def fit_lagged_linear_baseline(
     rank: int | None = None,
     X_test: ArrayLike | None = None,
     normalize: NormalizeMode = "global",
+    train_segment_lengths: Sequence[int] | None = None,
+    test_segment_lengths: Sequence[int] | None = None,
+    train_target_valid_mask: ArrayLike | None = None,
+    test_target_valid_mask: ArrayLike | None = None,
 ) -> LaggedLinearBaselineResult:
     """
     Fit a standard lagged linear baseline and extract lag-specific coefficients.
@@ -242,9 +329,23 @@ def fit_lagged_linear_baseline(
     Ridge produce the same score tensor, the method claim has to be framed as a
     bottleneck factorization/low-rank variant rather than a new estimator.
     """
-    train_features, train_targets = make_lagged_dataset(X_train, max_lag=max_lag, device="cpu")
+    train_features, train_targets = make_lagged_dataset(
+        X_train,
+        max_lag=max_lag,
+        device="cpu",
+        segment_lengths=train_segment_lengths,
+    )
     X_np = train_features.detach().cpu().numpy()
     y_np = train_targets.detach().cpu().numpy()
+    lagged_train_mask = None
+    if train_target_valid_mask is not None:
+        if method == "rrr":
+            raise ValueError("RRR does not support target-valid masks.")
+        lagged_train_mask = make_lagged_target_mask(
+            train_target_valid_mask,
+            max_lag=max_lag,
+            segment_lengths=train_segment_lengths,
+        ).numpy()
 
     params: dict[str, float | int | str] = {"method": method}
 
@@ -259,7 +360,7 @@ def fit_lagged_linear_baseline(
         coef_for_score = coefficients.T
         train_pred = _predict_from_coefficients(X_np, coefficients, intercept)
         params.update({"alpha": alpha, "rank": effective_rank})
-    elif method in {"ols", "ridge", "lasso"}:
+    elif method in {"ols", "ridge", "lasso"} and lagged_train_mask is None:
         if method == "ols":
             estimator = LinearRegression()
             params["alpha"] = 0.0
@@ -273,21 +374,74 @@ def fit_lagged_linear_baseline(
         estimator.fit(X_np, y_np)
         coef_for_score = estimator.coef_
         train_pred = estimator.predict(X_np)
+    elif method in {"ols", "ridge", "lasso"}:
+        estimators = []
+        coefficient_rows = []
+        train_pred = np.empty_like(y_np)
+        for target in range(y_np.shape[1]):
+            valid_rows = lagged_train_mask[:, target]
+            if method == "ols":
+                target_estimator = LinearRegression()
+                params["alpha"] = 0.0
+            elif method == "ridge":
+                target_estimator = Ridge(alpha=alpha)
+                params["alpha"] = alpha
+            else:
+                target_estimator = Lasso(
+                    alpha=alpha,
+                    max_iter=10_000,
+                    random_state=0,
+                )
+                params["alpha"] = alpha
+            target_estimator.fit(
+                X_np[valid_rows],
+                y_np[valid_rows, target],
+            )
+            estimators.append(target_estimator)
+            coefficient_rows.append(target_estimator.coef_)
+            train_pred[:, target] = target_estimator.predict(X_np)
+        coef_for_score = np.stack(coefficient_rows)
     else:
         raise ValueError(f"Unknown lagged linear baseline: {method}")
 
-    train_mse = float(np.mean((train_pred - y_np) ** 2))
+    squared_train_error = (train_pred - y_np) ** 2
+    train_mse = float(
+        squared_train_error.mean()
+        if lagged_train_mask is None
+        else squared_train_error[lagged_train_mask].mean()
+    )
 
     test_mse = None
     if X_test is not None:
-        test_features, test_targets = make_lagged_dataset(X_test, max_lag=max_lag, device="cpu")
+        test_features, test_targets = make_lagged_dataset(
+            X_test,
+            max_lag=max_lag,
+            device="cpu",
+            segment_lengths=test_segment_lengths,
+        )
         X_test_np = test_features.detach().cpu().numpy()
         y_test_np = test_targets.detach().cpu().numpy()
+        lagged_test_mask = None
+        if test_target_valid_mask is not None:
+            lagged_test_mask = make_lagged_target_mask(
+                test_target_valid_mask,
+                max_lag=max_lag,
+                segment_lengths=test_segment_lengths,
+            ).numpy()
         if method == "rrr":
             test_pred = _predict_from_coefficients(X_test_np, coefficients, intercept)
+        elif lagged_train_mask is not None:
+            test_pred = np.column_stack(
+                [target_estimator.predict(X_test_np) for target_estimator in estimators]
+            )
         else:
             test_pred = estimator.predict(X_test_np)
-        test_mse = float(np.mean((test_pred - y_test_np) ** 2))
+        squared_test_error = (test_pred - y_test_np) ** 2
+        test_mse = float(
+            squared_test_error.mean()
+            if lagged_test_mask is None
+            else squared_test_error[lagged_test_mask].mean()
+        )
 
     score = _coefficient_matrix_to_lag_score(
         coef_for_score,
@@ -313,6 +467,10 @@ def fit_tuned_lagged_linear_baseline(
     validation_fraction: float = 0.25,
     X_test: ArrayLike | None = None,
     normalize: NormalizeMode = "global",
+    segment_lengths: Sequence[int] | None = None,
+    test_segment_lengths: Sequence[int] | None = None,
+    target_valid_mask: ArrayLike | None = None,
+    test_target_valid_mask: ArrayLike | None = None,
 ) -> LaggedLinearBaselineResult:
     """
     Tune a lagged linear baseline by validation prediction MSE, then refit.
@@ -321,7 +479,27 @@ def fit_tuned_lagged_linear_baseline(
     """
     X_array = np.asarray(X_train, dtype=np.float32)
     min_len = max_lag + 2
-    if X_array.shape[0] < 2 * min_len:
+    validated_segment_lengths = None
+    if segment_lengths is not None:
+        validated_segment_lengths = _validate_segment_lengths(
+            segment_lengths,
+            X_array.shape[0],
+            max_lag,
+        )
+    validated_target_mask = None
+    if target_valid_mask is not None:
+        validated_target_mask = _validate_target_valid_mask(
+            target_valid_mask,
+            X_array.shape[0],
+            X_array.shape[1],
+        )
+        if method == "rrr":
+            raise ValueError("RRR does not support target-valid masks.")
+
+    if (validated_segment_lengths is None and X_array.shape[0] < 2 * min_len) or (
+        validated_segment_lengths is not None
+        and any(length < 2 * min_len for length in validated_segment_lengths)
+    ):
         if method == "rrr":
             return fit_lagged_linear_baseline(
                 X_train,
@@ -331,6 +509,10 @@ def fit_tuned_lagged_linear_baseline(
                 rank=rank_values[0],
                 X_test=X_test,
                 normalize=normalize,
+                train_segment_lengths=validated_segment_lengths,
+                test_segment_lengths=test_segment_lengths,
+                train_target_valid_mask=validated_target_mask,
+                test_target_valid_mask=test_target_valid_mask,
             )
         return fit_lagged_linear_baseline(
             X_train,
@@ -339,22 +521,56 @@ def fit_tuned_lagged_linear_baseline(
             alpha=alpha_values[0],
             X_test=X_test,
             normalize=normalize,
+            train_segment_lengths=validated_segment_lengths,
+            test_segment_lengths=test_segment_lengths,
+            train_target_valid_mask=validated_target_mask,
+            test_target_valid_mask=test_target_valid_mask,
         )
 
-    split = int(X_array.shape[0] * (1.0 - validation_fraction))
-    split = min(max(split, min_len), X_array.shape[0] - min_len)
-    fit_segment = X_array[:split]
-    validation_segment = X_array[split:]
+    fit_segment_lengths = None
+    validation_segment_lengths = None
+    if validated_segment_lengths is None:
+        split = int(X_array.shape[0] * (1.0 - validation_fraction))
+        split = min(max(split, min_len), X_array.shape[0] - min_len)
+        fit_segment = X_array[:split]
+        validation_segment = X_array[split:]
+        fit_target_mask = None if validated_target_mask is None else validated_target_mask[:split]
+        validation_target_mask = (
+            None if validated_target_mask is None else validated_target_mask[split:]
+        )
+    else:
+        fit_chunks = []
+        validation_chunks = []
+        fit_segment_lengths = []
+        validation_segment_lengths = []
+        fit_mask_chunks = []
+        validation_mask_chunks = []
+        start = 0
+        for length in validated_segment_lengths:
+            split = int(length * (1.0 - validation_fraction))
+            split = min(max(split, min_len), length - min_len)
+            segment = X_array[start : start + length]
+            fit_chunks.append(segment[:split])
+            validation_chunks.append(segment[split:])
+            fit_segment_lengths.append(split)
+            validation_segment_lengths.append(length - split)
+            if validated_target_mask is not None:
+                segment_mask = validated_target_mask[start : start + length]
+                fit_mask_chunks.append(segment_mask[:split])
+                validation_mask_chunks.append(segment_mask[split:])
+            start += length
+        fit_segment = np.concatenate(fit_chunks, axis=0)
+        validation_segment = np.concatenate(validation_chunks, axis=0)
+        fit_target_mask = None if validated_target_mask is None else np.concatenate(fit_mask_chunks)
+        validation_target_mask = (
+            None if validated_target_mask is None else np.concatenate(validation_mask_chunks)
+        )
 
     candidates = [(0.0, None)] if method == "ols" else []
     if method in {"ridge", "lasso"}:
         candidates = [(float(alpha), None) for alpha in alpha_values]
     elif method == "rrr":
-        candidates = [
-            (float(alpha), int(rank))
-            for alpha in alpha_values
-            for rank in rank_values
-        ]
+        candidates = [(float(alpha), int(rank)) for alpha in alpha_values for rank in rank_values]
     elif method != "ols":
         raise ValueError(f"Unknown lagged linear baseline: {method}")
 
@@ -369,6 +585,10 @@ def fit_tuned_lagged_linear_baseline(
             rank=rank,
             X_test=validation_segment,
             normalize=normalize,
+            train_segment_lengths=fit_segment_lengths,
+            test_segment_lengths=validation_segment_lengths,
+            train_target_valid_mask=fit_target_mask,
+            test_target_valid_mask=validation_target_mask,
         )
         validation_mse = result.test_prediction_mse
         if validation_mse is not None and validation_mse < best_validation_mse:
@@ -391,6 +611,10 @@ def fit_tuned_lagged_linear_baseline(
         rank=best_rank,
         X_test=X_test,
         normalize=normalize,
+        train_segment_lengths=validated_segment_lengths,
+        test_segment_lengths=test_segment_lengths,
+        train_target_valid_mask=validated_target_mask,
+        test_target_valid_mask=test_target_valid_mask,
     )
     refit_result.params = dict(refit_result.params or {})
     refit_result.params["validation_mse"] = best_validation_mse
@@ -472,12 +696,8 @@ def evaluate_lagged_scores(
         "aggregate_f1": float(aggregate_metrics["f1"]),
         "flat_lag_auroc": flat_metrics["auroc"],
         "flat_lag_auprc": flat_metrics["auprc"],
-        "per_lag_auroc_mean": (
-            float(np.mean(per_lag_aurocs)) if per_lag_aurocs else float("nan")
-        ),
-        "per_lag_auroc_std": (
-            float(np.std(per_lag_aurocs)) if per_lag_aurocs else float("nan")
-        ),
+        "per_lag_auroc_mean": (float(np.mean(per_lag_aurocs)) if per_lag_aurocs else float("nan")),
+        "per_lag_auroc_std": (float(np.std(per_lag_aurocs)) if per_lag_aurocs else float("nan")),
         "edge_lag_top1_acc": (
             float(np.mean(true_edge_lag_hits)) if true_edge_lag_hits else float("nan")
         ),
@@ -523,8 +743,23 @@ class LaggedBottleneckTrainer:
         self,
         X: ArrayLike,
         verbose: bool = True,
+        segment_lengths: Sequence[int] | None = None,
+        target_valid_mask: ArrayLike | None = None,
     ) -> dict[str, list[float]]:
-        features, targets = make_lagged_dataset(X, self.model.max_lag, device=self.device)
+        features, targets = make_lagged_dataset(
+            X,
+            self.model.max_lag,
+            device=self.device,
+            segment_lengths=segment_lengths,
+        )
+        lagged_target_mask = None
+        if target_valid_mask is not None:
+            lagged_target_mask = make_lagged_target_mask(
+                target_valid_mask,
+                self.model.max_lag,
+                device=self.device,
+                segment_lengths=segment_lengths,
+            )
         n_examples = features.shape[0]
         steps_per_epoch = max(1, n_examples // self.config.batch_size)
 
@@ -542,7 +777,12 @@ class LaggedBottleneckTrainer:
                 batch_y = targets[idx]
 
                 pred = self.model(batch_x)
-                pred_loss = self.loss_fn(pred, batch_y)
+                if lagged_target_mask is None:
+                    pred_loss = self.loss_fn(pred, batch_y)
+                else:
+                    batch_mask = lagged_target_mask[idx]
+                    squared_error = (pred - batch_y).square()
+                    pred_loss = (squared_error * batch_mask).sum() / batch_mask.sum().clamp_min(1)
                 sparse_loss = (
                     self.model.input_proj.weight.abs().sum()
                     + self.model.output_proj.weight.abs().sum()
@@ -572,12 +812,35 @@ class LaggedBottleneckTrainer:
 
         return self.history
 
-    def prediction_mse(self, X: ArrayLike) -> float:
-        features, targets = make_lagged_dataset(X, self.model.max_lag, device=self.device)
+    def prediction_mse(
+        self,
+        X: ArrayLike,
+        segment_lengths: Sequence[int] | None = None,
+        target_valid_mask: ArrayLike | None = None,
+    ) -> float:
+        features, targets = make_lagged_dataset(
+            X,
+            self.model.max_lag,
+            device=self.device,
+            segment_lengths=segment_lengths,
+        )
+        lagged_target_mask = None
+        if target_valid_mask is not None:
+            lagged_target_mask = make_lagged_target_mask(
+                target_valid_mask,
+                self.model.max_lag,
+                device=self.device,
+                segment_lengths=segment_lengths,
+            )
         self.model.eval()
         with torch.no_grad():
             pred = self.model(features)
-            return float(F.mse_loss(pred, targets).item())
+            if lagged_target_mask is None:
+                return float(F.mse_loss(pred, targets).item())
+            squared_error = (pred - targets).square()
+            return float(
+                ((squared_error * lagged_target_mask).sum() / lagged_target_mask.sum()).item()
+            )
 
 
 def evaluate_lagged_bottleneck_model(
@@ -585,16 +848,37 @@ def evaluate_lagged_bottleneck_model(
     X: ArrayLike,
     G_lag: np.ndarray,
     device: str = "cpu",
+    segment_lengths: Sequence[int] | None = None,
+    target_valid_mask: ArrayLike | None = None,
 ) -> dict[str, float]:
     """Extract lag scores and report lag-recovery plus prediction metrics."""
     S_lag = extract_lagged_weight_score(model, normalize="global")
     metrics = evaluate_lagged_scores(S_lag, G_lag)
 
-    features, targets = make_lagged_dataset(X, model.max_lag, device=device)
+    features, targets = make_lagged_dataset(
+        X,
+        model.max_lag,
+        device=device,
+        segment_lengths=segment_lengths,
+    )
+    lagged_target_mask = None
+    if target_valid_mask is not None:
+        lagged_target_mask = make_lagged_target_mask(
+            target_valid_mask,
+            model.max_lag,
+            device=device,
+            segment_lengths=segment_lengths,
+        )
     model = model.to(device)
     model.eval()
     with torch.no_grad():
         pred = model(features)
-        metrics["prediction_mse"] = float(F.mse_loss(pred, targets).item())
+        if lagged_target_mask is None:
+            metrics["prediction_mse"] = float(F.mse_loss(pred, targets).item())
+        else:
+            squared_error = (pred - targets).square()
+            metrics["prediction_mse"] = float(
+                ((squared_error * lagged_target_mask).sum() / lagged_target_mask.sum()).item()
+            )
 
     return metrics

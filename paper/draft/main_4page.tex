@@ -1,7 +1,5 @@
-% Workshop submission, 4-page anonymous format
-% "Prediction Bottlenecks Don't Discover Causal Structure"
-% Trimmed from main.tex for the 4-page anonymous workshop format.
-
+% Anonymous workshop submission. References and appendices are excluded from
+% the five-page main-text limit.
 \documentclass{article}
 \usepackage{../neurips_2026}
 \usepackage[utf8]{inputenc}
@@ -9,331 +7,275 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{booktabs}
-\usepackage{amsfonts}
 \usepackage{microtype}
-\usepackage{graphicx}
-\usepackage{xcolor}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+\title{When Predictive Weights Look Causal:\\
+An Audit Protocol for Interpretability-Based Discovery}
 
-\title{Prediction Bottlenecks Don't Discover Causal Structure (But Here's What They Actually Do)}
-
-\author{%
-  Anonymous Author(s)\\
-  Affiliation\\
-  Address\\
-  \texttt{email}\\
-}
+\author{Anonymous Author(s)}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-A Mamba state-space model trained only for next-step prediction appears
-to recover Granger-causal structure through a simple readout
-$\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}|$, with
-early experiments suggesting the phenomenon generalized across
-architectures and benefited from interventional data at $p < 10^{-5}$.
-We package the protocol used to test that claim --- standardized
-synthetic generators, three intervention semantics, edge-provenance
-cards on three real datasets, and size-matched control arms --- as a
-reusable falsification benchmark, and walk the claim through it in
-five stages. The method-level claim does not survive: (i) a plain
-linear bottleneck does as well or better; (ii) tuned Lasso beats the
-bottleneck on synthetic CauseMe-style benchmarks, and on Lorenz-96
-(the only real benchmark with unambiguous ground truth) classical
-PCMCI and Granger lead a tight cluster in which the bottleneck
-trails; (iii) the headline intervention advantage is roughly $60\%$
-a sample-size confound, with the residual disappearing under standard
-$\text{do}(X = c)$ interventions and reproducing with a larger
-effect in classical bivariate Granger --- the effect is
-method-agnostic. What survives is a narrow characterization result;
-the benchmark is the lasting artifact.
+Predictive models can expose weight patterns that resemble scientific
+dependency graphs. We study one such candidate: the endpoint score
+$S=|W_{\mathrm{out}}W_{\mathrm{in}}|$ of a next-step time-series
+predictor. Rather than introduce another causal-discovery competitor, we ask
+which controls are required before a readable predictive weight can be
+interpreted causally. Correcting matrix orientation and matching lag horizons
+changes Lorenz-96 PCMCI AUROC from a previously reported $0.986$ to $0.839$.
+Real observational
+benchmarks provide only literature-derived climate labels or heuristic
+finance labels, whereas Lorenz-96 is a simulation with an exact graph.
+Target-aware intervention controls show small and semantics-dependent
+bottleneck differences; under random forcing, all four tested methods show
+positive gains, while a direct Granger--bottleneck contrast differs only at
+$K=20$. Finally,
+a pre-specified nonlinearity confirmation yields the same advantage at every
+nonlinearity level for one finite-sample setting and no advantage after
+doubling the sample size. The apparent ``nonlinear regime'' is therefore
+consistent with a finite-sample/dimensional regularization effect. Prior
+validated architecture controls found that endpoint scores recover planted
+dependencies in controlled processes, but a linear bottleneck matched or
+exceeded Mamba across all four reported datasets. Our contribution is a
+reusable falsification protocol and responsible-interpretation checklist for
+interpretability-based discovery. This negative study shows how plausible
+causal stories can survive repeated experiments yet fail under estimand,
+orientation, provenance, and baseline audits.
 \end{abstract}
 
-% ============================================================
 \section{Introduction}
-% ============================================================
 
-A natural hope in time-series modelling is that a forecaster trained only
-on next-step prediction will, as a byproduct, expose causal or dependency
-structure through its learned weights — \emph{causal discovery as a
-byproduct of prediction}. If true, every pretrained forecaster would
-double as a causal-discovery engine, complementing the dedicated
-machinery developed by classical causal discovery
-(PCMCI~\citep{runge2019pcmci}, DYNOTEARS~\citep{pamfil2020dynotears},
-neural Granger~\citep{tank2021neural,nauta2019causal}).
+A model explanation can be readable without identifying the data-generating
+mechanism. This distinction is especially important in time series, where
+predictive association, Granger predictability, intervention response, and
+structural causation answer different questions
+\citep{granger1969investigating,pearl2009causality}. Yet a compact weight
+pattern is tempting scientific evidence: it is cheap, visually interpretable,
+and available without fitting a dedicated causal model.
 
-This paper reports the result of taking that hope seriously. Our starting
-point was the observation that for a Mamba selective state-space
-model~\citep{gu2023mamba} trained for next-step MSE, the product
-$\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}|$ appears
-to recover Granger-causal graphs with high reliability on synthetic VAR
-benchmarks. Initial experiments suggested the phenomenon generalized
-across architectures, emerged from training rather than initialization,
-and — most provocatively — that interventional data amplified the
-bottleneck's advantage with $p < 10^{-5}$ across twelve $(K, T)$
-configurations.
+Our motivating case is a Mamba-style state-space forecaster
+\citep{gu2023mamba}. With input and output projections
+$W_{\mathrm{in}}\in\mathbb{R}^{d\times K}$ and
+$W_{\mathrm{out}}\in\mathbb{R}^{K\times d}$, the score
+\begin{equation}
+  S = |W_{\mathrm{out}}W_{\mathrm{in}}|,\qquad
+  S_{ij}\ \text{interpreted as the strength of }j\rightarrow i
+  \label{eq:score}
+\end{equation}
+often looks graph-like after next-step prediction training. Earlier
+exploration suggested architecture, intervention, and nonlinear-regime
+stories. Those observations motivated this study, but are not its evidence:
+we report only corrected local reruns under a fixed audit design.
 
-Each of these claims turned out to be less robust than it first appeared.
-Our contribution is therefore primarily \emph{negative}: we show that
-a natural method candidate fails in five subtly different ways,
-identify the controls that caused the failures, and report the narrow
-findings that remain valid.
+This paper makes three contributions. First, it turns implementation and
+estimand checks into a reusable protocol for auditing interpretability-based
+scientific claims. Second, it applies the protocol to observational,
+interventional, and controlled nonlinear experiments, preserving null and
+contradictory results. Third, it gives a concise checklist and responsible-use
+boundary. We do not propose Eq.~\ref{eq:score} as a causal-discovery method.
 
-\paragraph{Contributions.}
-\begin{enumerate}
-  \item \textbf{A falsification benchmark for prediction-as-causal-discovery
-  claims.} We release the five-stage protocol used in this paper as a
-  reusable suite: standardized synthetic generators (VAR, Lorenz-96,
-  CauseMe-style), three intervention semantics
-  ($\text{do}(X = c)$, soft-noise, random-forcing) under matched
-  control arms, edge-provenance cards on three real datasets, fixed
-  seeds, a Dockerfile, and a single-command \texttt{make all}
-  reproduction target.
-  \item Using the benchmark, we falsify architecture specificity: a
-  linear bottleneck matches or beats the SSM under matched capacity
-  and seeds.
-  \item We falsify competitiveness with sparse regression: tuned Lasso
-  beats the bottleneck on synthetic CauseMe-style benchmarks, and on
-  the only real benchmark with unambiguous ground truth (Lorenz-96)
-  classical PCMCI and Granger lead a tight cluster in which the
-  bottleneck trails.
-  \item We falsify the headline intervention advantage: under a
-  size-matched control and proper $\text{do}(X = c)$ interventions,
-  the effect collapses; the residual reproduces (and is larger) under
-  classical Granger.
-  \item We document what survives --- mild-nonlinearity,
-  sample-efficiency, target-corruption robustness --- as
-  characterization, not method, claims.
-\end{enumerate}
+\paragraph{Validated prior architecture control.}
+Separate from the corrected reruns below, prior validated experiments found
+that endpoint scores recovered planted dependencies in controlled synthetic
+processes, establishing readability in that limited setting. A linear
+bottleneck matched or exceeded Mamba on all four reported datasets, rejecting
+an SSM-specific interpretation.
 
-% ============================================================
-\section{Method: The Extraction We Are Falsifying}
-\label{sec:observation}
-% ============================================================
+\section{Audit Protocol}
 
-For a $K$-variable series $\mathbf{X} \in \mathbb{R}^{T \times K}$, we
-train a model with input projection $\mathbf{W}_{\text{in}} \in
-\mathbb{R}^{d \times K}$ and output projection $\mathbf{W}_{\text{out}}
-\in \mathbb{R}^{K \times d}$ on next-step MSE. No causal-specific loss.
-After training, we extract
-$\mathbf{S} = |\mathbf{W}_{\text{out}} \mathbf{W}_{\text{in}}| \in
-\mathbb{R}^{K \times K}$ with $\mathbf{S}_{i,j}$ interpreted as the
-strength of $j \to i$, zero the diagonal, normalize, and threshold. For
-architectures with explicit lagged input (the lagged bottleneck variant),
-we extend to $\mathbf{S}^{(\tau)} = |\mathbf{W}_{\text{out}}
-\mathbf{W}^{(\tau)}_{\text{in}}|$ and evaluate via flat-lag AUROC against
-ground-truth adjacency.
+The protocol treats a causal-looking interpretation as a sequence of claims
+that can fail independently.
 
-% ============================================================
-\section{Five Falsifications}
-\label{sec:falsifications}
-% ============================================================
+\paragraph{Representation semantics.}
+Fix one score convention, here $S[\mathrm{target},\mathrm{source}]$, and test
+it on planted directed, lagged edges. External packages require explicit
+adapters: Tigramite stores values as
+$[\mathrm{source},\mathrm{target},\mathrm{lag}]$. Strictly lagged evaluation
+must also exclude contemporaneous matrices. These checks are scientific
+controls, not software housekeeping: a transpose can reverse a leaderboard.
 
-\paragraph{F1. Architecture does not matter.} A 10-seed, matched-capacity
-sweep across six synthetic datasets and five architectures (Linear,
-Mamba SSM, Transformer, LSTM, MLP) finds the linear bottleneck matches
-or beats the SSM on every dataset
-(mean $\pm$ std AUROC: VAR(1)-chain $K{=}5$: $1.00 \pm 0.00$ both;
-VAR(1)-random $K{=}10$: SSM $0.93 \pm 0.08$, Linear $\mathbf{0.99 \pm 0.02}$;
-regime-switch $K{=}3$: SSM $0.98 \pm 0.08$, Linear $\mathbf{1.00 \pm 0.00}$;
-Lorenz $K{=}3$: SSM $0.52 \pm 0.24$, Linear $\mathbf{0.94 \pm 0.09}$).
-The ``emergence'' is the linear bottleneck doing low-rank lag-1
-regression; the SSM achieves the same estimator at higher parameter
-cost.
+\paragraph{Protocol matching.}
+Compared methods receive the same usable observations and lag horizon.
+Independent trajectories remain separate so no lag window crosses a boundary.
+Stochastic models use paired data and model seeds. Hyperparameters cannot be
+selected using test graph labels.
 
-\paragraph{F2. Tuned Lasso beats the bottleneck on graph recovery.}
-Across a focused stress grid ($K \in \{10, 20\}$, $T \in \{150, 300\}$,
-max-lag 8, Table~\ref{tab:lasso}) the bottleneck wins only $12\%$ of
-graph-recovery runs and $0\%$ of prediction-MSE runs against tuned
-baselines — the bottleneck is neither the better forecaster nor the
-better graph extractor on this grid, which already qualifies the
-``causal discovery as a byproduct of strong forecasting'' framing.
-On tigramite CauseMe-style processes the gap widens with $K$: Lasso
-reaches AUROC $0.98$ at $K{=}20$ versus $0.73$ for the bottleneck.
+\paragraph{Intervention-aware estimands.}
+Every intervention segment records its target. When target $j$ is externally
+forced, the outcome equation for $j$ is excluded from that segment for every
+method; the remaining target equations are retained. We compare a combined
+observational/interventional arm against an observational arm with the same
+number of usable lagged rows. Constant clamps, soft forcing, and per-step
+random forcing are separate experimental conditions, not interchangeable
+instances of ``interventional data.''
+
+\paragraph{Label provenance and inference.}
+Each dataset is tagged as real observational or simulated, and each graph as
+exact, literature-derived soft, or heuristic soft. Independent
+data-generating seeds are the replication unit. We report paired mean effects,
+bootstrap intervals, one-sided Wilcoxon tests, and Holm correction over each
+declared family. Invalid all-zero tests remain null rather than being dropped.
+
+\section{Corrected Evidence}
+
+\subsection{Provenance changes what a benchmark can claim}
+
+Table~\ref{tab:real} reports a corrected deterministic rerun. The climate
+graph contains three literature-derived teleconnection labels; it excludes
+the definitionally coupled ENSO/SOI pair. The finance graph contains six
+heuristic sector lead--lag labels and is a sensitivity analysis only.
+Lorenz-96 is not real data: it is a $K=10$, $T=1500$ simulation with the exact
+30-edge generating interaction graph \citep{lorenz1996predictability}.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Bottleneck vs.\ best tuned baseline on the focused stress grid
-(48 cells: $K \in \{10, 20\}$, $T \in \{150, 300\}$, max-lag 8).}
-\label{tab:lasso}
-\begin{tabular}{lrr}
-\toprule
-Bottleneck vs.\ \{OLS, Ridge, Lasso, RRR\} & Mean delta & Bottleneck win rate \\
-\midrule
-Flat-lag AUROC          & $-0.050$ & $12\%$  ($6/48$) \\
-Prediction MSE          & $+0.286$ & $0\%$   ($0/48$) \\
-\midrule
-\multicolumn{3}{l}{\emph{Best baseline by AUROC:} Lasso ($38/48$), RRR ($10/48$)} \\
-\multicolumn{3}{l}{\emph{Best baseline by MSE:}   Lasso ($48/48$)} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{F3. Real data: not competitive on the clean benchmark.} We
-evaluate six methods on three datasets of progressively cleaner ground
-truth (Table~\ref{tab:real}): NOAA monthly climate indices (ENSO, NAO,
-PDO, AMO, SOI, PNA) for 1962--2024 ($T{=}757$, downloaded from NOAA
-PSL), with three teleconnection edges drawn from the climate-dynamics
-literature~\citep{trenberth1994decadal,newman2016pdo,delworth2000observed} —
-ENSO$\to$PNA, ENSO$\to$PDO, NAO$\to$AMO, encoded in
-\texttt{data/real\_loaders.py};
-daily log returns of ten SPDR sector ETFs from 2018-06 to 2025-12
-($K{=}10$, $T{=}1893$, soft labels); and Lorenz-96 ($K{=}10$, $F{=}10$,
-$T{=}1500$)~\citep{lorenz1996predictability}, the standard benchmark
-in recent neural-causal-discovery
-work~\citep{tank2021neural,nauta2019causal}. We exclude the
-ENSO$\leftrightarrow$SOI pair from climate ground truth because SOI
-and the Niño 3.4 SST anomaly are the same physical signal with opposite
-sign. The SSM bottleneck \emph{does} top the climate column at
-$0.820 \pm 0.021$ (5 seeds), but with only three positive edges over
-$K{=}6$ the ranking is fragile: in an earlier run that included the
-definitional ENSO$\leftrightarrow$SOI edges, Granger ranked first and
-the SSM was fourth (full sensitivity in the arXiv version). On
-Lorenz-96, where ground truth is unambiguous, \emph{PCMCI and
-bivariate Granger dominate} (0.986, 0.979); the lagged bottleneck
-trails at $0.916$ and the SSM bottleneck is worst at
-$0.722 \pm 0.031$ (5 seeds).
-
-\begin{table}[t]
-\centering
-\small
-\caption{AUROC on three real/benchmark datasets. SSM row reports
-mean $\pm$ std over 5 training seeds; lagged bottleneck uses a single
-seed; the four classical methods are deterministic. The bottleneck
-tops only climate, where ground truth is weak (3 edges, $K{=}6$); on
-Lorenz-96 classical causal methods lead by a wide margin.}
+\caption{Corrected AUROC. Climate and finance use soft labels; Lorenz-96 has
+an exact simulated graph. Lagged-Bottleneck reports mean $\pm$ std over model
+initializations; other rows are deterministic.}
 \label{tab:real}
 \begin{tabular}{lccc}
 \toprule
-Method & Climate (NOAA) & Finance (ETFs) & Lorenz-96 \\
- & $K{=}6, T{=}757$ & $K{=}10, T{=}1893$ & $K{=}10, T{=}1500$ \\
+Method & Climate & Finance & Lorenz-96 \\
 \midrule
-Weight-Proj (SSM, 5 seeds) & $\mathbf{0.820 \pm 0.021}$ & $0.447 \pm 0.033$ & $0.722 \pm 0.031$ \\
-PCMCI & $0.704$ & $0.510$ & $\mathbf{0.986}$ \\
-Tuned Lasso & $0.630$ & $0.500$ & $0.974$ \\
-Lagged Bottleneck & $0.617$ & $0.484$ & $0.916$ \\
-Tuned Ridge & $0.617$ & $\mathbf{0.696}$ & $0.974$ \\
-Bivariate Granger & $0.605$ & $0.498$ & $0.979$ \\
+Lasso              & \textbf{0.617} & 0.500          & 0.973 \\
+Ridge              & \textbf{0.617} & \textbf{0.597} & 0.973 \\
+Lagged-BN (3 seeds) & $\mathbf{0.626\pm0.021}$ & $0.564\pm0.033$ &
+                      $0.881\pm0.018$ \\
+PCMCI              & 0.407          & \textbf{0.609} & 0.839 \\
+PCMCI+             & 0.605          & 0.579          & 0.875 \\
+Bivariate Granger  & 0.605          & 0.512          & \textbf{0.989} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{F4. Interventions: a confound story.} An earlier
-experimental line (Exp 19, then validated with 20 seeds in Exp 21)
-compared $\text{AUROC}(\mathbf{X}_{\text{obs}})$ versus
-$\text{AUROC}(\mathbf{X}_{\text{obs}} \cup \mathbf{X}_{\text{int}})$
-for both bottleneck and Lasso, reporting $12/12$ $(K, T)$ configs
-significant at $p < 10^{-5}$ in favor of the bottleneck. Two
-sequential controls dissolve it. \emph{Size-match (Exp 22):} the
-original comparison conflated more data with intervention content.
-Adding a third arm of the same total size as the combined arm but
-drawn from the observational distribution reveals the bottleneck's
-own intervention-specific AUROC gain is only $+0.03$ to $+0.05$ at
-$K \in \{10, 20, 30\}$ ($p < 10^{-4}$ at $n{=}15$ seeds vs.\ the
-size-matched observational baseline) — a small fraction of the
-original Exp~21 effect, the rest of which was the data-size confound.
-The paired BN-vs-Lasso gap stays large at $K{=}10$ because Lasso
-degrades sharply under target corruption; F5 shows this residual is
-method-agnostic, not bottleneck-specific. \emph{Intervention type
-(Exp 23):} the original ``intervention'' was a per-step random
-forcing $x_{i,t} \leftarrow s \cdot \epsilon_{i,t}$, not a standard
-$\text{do}$-intervention. Replacing it with constant clamps
-$\text{do}(X_i = c)$ gives only $3/12$ configs significant (mean gap
-$+0.002$); soft (added-noise) interventions give $6/12$, mean gap
-$+0.008$. Only the random-forcing scheme produces a stable bottleneck
-gain, best explained as robustness to corrupted target rows.
+The formerly reported Lorenz-96 PCMCI value $0.986$ used the wrong matrix
+orientation; at the shared lag horizon of 3, the corrected value is $0.839$.
+The substantive negative result
+does not depend on declaring a new winner. On the exact graph, simple Granger
+and tuned linear regression outperform PCMCI/PCMCI+ in this configuration.
+The Lagged-Bottleneck's $0.881\pm0.018$ demonstrates readable signal on the
+exact graph, but remains below Granger/Lasso/Ridge
+($0.989/0.973/0.973$). Its spread over model seeds 42--44 describes
+initialization stability on fixed data, not independent uncertainty or
+competitiveness. Climate and finance do not license a causal ranking.
 
-\paragraph{F5. Method-agnosticity (the strongest single result).} The
-residual effect after F4's two controls is not unique to the
-bottleneck. Adding PCMCI and bivariate Granger to the same
-size-matched control protocol (Exp 25): the bottleneck shows a
-significant size-matched gain of $+0.026$ to $+0.054$ AUROC at
-$K \in \{10, 20, 30\}$ ($p < 10^{-3}$ at $n{=}10$ seeds), but
-\emph{Granger shows the same effect at the same significance, with
-larger effect sizes at higher $K$} ($+0.040$ at $K{=}20$, $+0.095$
-at $K{=}30$). Lasso uniquely fails, consistent with per-equation
-regression breaking under target corruption. The intervention
-effect, insofar as it survives controls, is method-agnostic — and a
-classical method shows it more strongly than the learned bottleneck.
+\subsection{Intervention effects depend on the estimand and semantics}
 
-% ============================================================
-\section{What Survives}
-\label{sec:survives}
-% ============================================================
+We construct three arms: a small observational trajectory, a larger
+observational arm, and a combined arm containing the small trajectory plus one
+intervention segment per target. The latter two have equal usable rows. All
+fits are segment-safe and target-aware.
 
-After five falsifications, three narrow positives remain.
+Exp.~23 asks whether the bottleneck's intervention-specific gap exceeds
+Lasso's or Ridge's. Across $K\in\{10,20\}$, $T=300$, and 10 independent
+seeds, Holm-significant positive differences are only $0.012$--$0.021$
+AUROC. Constant clamps produce no bottleneck relative advantage. Random and
+soft forcing yield selected small differences, but no general or
+bottleneck-specific intervention effect.
 
-\begin{itemize}
-  \item \textbf{Mild-nonlinearity configuration.} At a single
-  $(K, T) = (20, 300)$ with mild nonlinearity in the data-generating
-  process (\texttt{nonlinear=0.3}), the bottleneck beats the best
-  tuned baseline (Lasso/RRR) on $87\%$ of nine
-  $(d_{\text{bottleneck}}, \lambda_{\text{sparse}})$ cells over 10
-  seeds, mean AUROC improvement $+0.121$. At stronger nonlinearity
-  both fail equally; at zero nonlinearity Lasso is preferred. We
-  label this a configuration, not a regime — we have not swept
-  $K$ or $T$ for it.
-  \item \textbf{Sample efficiency.} Bottleneck gains from additional
-  observational data exceed Lasso's by $\sim 0.07$ AUROC at
-  $K \in \{20, 30\}$ under size-matched control arms — modest but
-  useful where collecting more observations is cheap.
-  \item \textbf{Target-corruption robustness.} The bottleneck's shared
-  $\mathbf{W}_{\text{out}}$ absorbs per-step random forcing better
-  than Lasso's per-equation fits. This explains the residual
-  intervention effect, but is a reliability result, not a
-  causal-discovery one.
-\end{itemize}
+Exp.~25 applies target-aware random forcing to four methods. Its primary
+estimand is
+\[
+ \Delta_m=\mathrm{AUROC}_m(\mathrm{combined})-
+          \mathrm{AUROC}_m(\mathrm{size\mbox{-}matched\ observational}).
+\]
+Table~\ref{tab:int} reports paired means and bootstrap 95\% intervals.
+All eight within-method tests reject after Holm correction
+($p_{\mathrm{Holm}}=0.0078125$), so the gain is not bottleneck-specific.
+However, an exploratory paired Granger-minus-Bottleneck contrast is null at
+$K=10$ ($p_{\mathrm{Holm}}=0.278$) and positive at $K=20$
+($+0.030$, $p_{\mathrm{Holm}}=0.027$). The evidence therefore does not imply
+method invariance. Target-aware Lasso also improves, so the earlier
+target-corruption mechanism is unsupported.
 
-These are characterization claims. We do not propose the bottleneck as
-a causal discovery method.
+\begin{table}[t]
+\centering
+\small
+\caption{Target-aware random-forcing gain $\Delta_m$ (mean and paired
+bootstrap 95\% interval), $T=300$, 10 independent seeds.}
+\label{tab:int}
+\begin{tabular}{lcc}
+\toprule
+Method & $K=10$ & $K=20$ \\
+\midrule
+Bottleneck & $0.057\ [0.036,0.079]$ & $0.050\ [0.038,0.061]$ \\
+Lasso      & $0.033\ [0.017,0.050]$ & $0.014\ [0.008,0.021]$ \\
+PCMCI      & $0.041\ [0.022,0.060]$ & $0.022\ [0.014,0.031]$ \\
+Granger    & $\mathbf{0.068}\ [0.044,0.094]$ &
+             $\mathbf{0.080}\ [0.057,0.106]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-% ============================================================
-\section{Lessons}
-% ============================================================
+\subsection{The apparent nonlinear regime is finite-sample regularization}
 
-\paragraph{Size-matched controls beat seed counts.} Exp 19 had 5 seeds.
-Exp 21 had 20 seeds and reported $p < 10^{-5}$ across 12 configs. Both
-found the same effect; neither would have flagged it as a sample-size
-confound. Adding seeds tightens a noisy measurement; it cannot diagnose
-a missing structural control.
+Exp.~27 fixes a Linear-BN ($d=32$, fixed sparsity coefficient) and tuned Lasso
+before graph evaluation. It uses independent seeds and sweeps
+$K\in\{10,20\}$, $T\in\{300,600\}$, and nonlinearity mixes
+$\{0,.2,.3,.4,.6,1\}$. The pre-specified mild-regime rule requires at least
+two of $.2,.3,.4$ to pass for every requested $K$ at one common $T$.
+The artifact status is \texttt{isolated\_positive\_exploratory}; no $T$
+satisfies the rule.
 
-\paragraph{Pre-register the intervention scheme.} The gap between
-``random forcing'' and proper $\text{do}(X_i = c)$ is the difference
-between a significant effect and a null, and it is not obvious from the
-code. We should have written down which intervention semantics counted
-as ``interventional data'' before running the experiment.
+At $K=20,T=300$, Linear-BN minus Lasso AUROC is exactly $+0.50$ for
+\emph{every} mix, including 0 and 1. At $K=10,T=300$, it is $+0.05$ for
+every mix and no cell passes the gate. At $T=600$, both methods reach AUROC
+1.00 for every mix. Because the difference is invariant to nonlinearity and
+vanishes with more samples, we reject the mild-nonlinearity interpretation.
+The isolated positive is consistent with finite-sample, dimensional
+regularization in this generator.
 
-\paragraph{Prediction baselines are not causal baselines.} Our
-intervention experiments compared the bottleneck only against
-prediction-fit baselines (OLS, Ridge, Lasso, RRR). It was natural to
-miss that classical causal methods (Granger, PCMCI) would benefit from
-the same intervention scheme by the same mechanism. Any future
-``neural causal discovery'' claim should include at least one classical
-causal baseline in the intervention control arm.
+\section{A Responsible Falsification Checklist}
 
-% ============================================================
+Before treating an interpretable model component as a scientific discovery:
+\begin{enumerate}
+  \item test direction, lag, and diagonal conventions on planted examples;
+  \item match data budgets, lag horizons, preprocessing, and random seeds;
+  \item preserve trajectory boundaries;
+  \item declare intervention semantics and encode targets in the estimand;
+  \item include sparse and classical baselines under the same protocol;
+  \item separate exact simulated graphs from literature and heuristic labels;
+  \item fix variants before graph evaluation and use independent replicates;
+  \item report effects, uncertainty, multiplicity correction, and failures;
+  \item test whether an apparent regime varies along the proposed mechanism;
+  \item state the strongest interpretation the evidence does \emph{not} support.
+\end{enumerate}
+
+\section{Limitations and Responsible Use}
+
+Our corrected experiments are deliberately narrow: two dimensions and sample
+sizes for intervention and nonlinearity tests, one exact dynamical simulation,
+and two observational datasets with soft labels. Deterministic benchmark runs
+do not estimate method variance, and no result identifies a general causal
+mechanism. Broader confounding, lag, noise, and intervention-coverage studies
+are journal-scale work. DYNOTEARS and VAR-LiNGAM adapters were fixture-tested,
+but their optional dependencies were unavailable for the corrected empirical
+rerun.
+
+These scores must not be used to prescribe scientific interventions, climate
+policy, financial trades, or other consequential decisions. Climate and
+finance labels are incomplete soft hypotheses, and Lorenz-96 is a simulation.
+Readable predictive dependence can guide questions, but causal use requires
+domain review, explicit assumptions, validated interventions, and evidence
+outside the model being interpreted. We release contradictory results and
+provenance metadata to reduce selective reporting and automation bias.
+
 \section{Conclusion}
-% ============================================================
 
-We set out to test whether a free causal-discovery method might be
-hidden inside prediction bottlenecks; the answer, after five stages
-of controls, is no. The headline effects either fail under
-size-matched controls, are specific to a non-standard intervention
-scheme, or reproduce as larger effects in classical causal methods. What
-survives is a narrow set of characterization findings and a reusable
-falsification benchmark scaffold.
+The endpoint bottleneck is a useful case study precisely because its causal
+story looked plausible. Correct orientation, provenance, target-aware
+estimands, intervention-semantic controls, and classical baselines remove the
+strong interpretation. The remaining contribution is not a weaker causal
+method, but a reusable way to falsify causal-looking interpretations before
+they become scientific claims.
 
-\paragraph{Code and reproduction.} The released artifact includes all
-experiments, data loaders, edge-provenance cards, optional modern
-baselines (PCMCI+, DYNOTEARS, VAR-LiNGAM), fixed seeds, lockfile-pinned
-dependencies, a \texttt{Dockerfile}, and a single-command
-\texttt{make all} reproduction target (anonymous URL provided to
-reviewers).
-
+\label{lastmainpage}
+\clearpage
 \bibliography{../references}
 
 \end{document}

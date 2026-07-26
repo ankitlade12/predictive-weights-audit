@@ -7,14 +7,16 @@ export UV_CACHE_DIR
 export MPLCONFIGDIR
 export MPLBACKEND
 
-.PHONY: help install test smoke exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 falsification experiments tables figures paper paper-arxiv paper-workshop all clean
+.PHONY: help install test smoke workshop-evidence exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments tables figures paper paper-arxiv paper-workshop all clean
 
 help:
 	@echo "Targets:"
 	@echo "  install          Install core, baseline, and dev dependencies with uv"
 	@echo "  test             Run the test suite"
 	@echo "  smoke            Run bounded CPU-friendly empirical verification"
-	@echo "  falsification    Run the current F1-F5 paper experiment pipeline"
+	@echo "  workshop-evidence Reproduce the corrected CPU workshop artifacts"
+	@echo "  falsification    Run the current F1-F6 paper experiment pipeline"
+	@echo "  exp27            Run the nonlinear-regime confirmation"
 	@echo "  experiments      Alias for falsification"
 	@echo "  paper-arxiv      Compile paper/draft/main_arxiv.tex"
 	@echo "  paper-workshop   Compile paper/draft/main_4page.tex"
@@ -39,6 +41,15 @@ smoke:
 	uv run python experiments/exp24_real_data_benchmark.py --datasets climate --epochs 1 --modern-baselines --save-dir /tmp/ssm-causal-exp24-smoke
 	uv run python experiments/exp25_causal_baselines.py --quick --save-dir /tmp/ssm-causal-exp25-quick
 	uv run python experiments/exp26_ssm_multiseed.py --datasets climate --seeds 1 --epochs 1 --save-dir /tmp/ssm-causal-exp26-smoke
+	uv run python experiments/exp27_nonlinearity_confirmation.py --k-values 10 --t-values 150 --strengths 0.3 --n-seeds 2 --epochs 2 --bootstrap-resamples 100 --output /tmp/ssm-causal-exp27-smoke.json
+
+workshop-evidence: data/real/sector_etfs.csv
+	uv run python experiments/exp20_distribution_shift.py --quick --save-dir results/corrected_workshop/graph_label_sensitivity_smoke
+	uv run python experiments/exp22_intervention_control.py --seeds 10 --K 10 20 --T 300 --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_control
+	uv run python experiments/exp23_intervention_sweep.py --seeds 10 --K 10 20 --T 300 --int-types random constant soft --strengths 1 --baselines lasso ridge --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_semantics
+	uv run python experiments/exp24_real_data_benchmark.py --datasets climate finance lorenz96 --methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger --model-seeds 42 43 44 --epochs 80 --device cpu --save-dir results/corrected_workshop/real_data
+	uv run python experiments/exp25_causal_baselines.py --seeds 10 --K-values 10 20 --T-values 300 --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_methods
+	uv run python experiments/exp27_nonlinearity_confirmation.py --output results/corrected_workshop/nonlinearity_confirmation.json
 
 exp7:
 	uv run python experiments/exp7_architecture_comparison.py
@@ -64,7 +75,10 @@ exp25:
 exp26: data/real/sector_etfs.csv
 	uv run python experiments/exp26_ssm_multiseed.py
 
-falsification: exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26
+exp27:
+	uv run python experiments/exp27_nonlinearity_confirmation.py
+
+falsification: exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27
 
 experiments: falsification
 

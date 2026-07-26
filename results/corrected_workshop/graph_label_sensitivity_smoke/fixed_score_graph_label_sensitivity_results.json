@@ -1,0 +1,390 @@
+{
+  "metadata": {
+    "objective": "fixed_score_graph_label_sensitivity",
+    "interpretation": "A source-trained score matrix is reused across graph labels; this does not measure target adaptation or shift robustness.",
+    "comparison_names": [
+      "same-graph-label-control",
+      "struct-small"
+    ],
+    "actual_rng_seeds": [
+      50000,
+      50001
+    ],
+    "run_config": {
+      "K": 4,
+      "T": 400,
+      "max_lag": 5,
+      "d_bottleneck": 12,
+      "lambda_sparse": 0.0001,
+      "n_seeds": 2,
+      "epochs": 30,
+      "batch_size": 64,
+      "device": "cpu",
+      "methods": [
+        "Linear-BN",
+        "Nonlinear-BN",
+        "LASSO",
+        "RRR"
+      ],
+      "baseline_methods": [
+        "lasso",
+        "rrr"
+      ],
+      "baseline_alpha_grid": [
+        0.0001,
+        0.001,
+        0.01,
+        0.1,
+        1.0
+      ],
+      "rrr_rank_grid": [
+        4,
+        8,
+        16
+      ],
+      "source_noise_std": 0.1,
+      "source_train_fraction": 0.8,
+      "comparison_configs": {
+        "same-graph-label-control": {
+          "comparison_type": "control",
+          "parameters": {}
+        },
+        "struct-small": {
+          "comparison_type": "structural",
+          "parameters": {
+            "n_edges_to_flip": 2
+          }
+        }
+      }
+    },
+    "runtime_seconds": 2.835319757461548
+  },
+  "summary": {
+    "by_comparison": {
+      "same-graph-label-control": {
+        "n_seeds": 2,
+        "methods": {
+          "LASSO": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 1.0,
+            "reference_flat_lag_auroc_std": 0.0,
+            "comparison_flat_lag_auroc_mean": 1.0,
+            "comparison_flat_lag_auroc_std": 0.0,
+            "graph_label_sensitivity_mean": null,
+            "graph_label_sensitivity_std": null
+          },
+          "Linear-BN": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 0.9464285714285714,
+            "reference_flat_lag_auroc_std": 0.0535714285714286,
+            "comparison_flat_lag_auroc_mean": 0.9464285714285714,
+            "comparison_flat_lag_auroc_std": 0.0535714285714286,
+            "graph_label_sensitivity_mean": null,
+            "graph_label_sensitivity_std": null
+          },
+          "Nonlinear-BN": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 0.9174107142857142,
+            "reference_flat_lag_auroc_std": 0.06473214285714285,
+            "comparison_flat_lag_auroc_mean": 0.9174107142857142,
+            "comparison_flat_lag_auroc_std": 0.06473214285714285,
+            "graph_label_sensitivity_mean": null,
+            "graph_label_sensitivity_std": null
+          },
+          "RRR": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 1.0,
+            "reference_flat_lag_auroc_std": 0.0,
+            "comparison_flat_lag_auroc_mean": 1.0,
+            "comparison_flat_lag_auroc_std": 0.0,
+            "graph_label_sensitivity_mean": null,
+            "graph_label_sensitivity_std": null
+          }
+        }
+      },
+      "struct-small": {
+        "n_seeds": 2,
+        "methods": {
+          "LASSO": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 1.0,
+            "reference_flat_lag_auroc_std": 0.0,
+            "comparison_flat_lag_auroc_mean": 0.8700672398589064,
+            "comparison_flat_lag_auroc_std": 0.06296847442680781,
+            "graph_label_sensitivity_mean": 0.1299327601410935,
+            "graph_label_sensitivity_std": 0.06296847442680781
+          },
+          "Linear-BN": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 0.9464285714285714,
+            "reference_flat_lag_auroc_std": 0.0535714285714286,
+            "comparison_flat_lag_auroc_mean": 0.7604717813051146,
+            "comparison_flat_lag_auroc_std": 0.00738536155202818,
+            "graph_label_sensitivity_mean": 0.18595679012345678,
+            "graph_label_sensitivity_std": 0.04618606701940042
+          },
+          "Nonlinear-BN": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 0.9174107142857142,
+            "reference_flat_lag_auroc_std": 0.06473214285714285,
+            "comparison_flat_lag_auroc_mean": 0.7484843474426808,
+            "comparison_flat_lag_auroc_std": 0.04169422398589062,
+            "graph_label_sensitivity_mean": 0.16892636684303347,
+            "graph_label_sensitivity_std": 0.023037918871252228
+          },
+          "RRR": {
+            "n_seeds": 2,
+            "reference_flat_lag_auroc_mean": 1.0,
+            "reference_flat_lag_auroc_std": 0.0,
+            "comparison_flat_lag_auroc_mean": 0.8403053350970018,
+            "comparison_flat_lag_auroc_std": 0.07487323633156961,
+            "graph_label_sensitivity_mean": 0.15969466490299822,
+            "graph_label_sensitivity_std": 0.07487323633156961
+          }
+        }
+      }
+    }
+  },
+  "runs": [
+    {
+      "comparison_name": "same-graph-label-control",
+      "comparison_type": "control",
+      "comparison_parameters": {},
+      "description": "same-graph-label-control",
+      "K": 4,
+      "T": 400,
+      "max_lag": 5,
+      "seed_index": 0,
+      "rng_seed": 50000,
+      "source_noise_std": 0.1,
+      "source_total_length": 400,
+      "source_train_length": 320,
+      "comparison_status": "not_applicable_same_graph_labels",
+      "graph_labels_changed": false,
+      "graph_label_difference_count": 0,
+      "methods": {
+        "Linear-BN": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 1.0,
+          "comparison_aggregate_auroc": 1.0,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        },
+        "Nonlinear-BN": {
+          "reference_flat_lag_auroc": 0.9821428571428571,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.9821428571428571,
+          "comparison_aggregate_auroc": 1.0,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        },
+        "LASSO": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 1.0,
+          "comparison_aggregate_auroc": 1.0,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        },
+        "RRR": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 1.0,
+          "comparison_aggregate_auroc": 1.0,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        }
+      }
+    },
+    {
+      "comparison_name": "same-graph-label-control",
+      "comparison_type": "control",
+      "comparison_parameters": {},
+      "description": "same-graph-label-control",
+      "K": 4,
+      "T": 400,
+      "max_lag": 5,
+      "seed_index": 1,
+      "rng_seed": 50001,
+      "source_noise_std": 0.1,
+      "source_total_length": 400,
+      "source_train_length": 320,
+      "comparison_status": "not_applicable_same_graph_labels",
+      "graph_labels_changed": false,
+      "graph_label_difference_count": 0,
+      "methods": {
+        "Linear-BN": {
+          "reference_flat_lag_auroc": 0.8928571428571428,
+          "reference_aggregate_auroc": 0.96875,
+          "comparison_flat_lag_auroc": 0.8928571428571428,
+          "comparison_aggregate_auroc": 0.96875,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        },
+        "Nonlinear-BN": {
+          "reference_flat_lag_auroc": 0.8526785714285714,
+          "reference_aggregate_auroc": 0.875,
+          "comparison_flat_lag_auroc": 0.8526785714285714,
+          "comparison_aggregate_auroc": 0.875,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        },
+        "LASSO": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 1.0,
+          "comparison_aggregate_auroc": 1.0,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        },
+        "RRR": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 1.0,
+          "comparison_aggregate_auroc": 1.0,
+          "graph_labels_changed": false,
+          "comparison_status": "not_applicable_same_graph_labels",
+          "graph_label_sensitivity": null,
+          "score_matrix_reused": true
+        }
+      }
+    },
+    {
+      "comparison_name": "struct-small",
+      "comparison_type": "structural",
+      "comparison_parameters": {
+        "n_edges_to_flip": 2
+      },
+      "description": "structural-rewiring(flipped=2)",
+      "K": 4,
+      "T": 400,
+      "max_lag": 5,
+      "seed_index": 0,
+      "rng_seed": 50000,
+      "source_noise_std": 0.1,
+      "source_total_length": 400,
+      "source_train_length": 320,
+      "comparison_status": "fixed_score_graph_label_sensitivity",
+      "graph_labels_changed": true,
+      "graph_label_difference_count": 2,
+      "methods": {
+        "Linear-BN": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.7678571428571428,
+          "comparison_aggregate_auroc": 0.71875,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.2321428571428572,
+          "score_matrix_reused": true
+        },
+        "Nonlinear-BN": {
+          "reference_flat_lag_auroc": 0.9821428571428571,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.7901785714285714,
+          "comparison_aggregate_auroc": 0.75,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.1919642857142857,
+          "score_matrix_reused": true
+        },
+        "LASSO": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.9330357142857143,
+          "comparison_aggregate_auroc": 0.6875,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.0669642857142857,
+          "score_matrix_reused": true
+        },
+        "RRR": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.9151785714285714,
+          "comparison_aggregate_auroc": 0.875,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.0848214285714286,
+          "score_matrix_reused": true
+        }
+      }
+    },
+    {
+      "comparison_name": "struct-small",
+      "comparison_type": "structural",
+      "comparison_parameters": {
+        "n_edges_to_flip": 2
+      },
+      "description": "structural-rewiring(flipped=2)",
+      "K": 4,
+      "T": 400,
+      "max_lag": 5,
+      "seed_index": 1,
+      "rng_seed": 50001,
+      "source_noise_std": 0.1,
+      "source_total_length": 400,
+      "source_train_length": 320,
+      "comparison_status": "fixed_score_graph_label_sensitivity",
+      "graph_labels_changed": true,
+      "graph_label_difference_count": 2,
+      "methods": {
+        "Linear-BN": {
+          "reference_flat_lag_auroc": 0.8928571428571428,
+          "reference_aggregate_auroc": 0.96875,
+          "comparison_flat_lag_auroc": 0.7530864197530864,
+          "comparison_aggregate_auroc": 0.9166666666666667,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.13977072310405636,
+          "score_matrix_reused": true
+        },
+        "Nonlinear-BN": {
+          "reference_flat_lag_auroc": 0.8526785714285714,
+          "reference_aggregate_auroc": 0.875,
+          "comparison_flat_lag_auroc": 0.7067901234567902,
+          "comparison_aggregate_auroc": 0.888888888888889,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.14588844797178124,
+          "score_matrix_reused": true
+        },
+        "LASSO": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.8070987654320987,
+          "comparison_aggregate_auroc": 0.9444444444444445,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.19290123456790131,
+          "score_matrix_reused": true
+        },
+        "RRR": {
+          "reference_flat_lag_auroc": 1.0,
+          "reference_aggregate_auroc": 1.0,
+          "comparison_flat_lag_auroc": 0.7654320987654322,
+          "comparison_aggregate_auroc": 0.9444444444444445,
+          "graph_labels_changed": true,
+          "comparison_status": "fixed_score_graph_label_sensitivity",
+          "graph_label_sensitivity": 0.23456790123456783,
+          "score_matrix_reused": true
+        }
+      }
+    }
+  ]
+}

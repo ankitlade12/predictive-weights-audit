@@ -1,183 +1,154 @@
-# Exp 24 + 25: Real Data Benchmark and Causal Baselines
+# Exp 24 + 25: Corrected Benchmark and Intervention Baselines
 
-**Dates:** 2026-04-16 (initial), 2026-04-17 (updated with revised ground truth and Lorenz-96)
-**Purpose:** Fill the two gaps Sai identified before workshop/journal
-submission — (1) real observational data with clean ground truth,
-(2) proper causal discovery baselines.
+**Original dates:** 2026-04-16 to 2026-04-17
+**Corrected local rerun:** 2026-07-25
 
----
+## Status
 
-## Revision note (2026-04-17)
+This document supersedes the earlier Exp 24/25 tables. In particular:
 
-The 2026-04-16 version of this document reported climate results that
-included the ENSO$\leftrightarrow$SOI pair in ground truth. Those two
-indices are the same signal with opposite sign (the Southern Oscillation
-Index is a surface-pressure analog of the Niño 3.4 SST anomaly). Counting
-them as causal edges inflates every method's AUROC on an
-instantaneous-coupling artifact. The revised ground truth keeps three
-unambiguous literature edges: ENSO→PNA, ENSO→PDO, NAO→AMO.
+- Tigramite PCMCI and PCMCI+ matrices are now converted from
+  `[source, target, lag]` to the project convention `[target, source]`.
+- intervention comparisons are segment-safe and target-aware;
+- all methods use the same size-matched estimand;
+- climate and finance labels are explicitly treated as soft evidence;
+- Lorenz-96 is identified as a simulation with an exact 30-edge graph.
 
-The revision **flipped the climate ranking**: bivariate Granger went from
-the top (0.819) to the bottom (0.605) once the ENSO$\leftrightarrow$SOI
-edges were removed. Several other methods moved too. This is itself a
-useful methodological finding we report in the paper.
+The corrected artifacts are:
 
-We also added Lorenz-96 ($K=10$, $F=10$, RK4 integration) as a third
-dataset. Lorenz-96 has unambiguous ground truth (each variable is driven
-by exactly three neighbors) and is the standard causal-discovery
-benchmark used by Tank et al.~(2022) and Nauta et al.~(2019).
+- `results/corrected_workshop/real_data/real_data_benchmark_results.json`
+- `results/corrected_workshop/real_data/edge_provenance_cards.json`
+- `results/corrected_workshop/intervention_methods/causal_baselines_results.json`
 
----
+## Exp 24: Corrected Benchmark
 
-## Exp 24: Real Data Benchmark (revised)
+### Dataset and Label Scope
 
-**Datasets used:**
-
-- **NOAA Climate Indices** — 757 months (1962–2024) of real monthly
-  ENSO, NAO, PDO, AMO, SOI, PNA indices from NOAA PSL. Ground truth:
-  3 unambiguous literature-derived edges (ENSO→PNA, ENSO→PDO,
-  NAO→AMO), ENSO$\leftrightarrow$SOI excluded as definitional.
-- **Sector ETFs** — 1,893 trading days (2018-06-19 to 2025-12-30) of
-  real log returns for 10 SPDR sector ETFs downloaded via yfinance.
-  Ground truth: 6 sector lead-lag edges from finance commentary
-  (treated as soft).
-- **Lorenz-96** — $K=10$, $F=10$, RK4 at $dt=0.01$, subsampled every
-  10 steps, $T=1500$. Ground truth: each node $i$ driven by $\{i-2, i-1,
-  i+1\}$ (mod $K$), 30 edges total.
-
-### Results (AUROC, 40-epoch SSM, deterministic non-SSM methods)
-
-The Weight-Proj (SSM) row reports mean ± std over 5 training seeds.
-The lagged bottleneck row uses a single seed. Non-SSM baselines are
-deterministic/default runs; PCMCI+, DYNOTEARS, and VAR-LiNGAM require
-the optional modern-baseline dependencies.
-
-| Method | Climate (K=6, T=757, 3 edges) | Finance (K=10, T=1893, 6 edges) | Lorenz-96 (K=10, T=1500, 30 edges) |
+| Dataset | Kind | Label status | Permitted interpretation |
 |---|---|---|---|
-| Weight-Proj (SSM, 5 seeds) | 0.820 ± 0.021 | 0.447 ± 0.033 | 0.722 ± 0.031 |
-| PCMCI | 0.704 | 0.510 | **0.986** |
-| Tuned Lasso | 0.630 | 0.500 | 0.974 |
-| Lagged Bottleneck | 0.617 | 0.484 | 0.916 |
-| Tuned Ridge | 0.617 | **0.696** | 0.974 |
-| Bivariate Granger | 0.605 | 0.498 | 0.979 |
-| PCMCI+ | 0.432 | 0.413 | 0.669 |
-| DYNOTEARS | 0.722 | 0.591 | 0.983 |
-| VAR-LiNGAM | **0.901** | 0.552 | 0.968 |
+| NOAA climate | Real observational, `K=6`, `T=757` | 3 literature-derived soft teleconnection labels | Label-sensitivity audit only |
+| Sector ETFs | Real observational, `K=10`, `T=1893` | 6 heuristic soft lead-lag labels | Heuristic sensitivity analysis only |
+| Lorenz-96 | Simulated, `K=10`, `T=1500` | Exact 30-edge generating interaction graph | Controlled graph-recovery benchmark |
 
-### Interpretation
+Climate labels retain ENSO to PNA, ENSO to PDO, and NAO to AMO. The
+definitionally coupled ENSO/SOI pair is excluded. Finance labels are not causal
+ground truth; they encode a heuristic sector graph and must not be used for a
+causal-discovery leaderboard.
 
-1. **Climate with honest ground truth**: rankings are unstable because
-   there are only 3 positive edges over $K=6$. VAR-LiNGAM tops the
-   expanded table, while the SSM bottleneck remains near the top; we do
-   not read either as a causal-discovery claim.
-2. **Finance**: Ridge wins (0.696); most methods are at or below
-   chance. ETF daily returns admit no clean lagged causal structure,
-   consistent with efficient-markets behavior at the daily scale.
-3. **Lorenz-96 with clean ground truth**: classical causal methods
-   (PCMCI 0.986, DYNOTEARS 0.983, Granger 0.979, VAR-LiNGAM 0.968)
-   dominate; tuned Lasso/Ridge nearly match them (0.974); the lagged
-   bottleneck trails at 0.916 and the SSM bottleneck is worst at
-   0.722 ± 0.031. **On the only dataset where ground truth is
-   unambiguous, the bottleneck is not competitive.**
+### Corrected Results
 
-### Effect of the 2026-04-16 → 2026-04-17 ground-truth correction on climate
+AUROC values below come directly from the corrected local artifact. This rerun
+includes Lasso, Ridge, PCMCI, PCMCI+, and bivariate Granger under documented
+default/tuned protocols, plus a three-model-seed Lagged-Bottleneck run
+(`42,43,44`, 80 epochs). Every method uses lag horizon `3`.
 
-| Method | 2026-04-16 (6 edges incl. ENSO$\leftrightarrow$SOI) | 2026-04-17 (3 edges, honest) |
-|---|---|---|
-| Bivariate Granger | 0.819 (top) | 0.605 (bottom) |
-| Lagged Bottleneck | 0.813 | 0.617 |
-| Tuned Lasso | 0.799 | 0.630 |
-| Weight-Proj (SSM) | 0.792 | 0.864 (top) |
-| PCMCI | 0.771 | 0.704 |
-| Tuned Ridge | 0.729 | 0.617 |
+| Method | Climate | Finance | Lorenz-96 |
+|---|---:|---:|---:|
+| Lasso | **0.617** | 0.500 | 0.973 |
+| Ridge | **0.617** | **0.597** | 0.973 |
+| Lagged-Bottleneck (3 model seeds) | **0.626 +/- 0.021** | 0.564 +/- 0.033 | 0.881 +/- 0.018 |
+| PCMCI | 0.407 | **0.609** | 0.839 |
+| PCMCI+ | 0.605 | 0.579 | 0.875 |
+| Bivariate Granger | 0.605 | 0.512 | **0.989** |
 
-The ordering changed substantially. Granger dropped from first to
-last, which tells us Granger was largely picking up the instantaneous
-ENSO/SOI coupling. The SSM rose to first, but with only three positive
-edges this is a fragile ranking. The methodological takeaway is that
-literature ground-truth choices on soft-ground-truth datasets can
-reverse conclusions — a reviewer-relevant point the paper now makes
-directly.
+The former Lorenz-96 PCMCI value `0.986` was an orientation error and is
+superseded by `0.839` under the matched lag horizon. The corrected ordering
+still supports the substantive
+negative conclusion without claiming that PCMCI dominates: on the exact
+simulated graph, simple Granger and tuned linear regression outperform PCMCI
+and PCMCI+ in this configuration.
 
----
+The Lagged-Bottleneck AUROC of `0.881 +/- 0.018` on Lorenz-96 demonstrates a
+readable signal on the exact generating graph, but it remains below Granger,
+Lasso, and Ridge (`0.989/0.973/0.973`). The reported spread is across model
+initialization seeds, with the data held fixed. It is descriptive
+initialization stability, not independent uncertainty and not evidence for a
+competitiveness claim.
 
-## Exp 25: Causal Baselines on Intervention Control Setup
+Climate and finance rankings are descriptive only. With three
+literature-derived climate labels and six heuristic finance labels, small label
+choices can change rankings; the provenance cards are therefore part of the
+result, not supplementary decoration.
 
-Mirrors Exp 22's size-matched intervention setup exactly (3 arms:
-`X_obs_small`, `X_obs_big`, `X_combined`), adds PCMCI and Granger as
-actual causal discovery baselines alongside Bottleneck and Lasso.
+## Exp 25: Target-Aware Method Comparison
 
-### Size-Matched Intervention Gap (Wilcoxon p-values)
+The corrected intervention protocol uses random forcing with:
 
-| Config | Bottleneck | Lasso | PCMCI | Granger |
-|---|---|---|---|---|
-| K=10, T=300 | **+0.026 (p=9.8e-04)** | −0.139 (p=0.81) | +0.025 (p=0.42) | +0.021 (p=0.05) |
-| K=20, T=300 | **+0.027 (p=9.8e-04)** | −0.012 (p=0.99) | +0.007 (p=0.42) | **+0.040 (p=9.8e-04)** |
-| K=30, T=300 | **+0.054 (p=9.8e-04)** | −0.001 (p=0.78) | +0.022 (p=0.01) | **+0.095 (p=9.8e-04)** |
+- 10 independent data-generating seeds;
+- `T=300`, `K in {10,20}`;
+- equal usable rows in the size-matched observational (`big`) and
+  observational-plus-intervention (`combined`) arms;
+- independent trajectory segments with no cross-boundary lag windows;
+- explicit intervention-target metadata;
+- exclusion of the intervened target outcome from each intervention segment;
+- aggregate edge AUROC as the primary metric;
+- paired bootstrap 95% intervals and Holm-adjusted one-sided Wilcoxon tests.
 
-(Columns show size-matched gap = AUROC(combined) − AUROC(obs_big))
+The primary estimand for each method is:
 
-### Interpretation
+`AUROC(combined) - AUROC(big)`
 
-1. **Bottleneck DOES show a genuine size-matched intervention gain**
-   on this data distribution (+0.026 to +0.054 AUROC, p < 0.001 on
-   all three K values). Sai's Exp 22 reported ~+0.03–0.05; this
-   replicates that.
-2. **But Granger shows an EVEN LARGER effect** at K=20 (+0.040) and
-   K=30 (+0.095, also p<0.001). **The "intervention advantage" is
-   not unique to the bottleneck.** Bivariate Granger — a method that
-   makes no low-rank bottleneck assumption — benefits equally or more.
-3. **Lasso uniquely does NOT benefit** from the random-forcing
-   intervention. At K=10 it actually hurts (−0.139). This is consistent
-   with the target-corruption hypothesis: per-step random forcing
-   clamps the target row, breaking Lasso's per-equation regression
-   but helping methods that aggregate information across variables
-   (Bottleneck, PCMCI, Granger).
-4. **PCMCI is weak on this data** (near-random on all arms). Its raw
-   AUROC hovers around 0.50, so small gains are noisy and mostly
-   non-significant.
+### Corrected Size-Matched Gaps
 
-### What This Confirms
+| Method | `K=10, T=300` | `K=20, T=300` |
+|---|---:|---:|
+| Bottleneck | `+0.057` `[0.036, 0.079]` | `+0.050` `[0.038, 0.061]` |
+| Lasso | `+0.033` `[0.017, 0.050]` | `+0.014` `[0.008, 0.021]` |
+| PCMCI | `+0.041` `[0.022, 0.060]` | `+0.022` `[0.014, 0.031]` |
+| Bivariate Granger | **`+0.068`** `[0.044, 0.094]` | **`+0.080`** `[0.057, 0.106]` |
 
-- The Exp 21 "bottleneck benefits uniquely from interventions" claim
-  is dead: the bottleneck's size-matched gap is real and replicable,
-  but so is Granger's, and Granger's is usually larger.
-- The residual effect (after controlling for sample size) is
-  method-agnostic for methods that aggregate across variables, and is
-  consistent with a target-corruption robustness mechanism rather
-  than a specific causal-structure signal.
-- Lasso's per-equation fit is the one method that is genuinely hurt
-  by random forcing.
+All eight within-method comparisons reject after Holm correction
+(`p_Holm=0.0078125`). The important result is not that interventions validate
+the bottleneck: all four methods gain under the same target-aware random-
+forcing protocol. A direct exploratory paired comparison of
+Granger-minus-Bottleneck gains is not significant at `K=10`
+(`p_Holm=0.278`), but is positive at `K=20`
+(`+0.030`, `p_Holm=0.027`). The evidence therefore rejects both
+bottleneck-specificity and method invariance.
 
----
+This corrected run also rejects the old target-corruption explanation. Lasso
+does not uniquely fail after forced target outcomes are excluded; it gains at
+both `K` values. The present evidence does not identify a mechanism for the
+common gain.
 
-## Combined Verdict for the Paper
+## Relation to Exp 23
 
-The updated evidence strengthens rather than weakens the negative-results
-story. The full arc:
+Exp 23 varies intervention semantics and measures the bottleneck's relative
+intervention-specific gap against Lasso and Ridge. Positive differences are
+small (`0.012`-`0.021` AUROC), and constant clamps yield no bottleneck relative
+advantage. Together, Exp 23 and Exp 25 show:
 
-1. **Initial excitement:** `|W_out @ W_in|` recovers dependency
-   structure without causal training.
-2. **Falsification chain:**
-   - Linear baseline beats SSM at same extraction.
-   - Tuned Lasso beats Bottleneck on graph recovery (synthetic
-     stress tests).
-   - On Lorenz-96 (clean ground truth), classical causal methods
-     (PCMCI, Granger) dominate; Bottleneck trails.
-   - Exp 21's intervention finding was ~60% sample-size confound.
-   - Residual effect is specific to random-forcing interventions,
-     not proper do(X=c).
-   - Granger benefits equally or more from the same intervention
-     scheme. The effect is not bottleneck-specific.
-   - Climate ranking is unstable under literature ground-truth
-     choices, and soft ground truth can reverse conclusions.
-3. **What survives as characterization:**
-   - Bottlenecks encode readable dependency structure.
-   - Narrow advantage in mild-nonlinearity regime.
-   - Sample-efficient relative to Lasso as T grows.
-   - Robust to target-corruption patterns.
+1. intervention semantics materially alter the apparent result;
+2. the bottleneck has no advantage under constant clamps;
+3. random and soft forcing can produce small relative differences in selected
+   cells;
+4. random forcing improves all tested methods under the target-aware,
+   size-matched estimand;
+5. no bottleneck-specific causal extraction claim survives.
 
-Paper framing: *"We wanted a free causal discovery method from
-prediction training. We got a method-agnostic robustness-to-corruption
-effect and a rankings-sensitivity-to-ground-truth lesson. Here is
-what we actually learned."*
+DYNOTEARS and VAR-LiNGAM are absent from the corrected empirical table because
+their optional dependencies were unavailable locally. Their orientation and
+lag adapters are covered by fixture-based tests, but this artifact makes no
+empirical claim about either method.
+
+## Workshop Interpretation
+
+The workshop contribution is an audit protocol for interpretability-based
+scientific discovery claims:
+
+1. declare matrix direction and lag conventions;
+2. attach provenance and claim scope to every graph label;
+3. separate real observational soft labels from simulated exact graphs;
+4. preserve trajectory boundaries;
+5. match usable data budgets;
+6. encode intervention targets in fitting and evaluation;
+7. include sparse and classical causal baselines;
+8. use independent seeds, paired intervals, and multiplicity correction;
+9. retain contradictory and null results;
+10. state explicitly that readable predictive dependency is not causal
+    knowledge.
+
+These experiments are not evidence for deploying bottleneck scores, Granger,
+PCMCI, or any other benchmarked method as an automated causal decision system.
+Domain validation and an intervention design matched to the scientific
+estimand remain necessary.

@@ -38,6 +38,7 @@ def simulate_lagged_var(
     noise_std: float,
     seed: int,
     burnin: int = 300,
+    standardize_output: bool = True,
 ) -> np.ndarray:
     rng = np.random.RandomState(seed)
     max_lag, K, _ = A_lags.shape
@@ -50,7 +51,8 @@ def simulate_lagged_var(
             value += A_lags[lag] @ X[t - lag - 1]
         X[t] = value + rng.randn(K) * noise_std
 
-    return standardize(X[burnin:])
+    result = X[burnin:]
+    return standardize(result) if standardize_output else result
 
 
 def lag_graph_from_coefficients(A_lags: np.ndarray) -> np.ndarray:

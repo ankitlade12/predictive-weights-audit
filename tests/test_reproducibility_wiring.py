@@ -15,6 +15,7 @@ def test_reproduce_all_runs_current_falsification_pipeline():
         "exp24_real_data_benchmark.py",
         "exp25_causal_baselines.py",
         "exp26_ssm_multiseed.py",
+        "exp27_nonlinearity_confirmation.py",
     ):
         assert exp in script
 
@@ -31,14 +32,20 @@ def test_makefile_exposes_help_and_paper_pipeline_targets():
     assert "falsification:" in makefile
     assert "paper-arxiv:" in makefile
     assert "main_arxiv.tex" in makefile
+    assert "exp27:" in makefile
+    assert "exp27_nonlinearity_confirmation.py" in makefile
+    assert "workshop-evidence:" in makefile
+    assert "--model-seeds 42 43 44" in makefile
+    assert "--methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger" in makefile
     assert "docker-build" not in makefile
 
 
-def test_reproduction_does_not_require_docker():
+def test_reproduction_supports_but_does_not_require_docker():
     readme = Path("README.md").read_text()
+    makefile = Path("Makefile").read_text()
 
-    assert not Path("Dockerfile").exists()
-    assert "docker build" not in readme
+    assert Path("Dockerfile").exists()
+    assert "docker-build" not in makefile
     assert "make smoke" in readme
 
 

@@ -7,7 +7,7 @@ Suggested reading order:
 1. `EXP24_25_REAL_DATA_AND_CAUSAL_BASELINES.md`
    Current real-data benchmark and causal-baseline summary. Read this first
    for the reviewer-facing falsification story: corrected NOAA ground truth,
-   Lorenz-96, PCMCI/Granger, and intervention method-agnosticity.
+   Lorenz-96, PCMCI/Granger, and intervention method contrasts.
 
 2. `RESEARCH_WRAP_UP_2026-04-16.md`
    Final follow-up wrap-up after the intervention controls and real-data
@@ -70,4 +70,6 @@ Current benchmark-hardening artifacts:
   `ssm_causal/benchmark_metadata.py`.
 - Exp 24 writes `results/real_data_benchmark/edge_provenance_cards.json`.
 - `make smoke` runs bounded CPU-friendly empirical verification.
-- `reproduce_all.sh` and `make falsification` run the current F1-F5 pipeline.
+- `make workshop-evidence` reproduces the compact corrected workshop artifact
+  set; `reproduce_all.sh` and `make falsification` run the broader F1-F6
+  pipeline.
