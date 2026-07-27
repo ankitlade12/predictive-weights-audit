@@ -34,6 +34,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 WORKDIR /workspace
 
 COPY pyproject.toml uv.lock README.md ./
+COPY ssm_causal ./ssm_causal
 RUN uv sync --frozen --extra baselines --extra dev
 
 COPY . .
