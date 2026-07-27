@@ -100,8 +100,8 @@
         "std": 0.02098361939750118
       },
       "finance": {
-        "mean": 0.5641534391534392,
-        "std": 0.03337162913106584
+        "mean": 0.5958994708994708,
+        "std": 0.05098172576878771
       },
       "lorenz96": {
         "mean": 0.8805555555555555,
@@ -155,10 +155,10 @@
   },
   "schema_version": "1.0",
   "source_artifacts": {
-    "results/corrected_workshop/intervention_methods/causal_baselines_results.json": "2bb133a845e0b36938d6160686dc76aedc1b645efdfb85339208a44868d79c15",
-    "results/corrected_workshop/intervention_semantics/intervention_sweep_results.json": "047c3a738276ca4221b2b4e381878494d1a11921d448e54a7ea013e29ed77771",
-    "results/corrected_workshop/nonlinearity_confirmation.json": "99ab2009659cdfbbfdb48ec102274622be774fdf1d75604087447df3da737113",
-    "results/corrected_workshop/real_data/real_data_benchmark_results.json": "03836f3e350dcccb65eee7228328f94326c1d08863100eb187840a402c3b587a"
+    "results/corrected_workshop/intervention_methods/causal_baselines_results.json": "067227889e73fb15d733828b037a7ef80dbe93c5b2473d6be9615350b2b5aeae",
+    "results/corrected_workshop/intervention_semantics/intervention_sweep_results.json": "e17f93a6f5dd2a725bf7723ed76c088188f1246ccdeea661b24ae6bf42d60cfc",
+    "results/corrected_workshop/nonlinearity_confirmation.json": "d6790727b100764cfbae5993bed772df6b07d1e6cf93b8438553c92f9a6ab9d4",
+    "results/corrected_workshop/real_data/real_data_benchmark_results.json": "f143a061a8fcb14b8f5158a7665ebc60428336734a8b21f027562703aa0a64b4"
   },
   "within_method_holm_p": 0.0078125
 }

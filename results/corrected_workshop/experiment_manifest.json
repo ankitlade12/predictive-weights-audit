@@ -1,13 +1,24 @@
 {
-  "schema_version": "1.0",
-  "generated_at_utc": "2026-07-26T21:38:54Z",
-  "local_only": true,
-  "code_revision": "7799fbf412408694a42a6e584af29ec9ec59c7aa",
-  "worktree_dirty": true,
-  "tracked_worktree_diff_sha256": "3eb305f765af5f6db031c82a95e76f487bc39d9b723b8bfe99a5dd75ad17bb1c",
-  "python_source_tree_sha256": "68fb54f6f35f55939b3a51cbff85f6cd417ddf515a257d103391bf60bd805509",
+  "schema_version": "2.0",
+  "generated_at_utc": "2026-07-27T03:54:24.781670+00:00",
+  "execution_environment": "local_cpu",
+  "code_revision": "456fe8c6c72896c8ebe7a77a1e028a98198c9863",
+  "tracked_source_worktree_dirty": false,
+  "tracked_source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tracked_source_tree_sha256": "f1131ed3f71815429663398d44395b9b3c62338dfb20eb95dfc87daea7dad056",
+  "tracked_source_file_count": 80,
+  "python_version": "3.13.9",
+  "package_versions": {
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.1",
+    "statsmodels": "0.14.6",
+    "tigramite": "5.2.10.1",
+    "torch": "2.11.0"
+  },
   "replication_policy": {
-    "unit": "independent data-generating seed unless an artifact explicitly says otherwise",
+    "unit": "independent data-generating seed unless an artifact explicitly states otherwise",
     "model_seed_spread": "descriptive initialization stability only",
     "multiplicity": "Holm correction within each declared primary family",
     "uncertainty": "paired bootstrap intervals for paired effects"
@@ -16,66 +27,74 @@
     {
       "id": "exp20",
       "artifact": "results/corrected_workshop/graph_label_sensitivity_smoke/fixed_score_graph_label_sensitivity_results.json",
-      "artifact_sha256": "9c0274f04d27a1d41144c0a1140177a2059ead86ecfbb5b89e9a72ac800e69a3",
-      "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python experiments/exp20_distribution_shift.py --quick --save-dir results/corrected_workshop/graph_label_sensitivity_smoke",
+      "command": "uv run --frozen --extra baselines --extra dev python experiments/exp20_distribution_shift.py --quick --save-dir results/corrected_workshop/graph_label_sensitivity_smoke",
       "scope": "CPU smoke validation",
-      "claim": "The protocol measures fixed-score graph-label sensitivity, not adaptation or distribution-shift robustness."
+      "claim": "The protocol measures fixed-score graph-label sensitivity, not adaptation or distribution-shift robustness.",
+      "artifact_sha256": "fd692b47edc4c8e26316190cc41ae8925c712d6ae02016efd1c8bcc34264ec06"
     },
     {
       "id": "exp22",
       "artifact": "results/corrected_workshop/intervention_control/intervention_control_results.json",
-      "artifact_sha256": "e8216f80b249343c055cd7cabefab19372dc168d26aad784f58680116e3c5927",
-      "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python experiments/exp22_intervention_control.py --seeds 10 --K 10 20 --T 300 --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_control",
+      "command": "uv run --frozen --extra baselines --extra dev python experiments/exp22_intervention_control.py --seeds 10 --K 10 20 --T 300 --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_control",
       "scope": "10 independent data seeds; target-aware, size-matched random forcing",
-      "claim": "The bottleneck has small relative advantages over Lasso in these two configurations; this contrast does not establish a direct causal-information benefit."
+      "claim": "The bottleneck has small relative advantages over Lasso in these two configurations; this contrast does not establish a direct causal-information benefit.",
+      "artifact_sha256": "053ae9a85fda9b454aeb957372149b21b4af35f7ec5f68981b2432db0f912869"
     },
     {
       "id": "exp23",
       "artifact": "results/corrected_workshop/intervention_semantics/intervention_sweep_results.json",
-      "artifact_sha256": "047c3a738276ca4221b2b4e381878494d1a11921d448e54a7ea013e29ed77771",
-      "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python experiments/exp23_intervention_sweep.py --seeds 10 --K 10 20 --T 300 --int-types random constant soft --strengths 1 --baselines lasso ridge --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_semantics",
+      "command": "uv run --frozen --extra baselines --extra dev python experiments/exp23_intervention_sweep.py --seeds 10 --K 10 20 --T 300 --int-types random constant soft --strengths 1 --baselines lasso ridge --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_semantics",
       "scope": "10 independent data seeds; target-aware intervention-semantics comparison",
-      "claim": "Constant clamps show no bottleneck relative advantage; selected random and soft effects are small and do not identify a bottleneck-specific mechanism."
+      "claim": "Constant clamps show no bottleneck relative advantage; selected random and soft effects are small and do not identify a bottleneck-specific mechanism.",
+      "artifact_sha256": "e17f93a6f5dd2a725bf7723ed76c088188f1246ccdeea661b24ae6bf42d60cfc"
     },
     {
       "id": "exp24",
       "artifact": "results/corrected_workshop/real_data/real_data_benchmark_results.json",
-      "artifact_sha256": "03836f3e350dcccb65eee7228328f94326c1d08863100eb187840a402c3b587a",
       "provenance_artifact": "results/corrected_workshop/real_data/edge_provenance_cards.json",
-      "provenance_artifact_sha256": "2f5df7e430b3b66695aa94895b23c5627783855cd69015a18b821c708e3daaa0",
-      "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python experiments/exp24_real_data_benchmark.py --datasets climate finance lorenz96 --methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger --model-seeds 42 43 44 --epochs 80 --device cpu --save-dir results/corrected_workshop/real_data",
+      "command": "uv run --frozen --extra baselines --extra dev python experiments/exp24_real_data_benchmark.py --datasets climate finance lorenz96 --methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger --model-seeds 42 43 44 --epochs 80 --device cpu --save-dir results/corrected_workshop/real_data",
       "scope": "Climate and finance soft-label sensitivity; exact simulated Lorenz-96 graph",
-      "claim": "Lagged bottleneck weights encode readable Lorenz-96 dependency signal, but Granger and tuned linear baselines recover the exact graph better in this configuration."
+      "claim": "Lagged bottleneck weights encode readable Lorenz-96 dependency signal, but Granger and tuned linear baselines recover the exact graph better in this configuration.",
+      "artifact_sha256": "f143a061a8fcb14b8f5158a7665ebc60428336734a8b21f027562703aa0a64b4",
+      "provenance_artifact_sha256": "2f5df7e430b3b66695aa94895b23c5627783855cd69015a18b821c708e3daaa0"
     },
     {
       "id": "exp25",
       "artifact": "results/corrected_workshop/intervention_methods/causal_baselines_results.json",
-      "artifact_sha256": "2bb133a845e0b36938d6160686dc76aedc1b645efdfb85339208a44868d79c15",
-      "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python experiments/exp25_causal_baselines.py --seeds 10 --K-values 10 20 --T-values 300 --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_methods",
+      "command": "uv run --frozen --extra baselines --extra dev python experiments/exp25_causal_baselines.py --seeds 10 --K-values 10 20 --T-values 300 --epochs 80 --device cpu --save-dir results/corrected_workshop/intervention_methods",
       "scope": "10 independent data seeds; target-aware random forcing",
-      "claim": "All four tested methods have positive within-method gains. A direct exploratory Granger-minus-Bottleneck contrast is null at K=10 and positive at K=20 after Holm correction, rejecting both bottleneck-specificity and method invariance."
+      "claim": "All four tested methods have positive within-method gains. A direct exploratory Granger-minus-Bottleneck contrast is null at K=10 and positive at K=20 after Holm correction.",
+      "artifact_sha256": "067227889e73fb15d733828b037a7ef80dbe93c5b2473d6be9615350b2b5aeae"
     },
     {
       "id": "exp27",
       "artifact": "results/corrected_workshop/nonlinearity_confirmation.json",
-      "artifact_sha256": "99ab2009659cdfbbfdb48ec102274622be774fdf1d75604087447df3da737113",
-      "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python experiments/exp27_nonlinearity_confirmation.py --output results/corrected_workshop/nonlinearity_confirmation.json",
+      "command": "uv run --frozen --extra baselines --extra dev python experiments/exp27_nonlinearity_confirmation.py --output results/corrected_workshop/nonlinearity_confirmation.json",
       "scope": "10 independent data seeds; K in {10,20}; T in {300,600}; nonlinearity mix in {0,0.2,0.3,0.4,0.6,1}",
-      "claim": "No common-T mild-nonlinearity regime passes the pre-specified gate; the isolated K=20,T=300 effect is invariant to nonlinearity and disappears at T=600."
+      "claim": "No common-T mild-nonlinearity regime passes the fixed gate; the isolated K=20,T=300 effect is invariant to nonlinearity and disappears at T=600.",
+      "artifact_sha256": "d6790727b100764cfbae5993bed772df6b07d1e6cf93b8438553c92f9a6ab9d4"
+    },
+    {
+      "id": "paper-values",
+      "artifact": "results/corrected_workshop/paper_values.json",
+      "command": "uv run --frozen --extra baselines --extra dev python paper/generate_workshop_results.py",
+      "scope": "Mechanical derivation of manuscript values from corrected artifacts",
+      "claim": "The manuscript tables and headline values are artifact-derived.",
+      "artifact_sha256": "5d2b84a986a760931f519eb9402bcbb89aad08c830a7b4013e805dc3ad02650a"
     }
   ],
   "not_rerun": [
     {
       "method": "SSM real-data benchmark",
-      "reason": "Not required for the corrected CPU evidence slice; prior architecture controls are reported separately."
+      "reason": "Outside the corrected CPU evidence slice; the workshop manuscript does not make a corrected empirical claim for it."
     },
     {
       "method": "DYNOTEARS",
-      "reason": "Optional causalnex dependency is not installed locally."
+      "reason": "Optional causalnex dependency is unavailable."
     },
     {
       "method": "VAR-LiNGAM",
-      "reason": "Optional lingam dependency is not installed locally."
+      "reason": "Optional lingam dependency is unavailable."
     }
   ]
 }

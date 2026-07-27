@@ -1,10 +1,11 @@
 {
   "schema_version": "1.0",
   "experiment": "exp24_real_data_benchmark",
-  "code_revision": "7799fbf412408694a42a6e584af29ec9ec59c7aa",
-  "worktree_dirty": true,
-  "worktree_diff_sha256": "3eb305f765af5f6db031c82a95e76f487bc39d9b723b8bfe99a5dd75ad17bb1c",
-  "source_tree_sha256": "68fb54f6f35f55939b3a51cbff85f6cd417ddf515a257d103391bf60bd805509",
+  "code_revision": "456fe8c6c72896c8ebe7a77a1e028a98198c9863",
+  "worktree_dirty": false,
+  "worktree_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "provenance_scope": "tracked_source_files",
+  "source_tree_sha256": "dfed9bacea3fe9af1720a2019aa409ca648ef304001000e7f88801bb061407f1",
   "command": "experiments/exp24_real_data_benchmark.py --datasets climate finance lorenz96 --methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger --model-seeds 42 43 44 --epochs 80 --device cpu --save-dir results/corrected_workshop/real_data",
   "argv": [
     "experiments/exp24_real_data_benchmark.py",
@@ -30,9 +31,9 @@
     "--save-dir",
     "results/corrected_workshop/real_data"
   ],
-  "created_at": "2026-07-26T21:38:38.551887+00:00",
-  "created_at_utc": "2026-07-26T21:38:38.551887+00:00",
-  "python_version": "3.12.3",
+  "created_at": "2026-07-27T03:51:14.872327+00:00",
+  "created_at_utc": "2026-07-27T03:51:14.872327+00:00",
+  "python_version": "3.13.9",
   "package_versions": {
     "numpy": "2.4.4",
     "torch": "2.11.0",
@@ -46,7 +47,7 @@
   },
   "device": "cpu",
   "epochs": 80,
-  "runtime_s": 17.71018441299998,
+  "runtime_s": 6.119680750009138,
   "metric_definitions": {
     "auroc": {
       "description": "Area under the receiver operating characteristic curve",
@@ -133,7 +134,7 @@
                 "auprc": 0.17359058565955116,
                 "oracle_f1": 0.4444444444444444
               },
-              "runtime_s": 2.1494773780000287
+              "runtime_s": 0.6064310409710743
             },
             {
               "model_seed": 43,
@@ -144,7 +145,7 @@
                 "auprc": 0.20136836343732895,
                 "oracle_f1": 0.4444444444444444
               },
-              "runtime_s": 0.5509585949999973
+              "runtime_s": 0.13859029102604836
             },
             {
               "model_seed": 44,
@@ -155,7 +156,7 @@
                 "auprc": 0.5559386973180076,
                 "oracle_f1": 0.6666666666666666
               },
-              "runtime_s": 0.7434363019999637
+              "runtime_s": 0.13808054197579622
             }
           ],
           "hyperparameters": {
@@ -174,7 +175,7 @@
             ]
           },
           "device": "cpu",
-          "runtime_s": 3.4438722749999897,
+          "runtime_s": 0.8831018739729188,
           "replication_unit": "model_initialization_seed",
           "aggregation": {
             "unit": "model_initialization_seed",
@@ -211,7 +212,7 @@
               "alpha": 0.01
             }
           },
-          "runtime_s": 0.015457213999980013,
+          "runtime_s": 0.020603374985512346,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -240,7 +241,7 @@
               "alpha": 0.01
             }
           },
-          "runtime_s": 0.013863481999919713,
+          "runtime_s": 0.006519875023514032,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -259,7 +260,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.23828406300003735,
+          "runtime_s": 0.12025362497661263,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -279,7 +280,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.1425465009999698,
+          "runtime_s": 0.0729187079705298,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -297,7 +298,7 @@
             "score_type": "neg_log_pvalue",
             "test": "bivariate_ssr_ftest"
           },
-          "runtime_s": 0.36469815700002073,
+          "runtime_s": 0.1369942909805104,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         }
@@ -312,31 +313,31 @@
       "T": 1893,
       "n_edges": 6,
       "names": [
-        "XLE",
         "XLB",
-        "XLI",
-        "XLY",
-        "XLP",
-        "XLF",
-        "XLK",
         "XLC",
+        "XLE",
+        "XLF",
+        "XLI",
+        "XLK",
+        "XLP",
+        "XLRE",
         "XLU",
-        "XLRE"
+        "XLY"
       ],
-      "data_sha256": "fe15449ea14eaedc29caeb5571129640c178931c49a6974a0101fcb138e1cea8",
-      "graph_sha256": "b0f489d2eb45d9aef882b2ee498a734ab0db1e30325024ae5ece4fba90716238",
+      "data_sha256": "6d10f9ff9368cd8642f05a52658d47ef2af4c94dacdbca272fdc8c4c07108f5e",
+      "graph_sha256": "9fd8d687367ae104e76addd1552aa8d066cd642545849a72db8f450bc821015e",
       "standardization": "per-variable mean zero and unit variance on full series",
       "methods": {
         "Lagged-Bottleneck": {
           "status": "ok",
           "error": null,
           "metrics": {
-            "auroc_mean": 0.5641534391534392,
-            "auroc_std": 0.03337162913106584,
-            "auprc_mean": 0.0920892825016103,
-            "auprc_std": 0.010682615977267228,
-            "oracle_f1_mean": 0.272875816993464,
-            "oracle_f1_std": 0.043169427495499686
+            "auroc_mean": 0.5958994708994708,
+            "auroc_std": 0.05098172576878771,
+            "auprc_mean": 0.10171043791547081,
+            "auprc_std": 0.022082625725968683,
+            "oracle_f1_mean": 0.2735930735930736,
+            "oracle_f1_std": 0.07086180318948483
           },
           "per_seed": [
             {
@@ -344,33 +345,33 @@
               "status": "ok",
               "error": null,
               "metrics": {
-                "auroc": 0.5595238095238095,
-                "auprc": 0.10676262513805321,
-                "oracle_f1": 0.3333333333333333
+                "auroc": 0.6309523809523809,
+                "auprc": 0.10123193204465122,
+                "oracle_f1": 0.26666666666666666
               },
-              "runtime_s": 1.9503017709999995
+              "runtime_s": 0.3651574170216918
             },
             {
               "model_seed": 43,
               "status": "ok",
               "error": null,
               "metrics": {
-                "auroc": 0.6071428571428572,
-                "auprc": 0.08786664202488799,
-                "oracle_f1": 0.23529411764705882
+                "auroc": 0.6329365079365079,
+                "auprc": 0.12899209851973498,
+                "oracle_f1": 0.36363636363636365
               },
-              "runtime_s": 1.2836299009999266
+              "runtime_s": 0.3584990000235848
             },
             {
               "model_seed": 44,
               "status": "ok",
               "error": null,
               "metrics": {
-                "auroc": 0.5257936507936507,
-                "auprc": 0.08163858034188973,
-                "oracle_f1": 0.25
+                "auroc": 0.5238095238095238,
+                "auprc": 0.07490728318202622,
+                "oracle_f1": 0.19047619047619047
               },
-              "runtime_s": 1.3428787629999306
+              "runtime_s": 0.36173420801060274
             }
           ],
           "hyperparameters": {
@@ -389,7 +390,7 @@
             ]
           },
           "device": "cpu",
-          "runtime_s": 4.576810434999857,
+          "runtime_s": 1.0853906250558794,
           "replication_unit": "model_initialization_seed",
           "aggregation": {
             "unit": "model_initialization_seed",
@@ -426,7 +427,7 @@
               "alpha": 1.0
             }
           },
-          "runtime_s": 0.056670381000003545,
+          "runtime_s": 0.024210500007029623,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -455,7 +456,7 @@
               "alpha": 100.0
             }
           },
-          "runtime_s": 0.013682521999953678,
+          "runtime_s": 0.005886666011065245,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -474,7 +475,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.8211122840000371,
+          "runtime_s": 0.4341871669748798,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -494,7 +495,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.47908691500003897,
+          "runtime_s": 0.2536499169655144,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -512,7 +513,7 @@
             "score_type": "neg_log_pvalue",
             "test": "bivariate_ssr_ftest"
           },
-          "runtime_s": 0.3843510229999083,
+          "runtime_s": 0.19240112497936934,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         }
@@ -562,7 +563,7 @@
                 "auprc": 0.754317779060437,
                 "oracle_f1": 0.8115942028985508
               },
-              "runtime_s": 1.1850631739999926
+              "runtime_s": 0.29285779199562967
             },
             {
               "model_seed": 43,
@@ -573,7 +574,7 @@
                 "auprc": 0.690482869606085,
                 "oracle_f1": 0.7945205479452054
               },
-              "runtime_s": 1.240526673999966
+              "runtime_s": 0.2900312909623608
             },
             {
               "model_seed": 44,
@@ -584,7 +585,7 @@
                 "auprc": 0.7622909834270764,
                 "oracle_f1": 0.8307692307692308
               },
-              "runtime_s": 1.0143079639999542
+              "runtime_s": 0.2855975410202518
             }
           ],
           "hyperparameters": {
@@ -603,7 +604,7 @@
             ]
           },
           "device": "cpu",
-          "runtime_s": 3.439897811999913,
+          "runtime_s": 0.8684866239782423,
           "replication_unit": "model_initialization_seed",
           "aggregation": {
             "unit": "model_initialization_seed",
@@ -640,7 +641,7 @@
               "alpha": 0.001
             }
           },
-          "runtime_s": 0.06957565299990165,
+          "runtime_s": 0.04044075001729652,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -669,7 +670,7 @@
               "alpha": 1.0
             }
           },
-          "runtime_s": 0.012582702000031531,
+          "runtime_s": 0.004222457995638251,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -688,7 +689,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 1.2472224079999705,
+          "runtime_s": 0.7080888749915175,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -708,7 +709,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.9759506670000064,
+          "runtime_s": 0.5000422919983976,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -726,7 +727,7 @@
             "score_type": "neg_log_pvalue",
             "test": "bivariate_ssr_ftest"
           },
-          "runtime_s": 0.40332197899999755,
+          "runtime_s": 0.17162600002484396,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         }
@@ -778,14 +779,14 @@
         "aggregation": "deterministic_run"
       },
       {
+        "method": "Lagged-Bottleneck",
+        "auroc": 0.5958994708994708,
+        "aggregation": "mean_across_model_seeds"
+      },
+      {
         "method": "PCMCI+",
         "auroc": 0.5793650793650794,
         "aggregation": "deterministic_run"
-      },
-      {
-        "method": "Lagged-Bottleneck",
-        "auroc": 0.5641534391534392,
-        "aggregation": "mean_across_model_seeds"
       },
       {
         "method": "Granger",
