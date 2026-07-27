@@ -34,7 +34,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 WORKDIR /workspace
 
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen && uv sync --frozen --extra baselines --extra dev
+RUN uv sync --frozen --extra baselines --extra dev
 
 COPY . .
 

@@ -213,10 +213,19 @@ def test_git_metadata_hashes_exact_binary_diff_deterministically(monkeypatch):
         git_args = command[1:]
         if git_args == ["rev-parse", "HEAD"]:
             return GitResult(b"abc123\n")
-        if git_args == ["diff", "--binary", "HEAD"]:
+        if git_args == [
+            "diff",
+            "--binary",
+            "HEAD",
+            "--",
+            ":(glob)**/*.py",
+            "Dockerfile",
+            "Makefile",
+            "pyproject.toml",
+            "reproduce_all.sh",
+            "uv.lock",
+        ]:
             return GitResult(diff_bytes)
-        if git_args == ["status", "--porcelain=v1", "--untracked-files=normal"]:
-            return GitResult(b" M experiments/exp24_real_data_benchmark.py\n")
         raise AssertionError(f"Unexpected git command: {command}")
 
     monkeypatch.setattr(exp24.subprocess, "run", fake_git_run)
@@ -230,6 +239,7 @@ def test_git_metadata_hashes_exact_binary_diff_deterministically(monkeypatch):
         "code_revision": "abc123",
         "worktree_dirty": True,
         "worktree_diff_sha256": expected_hash,
+        "provenance_scope": "tracked_source_files",
     }
 
 
@@ -327,6 +337,7 @@ def test_result_payload_contains_reproducibility_metadata(monkeypatch, tmp_path)
             "code_revision": "abc123",
             "worktree_dirty": False,
             "worktree_diff_sha256": hashlib.sha256(b"").hexdigest(),
+            "provenance_scope": "tracked_source_files",
         },
     )
     monkeypatch.setattr(
@@ -361,6 +372,7 @@ def test_result_payload_contains_reproducibility_metadata(monkeypatch, tmp_path)
     assert payload["code_revision"] == "abc123"
     assert payload["worktree_dirty"] is False
     assert payload["worktree_diff_sha256"] == hashlib.sha256(b"").hexdigest()
+    assert payload["provenance_scope"] == "tracked_source_files"
     assert payload["source_tree_sha256"] == "source-tree-hash"
     assert payload["argv"] == [
         "experiments/exp24_real_data_benchmark.py",

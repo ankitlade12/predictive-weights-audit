@@ -47,8 +47,5 @@ paper/**/*.xdv
 # Auto-generated tables (regenerable)
 paper/table*.tex
 
-# Lock file (large)
-uv.lock
-
 # Pytest
 .pytest_cache/

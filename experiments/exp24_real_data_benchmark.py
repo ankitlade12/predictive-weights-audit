@@ -505,6 +505,14 @@ def collect_edge_cards(datasets: list[str]) -> dict[str, dict[str, list[dict[str
 
 def _git_metadata() -> dict[str, object]:
     repo_root = Path(__file__).resolve().parents[1]
+    source_pathspecs = (
+        ":(glob)**/*.py",
+        "Dockerfile",
+        "Makefile",
+        "pyproject.toml",
+        "reproduce_all.sh",
+        "uv.lock",
+    )
     try:
         revision = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -513,13 +521,7 @@ def _git_metadata() -> dict[str, object]:
             check=False,
         )
         diff = subprocess.run(
-            ["git", "diff", "--binary", "HEAD"],
-            cwd=repo_root,
-            capture_output=True,
-            check=False,
-        )
-        status = subprocess.run(
-            ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+            ["git", "diff", "--binary", "HEAD", "--", *source_pathspecs],
             cwd=repo_root,
             capture_output=True,
             check=False,
@@ -527,16 +529,15 @@ def _git_metadata() -> dict[str, object]:
     except OSError:
         revision_bytes = b""
         diff_bytes = b""
-        status_bytes = b""
     else:
         revision_bytes = revision.stdout if revision.returncode == 0 else b""
         diff_bytes = diff.stdout if diff.returncode == 0 else b""
-        status_bytes = status.stdout if status.returncode == 0 else diff_bytes
 
     return {
         "code_revision": revision_bytes.decode().strip() or None,
-        "worktree_dirty": bool(status_bytes),
+        "worktree_dirty": bool(diff_bytes),
         "worktree_diff_sha256": hashlib.sha256(diff_bytes).hexdigest(),
+        "provenance_scope": "tracked_source_files",
     }
 
 
@@ -572,20 +573,34 @@ def _array_sha256(array: np.ndarray) -> str:
 
 def _source_tree_sha256(root: Path | None = None) -> str:
     source_root = root or Path(__file__).resolve().parents[1]
-    excluded_parts = {
-        ".git",
-        ".venv",
-        "venv",
-        "__pycache__",
-        ".tox",
-        "build",
-        "dist",
-    }
-    source_paths = sorted(
-        path
-        for path in source_root.rglob("*.py")
-        if not excluded_parts.intersection(path.relative_to(source_root).parts)
-    )
+    source_paths: list[Path]
+    if root is None:
+        tracked = subprocess.run(
+            ["git", "ls-files", "-z", "--", "*.py"],
+            cwd=source_root,
+            capture_output=True,
+            check=False,
+        )
+        source_paths = sorted(
+            source_root / item.decode()
+            for item in tracked.stdout.split(b"\0")
+            if item
+        )
+    else:
+        excluded_parts = {
+            ".git",
+            ".venv",
+            "venv",
+            "__pycache__",
+            ".tox",
+            "build",
+            "dist",
+        }
+        source_paths = sorted(
+            path
+            for path in source_root.rglob("*.py")
+            if not excluded_parts.intersection(path.relative_to(source_root).parts)
+        )
 
     digest = hashlib.sha256()
     for source_path in source_paths:

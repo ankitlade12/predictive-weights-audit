@@ -1,0 +1,164 @@
+{
+  "granger_minus_bottleneck": {
+    "K10": {
+      "holm_p": 0.2783203125,
+      "mean": 0.011107278777398654
+    },
+    "K20": {
+      "holm_p": 0.02734375,
+      "mean": 0.0298678636256423
+    }
+  },
+  "intervention": {
+    "Bottleneck": {
+      "K10": {
+        "high": 0.07856503491322557,
+        "holm_p": 0.0078125,
+        "low": 0.035717701742907774,
+        "mean": 0.05735238653629103
+      },
+      "K20": {
+        "high": 0.061204333207363695,
+        "holm_p": 0.0078125,
+        "low": 0.03831012692798946,
+        "mean": 0.05038377307659202
+      }
+    },
+    "Granger": {
+      "K10": {
+        "high": 0.09378631397557535,
+        "holm_p": 0.0078125,
+        "low": 0.04419421279660232,
+        "mean": 0.06845966531368969
+      },
+      "K20": {
+        "high": 0.10630201843770158,
+        "holm_p": 0.0078125,
+        "low": 0.057355165529427404,
+        "mean": 0.08025163670223431
+      }
+    },
+    "Lasso": {
+      "K10": {
+        "high": 0.04953544480059026,
+        "holm_p": 0.0078125,
+        "low": 0.017425323801539497,
+        "mean": 0.033230538924705844
+      },
+      "K20": {
+        "high": 0.02099785183513548,
+        "holm_p": 0.0078125,
+        "low": 0.008422911923568064,
+        "mean": 0.01402524240929286
+      }
+    },
+    "PCMCI": {
+      "K10": {
+        "high": 0.060191854826819984,
+        "holm_p": 0.0078125,
+        "low": 0.02220176067974215,
+        "mean": 0.040540546248981665
+      },
+      "K20": {
+        "high": 0.030571399566484893,
+        "holm_p": 0.0078125,
+        "low": 0.013629341943065941,
+        "mean": 0.02152969385169745
+      }
+    }
+  },
+  "intervention_semantics": {
+    "constant_max": -2.2783605132270514e-05,
+    "significant_positive_max": 0.02090196893996472,
+    "significant_positive_min": 0.012173997688054005
+  },
+  "nonlinearity": {
+    "K10_T300_delta": 0.05,
+    "K10_T600_bn": 1.0,
+    "K10_T600_lasso": 1.0,
+    "K20_T300_delta": 0.5,
+    "K20_T600_bn": 1.0,
+    "K20_T600_lasso": 1.0,
+    "T600_shared_auroc": 1.0,
+    "status": "isolated_positive_exploratory"
+  },
+  "real_benchmark": {
+    "Granger": {
+      "climate": {
+        "mean": 0.6049382716049383
+      },
+      "finance": {
+        "mean": 0.5119047619047619
+      },
+      "lorenz96": {
+        "mean": 0.9888888888888889
+      }
+    },
+    "Lagged-Bottleneck": {
+      "climate": {
+        "mean": 0.6255144032921811,
+        "std": 0.02098361939750118
+      },
+      "finance": {
+        "mean": 0.5641534391534392,
+        "std": 0.03337162913106584
+      },
+      "lorenz96": {
+        "mean": 0.8805555555555555,
+        "std": 0.017574064317212267
+      }
+    },
+    "Lasso": {
+      "climate": {
+        "mean": 0.6172839506172839
+      },
+      "finance": {
+        "mean": 0.5
+      },
+      "lorenz96": {
+        "mean": 0.9727777777777777
+      }
+    },
+    "PCMCI": {
+      "climate": {
+        "mean": 0.40740740740740744
+      },
+      "finance": {
+        "mean": 0.6091269841269842
+      },
+      "lorenz96": {
+        "mean": 0.8388888888888889
+      }
+    },
+    "PCMCI+": {
+      "climate": {
+        "mean": 0.6049382716049383
+      },
+      "finance": {
+        "mean": 0.5793650793650794
+      },
+      "lorenz96": {
+        "mean": 0.8750000000000001
+      }
+    },
+    "Ridge": {
+      "climate": {
+        "mean": 0.6172839506172839
+      },
+      "finance": {
+        "mean": 0.5972222222222222
+      },
+      "lorenz96": {
+        "mean": 0.9727777777777777
+      }
+    }
+  },
+  "schema_version": "1.0",
+  "source_artifacts": {
+    "results/corrected_workshop/intervention_methods/causal_baselines_results.json": "2bb133a845e0b36938d6160686dc76aedc1b645efdfb85339208a44868d79c15",
+    "results/corrected_workshop/intervention_semantics/intervention_sweep_results.json": "047c3a738276ca4221b2b4e381878494d1a11921d448e54a7ea013e29ed77771",
+    "results/corrected_workshop/nonlinearity_confirmation.json": "99ab2009659cdfbbfdb48ec102274622be774fdf1d75604087447df3da737113",
+    "results/corrected_workshop/real_data/real_data_benchmark_results.json": "03836f3e350dcccb65eee7228328f94326c1d08863100eb187840a402c3b587a"
+  },
+  "within_method_holm_p": 0.0078125
+}

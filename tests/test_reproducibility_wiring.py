@@ -35,6 +35,10 @@ def test_makefile_exposes_help_and_paper_pipeline_targets():
     assert "exp27:" in makefile
     assert "exp27_nonlinearity_confirmation.py" in makefile
     assert "workshop-evidence:" in makefile
+    assert "workshop-manifest:" in makefile
+    assert "anonymous-supplement:" in makefile
+    assert "submission-audit:" in makefile
+    assert "uv run --frozen --extra baselines --extra dev" in makefile
     assert "--model-seeds 42 43 44" in makefile
     assert "--methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger" in makefile
     assert "docker-build" not in makefile
@@ -53,7 +57,7 @@ def test_full_real_data_targets_download_missing_finance_data():
     makefile = Path("Makefile").read_text()
 
     assert "data/real/sector_etfs.csv:" in makefile
-    assert "uv run --with yfinance python scripts/download_etfs.py" in makefile
+    assert "uv run --frozen --with yfinance python scripts/download_etfs.py" in makefile
     assert "exp24: data/real/sector_etfs.csv" in makefile
     assert "exp26: data/real/sector_etfs.csv" in makefile
 

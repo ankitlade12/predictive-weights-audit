@@ -51,12 +51,12 @@ Corrected AUROC:
 
 | Method | Climate | Finance | Lorenz-96 |
 |---|---:|---:|---:|
-| Lasso | **0.617** | 0.500 | 0.973 |
-| Ridge | **0.617** | **0.597** | 0.973 |
-| Lagged-Bottleneck (3 model seeds) | **0.626 +/- 0.021** | 0.564 +/- 0.033 | 0.881 +/- 0.018 |
-| PCMCI | 0.407 | **0.609** | 0.839 |
+| Lasso | 0.617 | 0.500 | 0.973 |
+| Ridge | 0.617 | 0.597 | 0.973 |
+| Lagged-Bottleneck (3 model seeds) | 0.626 +/- 0.021 | 0.564 +/- 0.033 | 0.881 +/- 0.018 |
+| PCMCI | 0.407 | 0.609 | 0.839 |
 | PCMCI+ | 0.605 | 0.579 | 0.875 |
-| Bivariate Granger | 0.605 | 0.512 | **0.989** |
+| Bivariate Granger | 0.605 | 0.512 | 0.989 |
 
 The previously reported Lorenz-96 PCMCI AUROC of `0.986` came from a
 source/target orientation error. With every method evaluated at lag horizon
@@ -160,18 +160,17 @@ intervention design, and comparison with methods fit to the same estimand.
 
 ## Reproduction
 
-Install with `uv`:
+The checked-in `uv.lock` is the dependency authority. Install the exact
+core, baseline, and test environment:
 
 ```bash
-uv sync
-uv sync --extra baselines
-uv sync --extra dev
+uv sync --frozen --extra baselines --extra dev
 ```
 
-Run the lightweight verification suite:
+Run the full test suite:
 
 ```bash
-uv run pytest -q
+make test
 ```
 
 Run the native bounded, CPU-friendly reproduction path:
@@ -189,11 +188,27 @@ make workshop-evidence
 The exact commands and claim scope for each artifact are recorded in
 `results/corrected_workshop/experiment_manifest.json`.
 
-Build the anonymous workshop paper:
+Build the anonymous workshop paper with the official NeurIPS 2026 style:
 
 ```bash
 make paper-workshop
 ```
+
+Build the deterministic, identity-scanned review supplement:
+
+```bash
+make anonymous-supplement
+```
+
+Run all release checks without rerunning the experiments:
+
+```bash
+make submission-audit
+```
+
+The PDF is written to `paper/draft/main_4page.pdf`; the anonymous supplement
+is written to `dist/anonymous_workshop_supplement.zip`. Do not link the public
+repository during double-blind review.
 
 ## Repository Map
 
