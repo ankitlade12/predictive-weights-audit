@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
-  "generated_at_utc": "2026-07-27T03:57:13.872502+00:00",
+  "generated_at_utc": "2026-07-27T04:09:00.932747+00:00",
   "execution_environment": "local_cpu",
-  "code_revision": "c4002016173e5f1c22c7b599df13292b46c5a7c1",
+  "code_revision": "21d30415c4aad815f228b9b1f67a40fc9acc96d6",
   "tracked_source_worktree_dirty": false,
   "tracked_source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "tracked_source_tree_sha256": "f1131ed3f71815429663398d44395b9b3c62338dfb20eb95dfc87daea7dad056",
+  "tracked_source_tree_sha256": "8d1113173523383691527ac0498116cdf1e7e8a84568a165c3bfd06e57cc330a",
   "tracked_source_file_count": 80,
   "python_version": "3.13.9",
   "package_versions": {
@@ -55,7 +55,7 @@
       "command": "uv run --frozen --extra baselines --extra dev python experiments/exp24_real_data_benchmark.py --datasets climate finance lorenz96 --methods Lagged-Bottleneck Lasso Ridge PCMCI PCMCI+ Granger --model-seeds 42 43 44 --epochs 80 --device cpu --save-dir results/corrected_workshop/real_data",
       "scope": "Climate and finance soft-label sensitivity; exact simulated Lorenz-96 graph",
       "claim": "Lagged bottleneck weights encode readable Lorenz-96 dependency signal, but Granger and tuned linear baselines recover the exact graph better in this configuration.",
-      "artifact_sha256": "c6d5bad94520590b2bdf863766ca87c850fd407b3292dcc032c56cc7c1d0a47a",
+      "artifact_sha256": "732e13353f30eeca8222125b2fa288a1a1c78a7d6bbde4568346ca59bf355507",
       "provenance_artifact_sha256": "2f5df7e430b3b66695aa94895b23c5627783855cd69015a18b821c708e3daaa0"
     },
     {
@@ -80,7 +80,7 @@
       "command": "uv run --frozen --extra baselines --extra dev python paper/generate_workshop_results.py",
       "scope": "Mechanical derivation of manuscript values from corrected artifacts",
       "claim": "The manuscript tables and headline values are artifact-derived.",
-      "artifact_sha256": "80d22a09162c4556b0fea6baa219a8c616f55f36e624a51142f87e8772efdeb4"
+      "artifact_sha256": "20dd271a00d917bb8c2725d365595322272a37ce2ab20a61051c045a92c30b0c"
     }
   ],
   "not_rerun": [

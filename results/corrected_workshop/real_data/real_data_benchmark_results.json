@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "experiment": "exp24_real_data_benchmark",
-  "code_revision": "c4002016173e5f1c22c7b599df13292b46c5a7c1",
+  "code_revision": "21d30415c4aad815f228b9b1f67a40fc9acc96d6",
   "worktree_dirty": false,
   "worktree_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "provenance_scope": "tracked_source_files",
@@ -31,8 +31,8 @@
     "--save-dir",
     "results/corrected_workshop/real_data"
   ],
-  "created_at": "2026-07-27T03:57:13.378162+00:00",
-  "created_at_utc": "2026-07-27T03:57:13.378162+00:00",
+  "created_at": "2026-07-27T04:09:00.288647+00:00",
+  "created_at_utc": "2026-07-27T04:09:00.288647+00:00",
   "python_version": "3.13.9",
   "package_versions": {
     "numpy": "2.4.4",
@@ -47,7 +47,7 @@
   },
   "device": "cpu",
   "epochs": 80,
-  "runtime_s": 6.0893250410445035,
+  "runtime_s": 6.460559458006173,
   "metric_definitions": {
     "auroc": {
       "description": "Area under the receiver operating characteristic curve",
@@ -134,7 +134,7 @@
                 "auprc": 0.17359058565955116,
                 "oracle_f1": 0.4444444444444444
               },
-              "runtime_s": 0.6254835420404561
+              "runtime_s": 0.6996614999952726
             },
             {
               "model_seed": 43,
@@ -145,7 +145,7 @@
                 "auprc": 0.20136836343732895,
                 "oracle_f1": 0.4444444444444444
               },
-              "runtime_s": 0.13681600004201755
+              "runtime_s": 0.14132908399915323
             },
             {
               "model_seed": 44,
@@ -156,7 +156,7 @@
                 "auprc": 0.5559386973180076,
                 "oracle_f1": 0.6666666666666666
               },
-              "runtime_s": 0.13495712500298396
+              "runtime_s": 0.13693245797185227
             }
           ],
           "hyperparameters": {
@@ -175,7 +175,7 @@
             ]
           },
           "device": "cpu",
-          "runtime_s": 0.8972566670854576,
+          "runtime_s": 0.9779230419662781,
           "replication_unit": "model_initialization_seed",
           "aggregation": {
             "unit": "model_initialization_seed",
@@ -212,7 +212,7 @@
               "alpha": 0.01
             }
           },
-          "runtime_s": 0.02027645899215713,
+          "runtime_s": 0.020223041996359825,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -241,7 +241,7 @@
               "alpha": 0.01
             }
           },
-          "runtime_s": 0.004204083001241088,
+          "runtime_s": 0.007237459009047598,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -260,7 +260,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.11708912497851998,
+          "runtime_s": 0.12080408300971612,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -280,7 +280,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.07342483301181346,
+          "runtime_s": 0.0733302499866113,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -298,7 +298,7 @@
             "score_type": "neg_log_pvalue",
             "test": "bivariate_ssr_ftest"
           },
-          "runtime_s": 0.14026791701326147,
+          "runtime_s": 0.1518518750090152,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         }
@@ -349,7 +349,7 @@
                 "auprc": 0.10123193204465122,
                 "oracle_f1": 0.26666666666666666
               },
-              "runtime_s": 0.359365250042174
+              "runtime_s": 0.36657437501708046
             },
             {
               "model_seed": 43,
@@ -360,7 +360,7 @@
                 "auprc": 0.12899209851973498,
                 "oracle_f1": 0.36363636363636365
               },
-              "runtime_s": 0.35974983300548047
+              "runtime_s": 0.36340720899170265
             },
             {
               "model_seed": 44,
@@ -371,7 +371,7 @@
                 "auprc": 0.07490728318202622,
                 "oracle_f1": 0.19047619047619047
               },
-              "runtime_s": 0.35868508397834376
+              "runtime_s": 0.36036920902552083
             }
           ],
           "hyperparameters": {
@@ -390,7 +390,7 @@
             ]
           },
           "device": "cpu",
-          "runtime_s": 1.0778001670259982,
+          "runtime_s": 1.090350793034304,
           "replication_unit": "model_initialization_seed",
           "aggregation": {
             "unit": "model_initialization_seed",
@@ -427,7 +427,7 @@
               "alpha": 1.0
             }
           },
-          "runtime_s": 0.02420487505150959,
+          "runtime_s": 0.02527899999404326,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -456,7 +456,7 @@
               "alpha": 100.0
             }
           },
-          "runtime_s": 0.004462167038582265,
+          "runtime_s": 0.016169667011126876,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -475,7 +475,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.4262884589843452,
+          "runtime_s": 0.467665083007887,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -495,7 +495,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.25147091603139415,
+          "runtime_s": 0.2587265420006588,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -513,7 +513,7 @@
             "score_type": "neg_log_pvalue",
             "test": "bivariate_ssr_ftest"
           },
-          "runtime_s": 0.18885412497911602,
+          "runtime_s": 0.19554849999258295,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         }
@@ -563,7 +563,7 @@
                 "auprc": 0.754317779060437,
                 "oracle_f1": 0.8115942028985508
               },
-              "runtime_s": 0.2894767500110902
+              "runtime_s": 0.29220812499988824
             },
             {
               "model_seed": 43,
@@ -574,7 +574,7 @@
                 "auprc": 0.690482869606085,
                 "oracle_f1": 0.7945205479452054
               },
-              "runtime_s": 0.28656516602495685
+              "runtime_s": 0.2883550419937819
             },
             {
               "model_seed": 44,
@@ -585,7 +585,7 @@
                 "auprc": 0.7622909834270764,
                 "oracle_f1": 0.8307692307692308
               },
-              "runtime_s": 0.2872939169756137
+              "runtime_s": 0.2872154170181602
             }
           ],
           "hyperparameters": {
@@ -604,7 +604,7 @@
             ]
           },
           "device": "cpu",
-          "runtime_s": 0.8633358330116607,
+          "runtime_s": 0.8677785840118304,
           "replication_unit": "model_initialization_seed",
           "aggregation": {
             "unit": "model_initialization_seed",
@@ -641,7 +641,7 @@
               "alpha": 0.001
             }
           },
-          "runtime_s": 0.04021783301141113,
+          "runtime_s": 0.040839207998942584,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -670,7 +670,7 @@
               "alpha": 1.0
             }
           },
-          "runtime_s": 0.004215666034724563,
+          "runtime_s": 0.004626500012818724,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -689,7 +689,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.6986025830265135,
+          "runtime_s": 0.8015552920405753,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -709,7 +709,7 @@
             "significance": "analytic",
             "lag_aggregation": "maximum_absolute_test_statistic"
           },
-          "runtime_s": 0.49710120900999755,
+          "runtime_s": 0.5536842089495622,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         },
@@ -727,7 +727,7 @@
             "score_type": "neg_log_pvalue",
             "test": "bivariate_ssr_ftest"
           },
-          "runtime_s": 0.16884804202709347,
+          "runtime_s": 0.19488212501164526,
           "device": "cpu",
           "replication_unit": "deterministic_run"
         }
