@@ -38,6 +38,10 @@ INCLUDED_FILES = {
     "scripts/download_etfs.py",
     "scripts/generate_workshop_manifest.py",
 }
+EXCLUDED_FILES = {
+    # This local release test intentionally contains identity-denial fixtures.
+    "tests/test_workshop_submission.py",
+}
 DENIED_IDENTITY_TOKENS = (
     "ankit hemant",
     "ankitlade12",
@@ -115,6 +119,8 @@ def _tracked_files() -> list[str]:
 
 
 def _is_included(relative_path: str) -> bool:
+    if relative_path in EXCLUDED_FILES:
+        return False
     return (
         relative_path in TOP_LEVEL_FILES
         or relative_path in INCLUDED_FILES
