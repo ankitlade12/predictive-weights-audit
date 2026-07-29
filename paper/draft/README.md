@@ -33,6 +33,13 @@ All reported current values are generated from
 
 ## Building
 
+For a native Debian/Ubuntu build, install the required LaTeX packages once:
+
+```bash
+sudo apt-get install texlive-latex-base texlive-latex-extra \
+  texlive-fonts-recommended texlive-bibtex-extra
+```
+
 From the repository root:
 
 ```bash

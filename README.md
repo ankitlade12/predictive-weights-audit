@@ -191,6 +191,9 @@ The exact commands and claim scope for each artifact are recorded in
 Build the anonymous workshop paper with the official NeurIPS 2026 style:
 
 ```bash
+# Debian/Ubuntu native build dependency
+sudo apt-get install texlive-latex-base texlive-latex-extra \
+  texlive-fonts-recommended texlive-bibtex-extra
 make paper-workshop
 ```
 

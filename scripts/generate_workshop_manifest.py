@@ -162,28 +162,40 @@ EXPERIMENTS: tuple[dict[str, Any], ...] = (
 )
 
 
-def _run_git(*args: str) -> bytes:
-    result = subprocess.run(
-        ["git", *args],
-        cwd=ROOT,
-        capture_output=True,
-        check=True,
+def _git_output(*args: str) -> bytes | None:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=ROOT,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def _is_source_path(relative_path: str) -> bool:
+    return relative_path in SOURCE_FILES or (
+        relative_path.endswith(".py")
+        and relative_path.startswith(SOURCE_PREFIXES)
     )
-    return result.stdout
 
 
 def _tracked_source_paths() -> list[Path]:
-    tracked = _run_git("ls-files", "-z").split(b"\0")
-    relative_paths = sorted(
-        item.decode()
-        for item in tracked
-        if item
-        and (
-            item.decode() in SOURCE_FILES
-            or item.decode().endswith(".py")
-            and item.decode().startswith(SOURCE_PREFIXES)
+    git_output = _git_output("ls-files", "-z")
+    if git_output is not None:
+        relative_paths = sorted(
+            item.decode()
+            for item in git_output.split(b"\0")
+            if item and _is_source_path(item.decode())
         )
-    )
+    else:
+        relative_paths = sorted(
+            path.relative_to(ROOT).as_posix()
+            for path in ROOT.rglob("*")
+            if path.is_file() and _is_source_path(path.relative_to(ROOT).as_posix())
+        )
     return [ROOT / relative_path for relative_path in relative_paths]
 
 
@@ -202,8 +214,17 @@ def _source_tree_sha256(paths: list[Path]) -> str:
 
 def _tracked_source_diff(paths: list[Path]) -> bytes:
     relative_paths = [path.relative_to(ROOT).as_posix() for path in paths]
-    unstaged = _run_git("diff", "--binary", "HEAD", "--", *relative_paths)
-    staged = _run_git("diff", "--binary", "--cached", "HEAD", "--", *relative_paths)
+    unstaged = _git_output("diff", "--binary", "HEAD", "--", *relative_paths)
+    staged = _git_output(
+        "diff",
+        "--binary",
+        "--cached",
+        "HEAD",
+        "--",
+        *relative_paths,
+    )
+    if unstaged is None or staged is None:
+        return b""
     return staged + unstaged
 
 
@@ -234,7 +255,8 @@ def _package_versions() -> dict[str, str | None]:
 def build_manifest() -> dict[str, Any]:
     source_paths = _tracked_source_paths()
     source_diff = _tracked_source_diff(source_paths)
-    revision = _run_git("rev-parse", "HEAD").decode().strip()
+    revision_output = _git_output("rev-parse", "HEAD")
+    revision = revision_output.decode().strip() if revision_output is not None else None
 
     experiments = []
     for definition in EXPERIMENTS:
@@ -251,6 +273,11 @@ def build_manifest() -> dict[str, Any]:
         "schema_version": "2.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "execution_environment": "local_cpu",
+        "provenance_mode": (
+            "git_tracked_source"
+            if revision is not None
+            else "anonymous_snapshot_filesystem"
+        ),
         "code_revision": revision,
         "tracked_source_worktree_dirty": bool(source_diff),
         "tracked_source_diff_sha256": hashlib.sha256(source_diff).hexdigest(),

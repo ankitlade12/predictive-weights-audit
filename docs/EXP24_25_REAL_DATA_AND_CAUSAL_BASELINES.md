@@ -46,7 +46,7 @@ default/tuned protocols, plus a three-model-seed Lagged-Bottleneck run
 |---|---:|---:|---:|
 | Lasso | **0.617** | 0.500 | 0.973 |
 | Ridge | **0.617** | **0.597** | 0.973 |
-| Lagged-Bottleneck (3 model seeds) | **0.626 +/- 0.021** | 0.564 +/- 0.033 | 0.881 +/- 0.018 |
+| Lagged-Bottleneck (3 model seeds) | **0.626 +/- 0.021** | 0.596 +/- 0.051 | 0.881 +/- 0.018 |
 | PCMCI | 0.407 | **0.609** | 0.839 |
 | PCMCI+ | 0.605 | 0.579 | 0.875 |
 | Bivariate Granger | 0.605 | 0.512 | **0.989** |
