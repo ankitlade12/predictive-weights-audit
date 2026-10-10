@@ -31,8 +31,7 @@ results/*
 # Data (downloaded, not committed)
 data/climate_raw/
 data/fmri_raw/
-# ETF CSV is re-downloadable via scripts/download_etfs.py
-data/real/sector_etfs.csv
+# The ETF snapshot used by the submitted benchmark is versioned for exact reproduction.
 
 # LaTeX build artifacts (any depth under paper/)
 paper/**/*.aux

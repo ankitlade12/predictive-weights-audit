@@ -92,8 +92,10 @@ We test direction, lag, and diagonal conventions on planted edges. Package
 adapters are explicit: Tigramite stores values as
 $[\mathrm{source},\mathrm{target},\mathrm{lag}]$, whereas our score uses
 $[\mathrm{target},\mathrm{source}]$. Strictly lagged evaluation excludes
-contemporaneous matrices. Compared methods receive the same usable
-observations, lag horizon, and preprocessing. Independent trajectories remain
+contemporaneous matrices. The original controlled comparisons match usable
+observations, lag horizon, and preprocessing. The added observational baselines
+share input arrays and a maximum lag horizon; VAR-LiNGAM selects its lag order
+within that horizon (Appendix~\ref{app:followup}). Independent trajectories remain
 separate so no lag window crosses a boundary.
 
 \paragraph{Intervention-aware estimand.}
@@ -107,10 +109,12 @@ and per-step random forcing are separate conditions.
 \paragraph{Provenance and inference.}
 Every graph is tagged as exact simulated, literature-derived soft, or
 heuristic soft. Independent data-generating seeds are the replication unit;
-model-seed spread on fixed data is only descriptive. Paired effects receive
+model-seed spread on fixed data is only descriptive. In the original
+intervention and nonlinearity studies, paired effects receive
 bootstrap 95\% intervals and one-sided Wilcoxon tests with Holm correction
 over each declared family. Hyperparameters and gates are fixed before graph
-evaluation.
+evaluation. The post-review trajectory comparison reports exploratory
+bootstrap intervals without significance tests.
 
 \section{Corrected Evidence}
 
@@ -220,7 +224,7 @@ All eight within-method tests reject after Holm correction
 ($p_{\mathrm{Holm}}=\WithinMethodHolmP$), so the gain is not
 bottleneck-specific. An
 exploratory paired Granger-minus-Bottleneck contrast does not reject at $K=10$
-($p_{\mathrm{Holm}}=\GrangerBNKTenP$) and positive at $K=20$
+($p_{\mathrm{Holm}}=\GrangerBNKTenP$) and is positive at $K=20$
 ($+\GrangerBNKTwentyDelta$,
 $p_{\mathrm{Holm}}=\GrangerBNKTwentyP$). The evidence therefore supports
 neither bottleneck specificity nor method invariance. Target-aware Lasso also
@@ -252,7 +256,7 @@ $s\in\{.2,.3,.4\}$ to pass at both dimensions at one common $T$.
 Appendix~\ref{app:gates} gives splits, metric definitions, and all cell results.
 
 No $T$ satisfies that rule. Six cells pass, all at $K=20,T=300$;
-``isolated positive therefore denotes one dimensional/sample-size setting,
+``isolated positive'' therefore denotes one dimensional/sample-size setting,
 not one nonlinearity strength. At
 $K=20,T=300$, Linear-BN minus Lasso AUROC is
 $+\NonlinearityKTwentyDelta$ for \emph{every} $s$, including 0 and 1. At
@@ -298,6 +302,8 @@ undermines a particular discovery claim; passing them is not sufficient for
 causal identification.
 
 \paragraph{Reproducibility and responsible use.}
+Code and result artifacts are available at
+\url{https://github.com/ankitlade12/ssm-causal}.
 The accompanying reproducibility archive contains the official template,
 pinned environments, tests, commands, input hashes, submitted and post-review
 result artifacts, and mechanically generated table values. New analyses are

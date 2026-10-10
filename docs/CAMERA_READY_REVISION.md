@@ -149,7 +149,30 @@ The public CFP does **not** list a camera-ready deadline. Check the acceptance
 email/OpenReview author task for that deadline, the actual upload field, and
 any later organizer instructions. Poster dimensions, upload deadlines, and
 whether this paper received a spotlight were not provided. No upload,
-submission, organizer message, public release, or repository push was made.
+submission or organizer message was made. The revision was pushed to
+`ankitlade12/ssm-causal` on `main` in commit `8122a09`; this record is also
+updated with the final audit fixes below.
 
 The broader benchmark and interpretation-signal limitations are addressed
 through bounded claims, not reported as experimentally resolved.
+
+## Second audit
+
+The final audit checks a clean Git snapshot as well as the packaged archive.
+It found that the finance CSV was present in the release archive but ignored
+by Git. The exact benchmark snapshot is now versioned, so a fresh checkout
+does not need a potentially changed download to rebuild the release.
+Regression checks verify the loaded finance data and graph against the
+submitted artifact hashes, and verify exported trajectory hashes against
+both follow-up stages. Two minor prose errors were corrected. Main-text
+methods now explicitly distinguish the original Holm-adjusted tests from
+exploratory follow-up intervals, and clarify VAR-LiNGAM's lag selection.
+The final paper now links directly to the public code and artifact repository.
+
+All 24 original nonlinearity cell summaries (including bootstrap intervals,
+Holm adjustment, gates, and the regime outcome) were recomputed exactly from
+saved replicates. All 22 optional-baseline AUROC/AUPRC pairs were recomputed
+from saved score matrices. No numerical changes were needed. A clean Git
+snapshot built both PDFs and the release archive; 23 focused reproduction
+and release tests passed there. Original artifact and follow-up source hashes
+remain valid.

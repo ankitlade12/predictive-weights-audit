@@ -1,6 +1,7 @@
 """Release checks for paired post-review evidence and generated tables."""
 
 import copy
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -47,3 +48,24 @@ def test_followup_refuses_unpaired_or_failed_results(damage):
         optional["replicates"][-1]["methods"]["DYNOTEARS"]["status"] = "failed"
     with pytest.raises(ValueError):
         generator.summarize(primary, optional)
+
+
+def test_exported_inputs_match_both_followup_stages():
+    for payload in artifacts():
+        for record in payload["replicates"]:
+            path = ROOT / "results/reviewer_followup" / f"lorenz96_seed{record['data_seed']}.npz"
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == record["input_sha256"]
+
+
+def test_versioned_finance_snapshot_matches_submitted_benchmark():
+    from data.real_loaders import load_sector_etfs
+    from experiments.exp24_real_data_benchmark import _array_sha256
+
+    snapshot = ROOT / "data/real/sector_etfs.csv"
+    assert snapshot.is_file(), "The release must include the original finance snapshot"
+    data, graph, _ = load_sector_etfs(data_dir=str(snapshot.parent))
+    submitted = json.loads(
+        (ROOT / "results/corrected_workshop/real_data/real_data_benchmark_results.json").read_text()
+    )["datasets"]["finance"]
+    assert _array_sha256(data) == submitted["data_sha256"]
+    assert _array_sha256(graph) == submitted["graph_sha256"]
