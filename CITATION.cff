@@ -1,21 +1,27 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "SSM-Causal: Causal Discovery via State Space Model Internals"
+title: "When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery"
 authors:
   - family-names: "Lade"
     given-names: "Ankit Hemant"
+  - family-names: "Jasti"
+    given-names: "Sai Krishna"
   - family-names: "Chadha"
     given-names: "Aman"
+  - family-names: "Kumar"
+    given-names: "Indar"
 type: software
-date-released: 2026-04-02
-url: "https://github.com/ankit/ssm-causal"
 preferred-citation:
   type: conference-paper
-  title: "Causal Discovery via State Space Model Internals"
+  title: "When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery"
   authors:
     - family-names: "Lade"
       given-names: "Ankit Hemant"
+    - family-names: "Jasti"
+      given-names: "Sai Krishna"
     - family-names: "Chadha"
       given-names: "Aman"
-  collection-title: "Advances in Neural Information Processing Systems (NeurIPS)"
+    - family-names: "Kumar"
+      given-names: "Indar"
+  collection-title: "NeurIPS 2026 Workshop on Interpretability for Discovery (non-archival)"
   year: 2026

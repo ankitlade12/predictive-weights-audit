@@ -6,13 +6,21 @@ corrected evidence boundary, not a new causal-discovery method.
 
 ## Files
 
+- `main_camera_ready.tex` — accepted workshop revision, author order and
+  affiliations from the accepted OpenReview entry; final workshop template
+- `camera_ready_content.tex` — revised scientific content shared by the final
+  workshop version and preprint
+- `camera_ready_appendix.tex` — all 24 nonlinearity cells, inference rules,
+  added-baseline configuration, and evidence boundaries
+- `generated_reviewer_results.tex` — post-review artifact-derived tables
+
 - `main_4page.tex` — anonymous Interpretability for Discovery submission
-- `main_arxiv.tex` — author-identified preprint with identical scientific claims
+- `main_arxiv.tex` — preprint sharing the camera-ready content and appendices
 - `generated_workshop_results.tex` — artifact-derived values; do not edit manually
 - `../neurips_2026.sty` — official NeurIPS 2026 workshop style
 - `../references.bib` — shared bibliography
 
-The workshop source uses `dblblindworkshop`, declares
+The historical four-page workshop source uses `dblblindworkshop`, declares
 `\workshoptitle{Interpretability for Discovery}`, and keeps the main text to
 four pages; references follow on a fifth page.
 
@@ -44,6 +52,7 @@ From the repository root:
 
 ```bash
 make paper-workshop
+make paper-camera-ready
 make paper-arxiv
 make anonymous-supplement
 make submission-audit
@@ -53,3 +62,10 @@ The workshop PDF is `main_4page.pdf`. The deterministic, identity-scanned
 review archive is `../../dist/anonymous_workshop_supplement.zip`. The public
 repository and the author-identified preprint must not be linked in the
 double-blind submission.
+
+The accepted revision builds to `main_camera_ready.pdf`. The workshop CFP
+allows six main-text pages for accepted papers, excluding references and
+appendices: https://interpretability4discovery.github.io/cfp.html (checked
+2026-10-10). The final submission deadline is not listed there. See
+`../../docs/CAMERA_READY_REVISION.md` for the post-review evidence and release
+checks. Do not upload the historical anonymous PDF as the final revision.

@@ -43,6 +43,9 @@ INCLUDED_FILES = {
 EXCLUDED_FILES = {
     # This local release test intentionally contains identity-denial fixtures.
     "tests/test_workshop_submission.py",
+    # The historical review archive does not include post-review evidence.
+    "tests/test_reviewer_followup.py",
+    "experiments/exp28_reviewer_followup.py",
 }
 DENIED_IDENTITY_TOKENS = (
     "ankit hemant",

@@ -5,6 +5,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{microtype}
 \usepackage{amsmath}
@@ -176,21 +177,19 @@ The four-method audit then applies target-aware random forcing using
  \Delta_m=\mathrm{AUROC}_m(\mathrm{combined})-
  \mathrm{AUROC}_m(\mathrm{size\mbox{-}matched\ observational}).
 \]
+Figure~\ref{fig:evidence-summary} shows positive gains for every method at
+both dimensions.
 
-\begin{table}[t]
+\begin{figure}[t]
 \centering
-\small
-\caption{Target-aware random-forcing gain $\Delta_m$: paired mean and
-bootstrap 95\% interval over 10 independent seeds, $T=300$.}
-\label{tab:int}
-\begin{tabular}{lcc}
-\toprule
-Method & $K=10$ & $K=20$ \\
-\midrule
-\InterventionTableRows
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\linewidth]{workshop_evidence_summary.pdf}
+\caption{Corrected evidence summary. (a) Lorenz-96 AUROC against the exact
+graph; Lagged-BN reports mean $\pm$ standard deviation over three model
+initializations, while the baselines are deterministic. (b) Target-aware
+random-forcing gain relative to a size-matched observational arm, with
+bootstrap 95\% intervals over 10 independent data seeds, $T=300$.}
+\label{fig:evidence-summary}
+\end{figure}
 
 All eight within-method tests reject after Holm correction
 ($p_{\mathrm{Holm}}=\WithinMethodHolmP$), so the gain is not

@@ -16,6 +16,7 @@ SEMANTICS_PATH = RESULTS / "intervention_semantics" / "intervention_sweep_result
 NONLINEARITY_PATH = RESULTS / "nonlinearity_confirmation.json"
 TEX_OUTPUT = ROOT / "paper" / "draft" / "generated_workshop_results.tex"
 JSON_OUTPUT = RESULTS / "paper_values.json"
+FIGURE_OUTPUT = ROOT / "paper" / "draft" / "workshop_evidence_summary.pdf"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -341,12 +342,154 @@ def render_tex(values: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def render_figure(values: dict[str, Any], output: Path = FIGURE_OUTPUT) -> None:
+    """Render the corrected benchmark and intervention evidence."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    real = values["real_benchmark"]
+    intervention = values["intervention"]
+
+    plt.rcParams.update(
+        {
+            "font.family": "serif",
+            "font.size": 7.2,
+            "axes.titlesize": 8.0,
+            "axes.labelsize": 7.2,
+            "xtick.labelsize": 6.7,
+            "ytick.labelsize": 6.7,
+            "legend.fontsize": 6.6,
+            "axes.linewidth": 0.6,
+            "lines.linewidth": 1.0,
+            "pdf.fonttype": 42,
+        }
+    )
+
+    fig, (ax_real, ax_intervention) = plt.subplots(
+        1,
+        2,
+        figsize=(5.5, 2.35),
+        gridspec_kw={"width_ratios": (0.95, 1.25)},
+        constrained_layout=True,
+    )
+
+    real_methods = (
+        "PCMCI",
+        "PCMCI+",
+        "Lagged-Bottleneck",
+        "Lasso",
+        "Ridge",
+        "Granger",
+    )
+    real_labels = ("PCMCI", "PCMCI+", "Lagged-BN", "Lasso", "Ridge", "Granger")
+    real_values = np.array(
+        [real[method]["lorenz96"]["mean"] for method in real_methods]
+    )
+    real_errors = np.array(
+        [real[method]["lorenz96"].get("std", 0.0) for method in real_methods]
+    )
+    real_colors = [
+        "#777777" if method != "Lagged-Bottleneck" else "#0072B2"
+        for method in real_methods
+    ]
+    y_positions = np.arange(len(real_methods))
+
+    for y, value, error, color in zip(
+        y_positions, real_values, real_errors, real_colors, strict=True
+    ):
+        ax_real.errorbar(
+            value,
+            y,
+            xerr=error if error else None,
+            fmt="o",
+            color=color,
+            ecolor=color,
+            markersize=4.2,
+            capsize=2.0,
+            markeredgewidth=0.5,
+            markeredgecolor="white",
+            zorder=3,
+        )
+    ax_real.set_yticks(y_positions, real_labels)
+    ax_real.set_xlim(0.80, 1.005)
+    ax_real.set_xticks((0.80, 0.85, 0.90, 0.95, 1.00))
+    ax_real.set_xlabel("AUROC (lag horizon 3)")
+    ax_real.set_title("(a) Exact Lorenz-96 graph", loc="left", fontweight="bold")
+    ax_real.grid(axis="x", color="#D9D9D9", linewidth=0.5)
+    ax_real.set_axisbelow(True)
+    ax_real.spines["top"].set_visible(False)
+    ax_real.spines["right"].set_visible(False)
+
+    methods = ("Bottleneck", "Lasso", "PCMCI", "Granger")
+    x_positions = np.arange(len(methods))
+    conditions = (
+        ("K10", r"$K=10$", "#0072B2", "o", -0.10),
+        ("K20", r"$K=20$", "#D55E00", "s", 0.10),
+    )
+    for condition, label, color, marker, offset in conditions:
+        means = np.array(
+            [intervention[method][condition]["mean"] for method in methods]
+        )
+        lows = np.array(
+            [intervention[method][condition]["low"] for method in methods]
+        )
+        highs = np.array(
+            [intervention[method][condition]["high"] for method in methods]
+        )
+        asymmetric_errors = np.vstack((means - lows, highs - means))
+        ax_intervention.errorbar(
+            x_positions + offset,
+            means,
+            yerr=asymmetric_errors,
+            fmt=marker,
+            color=color,
+            ecolor=color,
+            label=label,
+            markersize=4.0,
+            capsize=2.0,
+            markeredgewidth=0.5,
+            markeredgecolor="white",
+            zorder=3,
+        )
+
+    ax_intervention.axhline(0.0, color="#444444", linewidth=0.7)
+    ax_intervention.set_xticks(x_positions, methods)
+    ax_intervention.set_ylim(-0.005, 0.115)
+    ax_intervention.set_yticks((0.00, 0.03, 0.06, 0.09))
+    ax_intervention.set_ylabel(r"AUROC gain $\Delta_m$")
+    ax_intervention.set_title(
+        "(b) Matched random forcing (95% CI)",
+        loc="left",
+        fontweight="bold",
+    )
+    ax_intervention.legend(
+        loc="upper left",
+        frameon=False,
+        ncol=2,
+        handletextpad=0.3,
+        columnspacing=0.8,
+    )
+    ax_intervention.grid(axis="y", color="#D9D9D9", linewidth=0.5)
+    ax_intervention.set_axisbelow(True)
+    ax_intervention.spines["top"].set_visible(False)
+    ax_intervention.spines["right"].set_visible(False)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, format="pdf")
+    plt.close(fig)
+
+
 def main() -> None:
     values = build_values()
     TEX_OUTPUT.write_text(render_tex(values))
     JSON_OUTPUT.write_text(json.dumps(values, indent=2, sort_keys=True) + "\n")
+    render_figure(values)
     print(f"Wrote {TEX_OUTPUT.relative_to(ROOT)}")
     print(f"Wrote {JSON_OUTPUT.relative_to(ROOT)}")
+    print(f"Wrote {FIGURE_OUTPUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

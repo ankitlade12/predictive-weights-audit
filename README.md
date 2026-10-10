@@ -18,6 +18,17 @@ an SSM-specific discovery mechanism.
 
 ## Workshop Contribution
 
+Accepted at the NeurIPS 2026 Workshop on Interpretability for Discovery
+(non-archival). The camera-ready revision is `paper/draft/main_camera_ready.tex`;
+build it with `make paper-camera-ready`. The original four-page manuscript is
+retained separately. See [the revision record](docs/CAMERA_READY_REVISION.md)
+for every reviewer concern, follow-up commands, and remaining limits.
+
+Post-review analyses in `results/reviewer_followup/` add ten independent
+Lorenz-96 trajectories, actual DYNOTEARS and VAR-LiNGAM runs, and a diagnostic
+reproducing all 240 original Lasso fits. These are exploratory additions;
+they do not broaden the evaluated graph family or interpretability signal.
+
 The Interp4Discovery-facing contribution is a reusable falsification and audit
 protocol for interpretability-based scientific discovery claims. It asks:
 

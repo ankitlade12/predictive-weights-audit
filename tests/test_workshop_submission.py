@@ -58,6 +58,21 @@ def test_generated_values_cover_every_number_repeated_in_prose():
         assert rf"\newcommand{{\{macro}}}" in rendered
 
 
+def test_workshop_figure_is_generated_from_corrected_values(tmp_path):
+    generator = _load_script(
+        "generate_workshop_figure",
+        "paper/generate_workshop_results.py",
+    )
+    output = tmp_path / "workshop_evidence_summary.pdf"
+
+    generator.render_figure(generator.build_values(), output)
+
+    assert output.read_bytes().startswith(b"%PDF")
+    manuscript = (ROOT / "paper" / "draft" / "main_4page.tex").read_text()
+    assert r"\includegraphics[width=\linewidth]{workshop_evidence_summary.pdf}" in manuscript
+    assert r"\label{fig:evidence-summary}" in manuscript
+
+
 def test_anonymous_makefile_has_self_contained_default_workflow():
     builder = _load_script(
         "build_anonymous_supplement",

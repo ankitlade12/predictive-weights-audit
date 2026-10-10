@@ -1,276 +1,38 @@
-% Non-anonymous preprint. Scientific claims and generated values match the
-% anonymous workshop submission.
+% Preprint sharing the accepted workshop scientific content.
 \documentclass{article}
 \usepackage[preprint]{neurips_2026}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{url}
+\usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{microtype}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+\workshoptitle{Interpretability for Discovery}
 \title{When Predictive Weights Look Causal:\\
 An Audit Protocol for Interpretability-Based Discovery}
 \author{%
-  Ankit Hemant Lade \quad Sai Krishna Jasti \quad Indar Kumar \quad
-  Aman Chadha\thanks{Work done outside role at Google DeepMind.}\\[2pt]
-  \small \texttt{ankitlade12@gmail.com} \quad
-  \texttt{jsaikrishna379@gmail.com} \\[1pt]
-  \small \texttt{indarkarhana@gmail.com} \quad \texttt{hi@aman.ai}
+Ankit Hemant Lade$^{1}$ \quad Sai Krishna Jasti$^{2}$ \quad
+Aman Chadha$^{3}$ \quad Indar Kumar$^{2}$\\
+$^{1}$University of Central Missouri \quad $^{2}$Ascentt Systems Inc\\
+$^{3}$Google
 }
 
 \input{generated_workshop_results}
+\input{generated_reviewer_results}
 
 \begin{document}
 \maketitle
 
-\begin{abstract}
-Readable model weights are tempting evidence about the mechanisms that
-generated scientific data. We audit one such candidate: the endpoint-product
-score of a next-step time-series predictor. A sequence of initially plausible
-architecture, benchmark, intervention, and nonlinearity stories does not
-survive controls for direction conventions, lag horizons, label provenance,
-data budgets, intervention targets, and classical baselines. Correcting one
-source/target transpose changes Lorenz-96 PCMCI AUROC from a previously
-reported $0.986$ to $\CorrectedPCMCI$. On target-aware, size-matched random forcing,
-all four tested methods improve, so the effect is not bottleneck-specific.
-A fixed nonlinearity confirmation produces the same advantage at every
-nonlinearity strength in one finite-sample setting and none after doubling
-the sample size. We contribute a reproducible falsification protocol for
-interpretability-based discovery, along with concrete reporting and
-responsible-use boundaries. This negative study illustrates how a readable
-predictive representation can remain useful for hypothesis generation without
-constituting causal knowledge.
-\end{abstract}
-
-\section{Introduction}
-
-Interpretability can expose regularities that domain experts did not encode
-explicitly, making it a promising interface between learned representations
-and scientific discovery. But an explanation can be readable without
-identifying the data-generating mechanism. In time series, predictive
-association, Granger predictability, intervention response, and structural
-causation answer different questions
-\citep{granger1969investigating,pearl2009causality,peters2017elements}.
-Confusing them can turn a useful model diagnostic into an unsupported
-scientific claim.
-
-Our motivating case is a next-step predictor with input and output
-projections. For a non-lagged model, the candidate score is
-\begin{equation}
-  S=|W_{\mathrm{out}}W_{\mathrm{in}}|,\qquad
-  S_{ij}\ \text{read as the strength of }j\rightarrow i.
-  \label{eq:score}
-\end{equation}
-The score is cheap, compact, and often graph-like. It arose while studying a
-Mamba-style state-space forecaster \citep{gu2023mamba}, but a readable pattern
-does not establish that the architecture discovered causal structure.
-
-We make three contributions. First, we organize implementation, estimand, and
-provenance checks into an audit protocol for discovery claims. Second, we
-apply it to corrected observational, interventional, and controlled nonlinear
-experiments while retaining null and contradictory outcomes. Third, we pair
-the empirical audit with a responsible-use and reproducibility boundary. We
-do not propose Eq.~\ref{eq:score} as a causal-discovery method.
-
-\paragraph{Relation to prior work.}
-Time-series work spans Granger/VAR methods, conditional-independence tests,
-and neural estimators
-\citep{runge2019pcmci,tank2021neural,nauta2019causal,pamfil2020dynotears}.
-Interpretable neural Granger models explicitly design the predictor around a
-causal estimand \citep{marcinkevics2021interpretable}; causal representation
-learning likewise emphasizes assumptions connecting representations to
-interventions \citep{scholkopf2021toward}. Our question is complementary:
-what should be checked \emph{before} treating an ordinary predictive weight
-as scientific evidence?
-
-\section{Candidate and Audit Design}
-
-\paragraph{Lag-resolved candidate.}
-Most corrected experiments use a low-rank predictor of $x_t$ from
-$[x_{t-1},\ldots,x_{t-p}]$. Splitting the input projection by lag gives
-\[
-  S_\tau=\left|W_{\mathrm{out}}W_{\mathrm{in},\tau}\right|,
-  \quad \tau=1,\ldots,p,
-\]
-with convention $S_\tau[\mathrm{target},\mathrm{source}]$. We zero
-self-edges and aggregate lags by their maximum score. The ``Lagged-BN'' and
-``Linear-BN'' labels below refer to this prediction-trained bottleneck, not
-to an intervention-aware causal model. Lasso and Ridge use the same lagged
-rows and choose regularization by prediction validation rather than graph
-labels.
-
-\paragraph{Representation and protocol checks.}
-We test direction, lag, and diagonal conventions on planted edges. Package
-adapters are explicit: Tigramite stores values as
-$[\mathrm{source},\mathrm{target},\mathrm{lag}]$, whereas our score uses
-$[\mathrm{target},\mathrm{source}]$. Strictly lagged evaluation excludes
-contemporaneous matrices. Compared methods receive the same usable
-observations, lag horizon, and preprocessing. Independent trajectories remain
-separate so no lag window crosses a boundary.
-
-\paragraph{Intervention-aware estimand.}
-Each intervention segment records its target. When variable $j$ is externally
-forced, the outcome equation for $j$ is excluded from that segment for every
-method; other outcome equations remain usable. A combined
-observational/interventional arm is compared with an observational arm having
-the same number of usable lagged rows. Constant clamps, additive soft forcing,
-and per-step random forcing are separate conditions.
-
-\paragraph{Provenance and inference.}
-Every graph is tagged as exact simulated, literature-derived soft, or
-heuristic soft. Independent data-generating seeds are the replication unit;
-model-seed spread on fixed data is only descriptive. Paired effects receive
-bootstrap 95\% intervals and one-sided Wilcoxon tests with Holm correction
-over each declared family. Hyperparameters and gates are fixed before graph
-evaluation.
-
-\section{Corrected Evidence}
-
-\subsection{Benchmark provenance and orientation}
-
-Table~\ref{tab:real} separates two observational sensitivity analyses from an
-exact simulated graph. Climate contains six NOAA indices ($T=757$) and three
-literature-derived teleconnection labels
-\citep{trenberth1994decadal,newman2016pdo,delworth2000observed}; the
-definitionally coupled ENSO/SOI pair is excluded. Finance contains ten sector
-ETF return series ($T=1893$) and six heuristic labels. Lorenz-96 is a
-$K=10$, $T=1500$ simulation with the exact 30-edge interaction graph
-\citep{lorenz1996predictability}.
-
-\begin{table}[t]
-\centering
-\small
-\caption{Corrected AUROC at lag horizon 3. Climate and finance have soft
-labels and are sensitivity analyses, not causal leaderboards. Lagged-BN
-reports mean $\pm$ standard deviation over three model initializations on
-fixed data; other rows are deterministic.}
-\label{tab:real}
-\begin{tabular}{lccc}
-\toprule
-Method & Climate & Finance & Lorenz-96 \\
-\midrule
-\RealBenchmarkTableRows
-\bottomrule
-\end{tabular}
-\end{table}
-
-The formerly reported Lorenz-96 PCMCI value $0.986$ used the wrong matrix
-orientation; the corrected value is $\CorrectedPCMCI$. On the exact graph, Granger and
-tuned linear regression outperform PCMCI/PCMCI+ in this configuration. The
-Lagged-BN score still contains readable dependency signal, but its
-$\CorrectedLaggedBNMean\pm\CorrectedLaggedBNStd$ remains below
-Granger/Lasso/Ridge
-($\CorrectedGranger/\CorrectedLasso/\CorrectedRidge$). Its spread over model
-seeds 42--44 is initialization
-stability, not independent uncertainty. Climate and finance cannot support a
-causal ranking.
-
-\subsection{Intervention semantics and method specificity}
-
-The semantics audit compares the bottleneck's intervention-specific gain with
-Lasso and Ridge across $K\in\{10,20\}$, $T=300$, and 10 independent seeds.
-Holm-significant positive differences are only
-\SemanticsPositiveRange{} AUROC. Constant clamps yield no positive
-bottleneck advantage; random and soft forcing produce selected small
-differences, not a general mechanism.
-
-The four-method audit then applies target-aware random forcing using
-\[
- \Delta_m=\mathrm{AUROC}_m(\mathrm{combined})-
- \mathrm{AUROC}_m(\mathrm{size\mbox{-}matched\ observational}).
-\]
-
-\begin{table}[t]
-\centering
-\small
-\caption{Target-aware random-forcing gain $\Delta_m$: paired mean and
-bootstrap 95\% interval over 10 independent seeds, $T=300$.}
-\label{tab:int}
-\begin{tabular}{lcc}
-\toprule
-Method & $K=10$ & $K=20$ \\
-\midrule
-\InterventionTableRows
-\bottomrule
-\end{tabular}
-\end{table}
-
-All eight within-method tests reject after Holm correction
-($p_{\mathrm{Holm}}=\WithinMethodHolmP$), so the gain is not
-bottleneck-specific. An
-exploratory paired Granger-minus-Bottleneck contrast is null at $K=10$
-($p_{\mathrm{Holm}}=\GrangerBNKTenP$) and positive at $K=20$
-($+\GrangerBNKTwentyDelta$,
-$p_{\mathrm{Holm}}=\GrangerBNKTwentyP$). The evidence therefore supports
-neither bottleneck specificity nor method invariance. Target-aware Lasso also
-improves, rejecting the earlier target-corruption explanation.
-
-\subsection{Nonlinearity confirmation}
-
-The controlled generator varies only the planted edge function
-\[
- g_s(x)=a(s)\big[(1-s)x+s\sigma\tanh(x/\sigma)\big],
-\]
-where $a(s)$ equalizes marginal scale under a fixed Gaussian reference.
-Self-dynamics, edge coefficients, noise, lag structure, and seeds remain
-fixed. We compare a fixed Linear-BN ($d=32$, sparsity coefficient $10^{-3}$)
-with prediction-tuned Lasso over $K\in\{10,20\}$,
-$T\in\{300,600\}$, $s\in\{0,.2,.3,.4,.6,1\}$, and 10 data seeds.
-A positive cell requires AUROC difference $\geq.03$, a positive bootstrap
-lower bound, Holm-adjusted $p<.05$, improved AUPRC above edge prevalence,
-and prediction MSE within 10\% of Lasso. A regime requires at least two of
-$s\in\{.2,.3,.4\}$ to pass for every $K$ at one common $T$.
-
-No $T$ satisfies that rule; the artifact status is \NonlinearityStatus. At
-$K=20,T=300$, Linear-BN minus Lasso AUROC is
-$+\NonlinearityKTwentyDelta$ for \emph{every} $s$, including 0 and 1. At
-$K=10,T=300$, it is $+\NonlinearityKTenDelta$ for every $s$, with no passing
-cell. At $T=600$, both methods reach AUROC
-\NonlinearityTSixHundredAUROC{} throughout. Invariance to
-nonlinearity and disappearance with more samples support a finite-sample,
-dimensional-regularization explanation rather than a nonlinear regime.
-
-\section{Implications, Limitations, and Responsible Use}
-
-\paragraph{A practical falsification checklist.}
-Before elevating an interpretation to a discovery claim: (i) test direction,
-lag, and diagonal conventions on planted examples; (ii) match data budgets,
-preprocessing, boundaries, and seeds; (iii) encode intervention targets and
-state intervention semantics; (iv) compare against sparse and classical
-baselines under the same estimand; (v) distinguish exact graphs from soft
-labels; and (vi) fix variants before evaluation, report multiplicity-adjusted
-effects, and retain failures.
-
-\paragraph{Limitations.}
-The corrected evidence covers two dimensions and sample sizes for intervention
-and nonlinearity tests, one exact dynamical simulation, and two observational
-datasets with sparse soft labels. Deterministic benchmark runs do not estimate
-method variance. DYNOTEARS and VAR-LiNGAM adapters were fixture-tested, but
-their optional dependencies were unavailable for the corrected empirical
-rerun. Broader confounding, lag, noise, and intervention coverage remain open.
-
-\paragraph{Reproducibility and responsible use.}
-An anonymized supplement contains the exact official template, pinned
-environment, tests, commands, input and source hashes, corrected result
-artifacts, and mechanically generated table values. These scores must not
-prescribe scientific interventions, climate policy, financial trades, or
-other consequential decisions. Climate and finance labels are incomplete
-hypotheses, and Lorenz-96 is simulated. Predictive dependence can guide
-questions, but causal use requires domain review, explicit assumptions,
-validated interventions, and evidence outside the interpreted model.
-
-\section{Conclusion}
-
-The endpoint bottleneck is informative precisely because its causal story
-looked plausible. Orientation, provenance, matched estimands, intervention
-semantics, and classical baselines remove the strong interpretation. The
-remaining contribution is a reproducible way to falsify causal-looking model
-interpretations before they become scientific claims.
-
+\input{camera_ready_content}
+\label{lastmainpage}
+\clearpage
 \bibliographystyle{plainnat}
 \bibliography{../references}
-
+\clearpage
+\appendix
+\input{camera_ready_appendix}
 \end{document}

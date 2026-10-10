@@ -9,7 +9,7 @@ export MPLBACKEND
 
 UV_RUN := uv run --frozen --extra baselines --extra dev
 
-.PHONY: help install test smoke workshop-evidence workshop-tables workshop-manifest anonymous-supplement submission-audit exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments tables figures paper paper-arxiv paper-workshop all clean
+.PHONY: help install test smoke workshop-evidence workshop-tables workshop-manifest anonymous-supplement submission-audit exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments tables figures paper paper-arxiv paper-workshop paper-camera-ready reviewer-tables all clean
 
 help:
 	@echo "Targets:"
@@ -22,6 +22,7 @@ help:
 	@echo "  experiments      Alias for falsification"
 	@echo "  paper-arxiv      Compile paper/draft/main_arxiv.tex"
 	@echo "  paper-workshop   Compile paper/draft/main_4page.tex"
+	@echo "  paper-camera-ready Compile accepted revision with appendices"
 	@echo "  anonymous-supplement Build and audit the double-blind code supplement"
 	@echo "  submission-audit Run tests, paper build, manifest, and anonymity checks"
 	@echo "  paper            Alias for paper-arxiv"
@@ -105,7 +106,13 @@ tables:
 figures:
 	$(UV_RUN) python paper/generate_figures.py
 
-paper-arxiv:
+reviewer-tables:
+	$(UV_RUN) python paper/generate_reviewer_results.py
+
+paper-camera-ready: workshop-tables reviewer-tables
+	cd paper/draft && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_camera_ready.tex && bibtex main_camera_ready && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_camera_ready.tex && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_camera_ready.tex
+
+paper-arxiv: workshop-tables reviewer-tables
 	cd paper/draft && TEXINPUTS=..: pdflatex main_arxiv.tex && bibtex main_arxiv && TEXINPUTS=..: pdflatex main_arxiv.tex && TEXINPUTS=..: pdflatex main_arxiv.tex
 
 paper-workshop:
