@@ -31,11 +31,12 @@ the Linear-BN configuration in advance, used independent data seeds, and swept
 | `K=20, T=300` | The difference is `+0.50` at every mix from `0.0` through `1.0`. |
 | `K in {10,20}, T=600` | Both methods reach AUROC `1.00`; the difference is zero at every mix. |
 
-Exp 27 records the overall status as `isolated_positive_exploratory`. Because
-the `K=20, T=300` effect is exactly invariant to nonlinearity and disappears
-when `T` doubles, it does not identify a mild-nonlinearity regime. The supported
-interpretation is that the result is consistent with a finite-sample,
-dimensional regularization effect in this controlled generator.
+Because the `K=20, T=300` effect is exactly invariant to nonlinearity and
+disappears when `T` doubles, it does not identify a mild-nonlinearity regime.
+The post-review diagnostic (`results/reviewer_followup/lasso_diagnostic.json`)
+locates the cause in the comparator: Linear-BN reaches AUROC `1.00` in all 240
+fits, while every `K=20, T=300` Lasso fit selects the largest grid penalty
+(`alpha=1`) and returns all-zero cross-variable scores.
 
 Artifact:
 `results/corrected_workshop/nonlinearity_confirmation.json`

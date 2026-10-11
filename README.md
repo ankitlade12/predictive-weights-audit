@@ -45,8 +45,8 @@ elevating an interpretation to a discovery claim:
    retain failures.
 
 This is a negative/failure study, not a causal-discovery competition. Earlier
-positive results are retained as historical context but are superseded where
-the corrected local artifacts disagree.
+positive results are superseded where the corrected artifacts disagree; see
+"What Is Superseded" below.
 
 ## Corrected Evidence
 
@@ -245,7 +245,7 @@ data/             synthetic generators and observational data loaders
 experiments/      executable experiment protocols
 results/          local experiment artifacts
 tests/            direction, lag, segmentation, seed, and statistics checks
-docs/             research history, design decisions, and corrected summaries
+docs/             camera-ready revision record and corrected experiment summaries
 paper/            workshop and arXiv paper sources
 ```
 

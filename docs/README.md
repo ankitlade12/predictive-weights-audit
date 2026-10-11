@@ -1,75 +1,26 @@
 # Docs
 
 Current results are in the camera-ready paper
-(`../paper/draft/main_camera_ready.pdf`) and its revision record,
-`CAMERA_READY_REVISION.md`, which maps every reviewer concern to a change and
-lists the post-review evidence. Where any other document here disagrees with
-those two, the other document is superseded.
+(`../paper/draft/main_camera_ready.pdf`) and these documents:
 
-The remaining files are the project's historical research record, kept to show
-how earlier positive claims were tested and withdrawn. Suggested reading order:
+1. `CAMERA_READY_REVISION.md`
+   Maps every reviewer concern to a change, documents the post-review
+   evidence, and records how to reproduce and validate the release.
 
-1. `EXP24_25_REAL_DATA_AND_CAUSAL_BASELINES.md`
-   Corrected real-data benchmark and causal-baseline summary from the
-   submission: soft climate and finance labels, Lorenz-96, PCMCI/Granger, and
-   intervention method contrasts. DYNOTEARS and VAR-LiNGAM were later run;
-   see the revision record.
+2. `EXP24_25_REAL_DATA_AND_CAUSAL_BASELINES.md`
+   Corrected real-data benchmark (soft climate and finance labels, the exact
+   Lorenz-96 graph) and the intervention method contrasts.
 
-2. `RESEARCH_WRAP_UP_2026-04-16.md`
-   Final follow-up wrap-up after the intervention controls and real-data
-   causal-baseline additions.
+3. `EXP18_19_20_RESULTS.md`
+   Exploratory Exp 18-20 results and their corrected interpretation, including
+   the nonlinearity confirmation.
 
-3. `RESEARCH_WRAP_UP_2026-04-08.md`
-   Final project wrap-up: what was tested, what survived, what failed, and why
-   method-building is now closed.
+Earlier research notes and the original state-space-model paper drafts were
+removed when the camera-ready version was prepared; they remain in Git
+history. Where an older statement disagrees with the camera-ready paper, the
+paper is authoritative.
 
-4. `EXP17_CAUSEME_LAG_GATE_RESULTS.md`
-   Final lag-specific semi-real benchmark gate for explicit lag-resolved
-   bottleneck extraction.
-
-5. `neurips_gap_analysis.md`
-   Broad audit of the original project, including novelty, reviewer risks,
-   and why the initial thesis was not yet NeurIPS-ready.
-
-6. `RESEARCH_STATUS.md`
-   Short honest snapshot of where the project stands after the first round
-   of experiments and scientific corrections.
-
-7. `RESULTS.md`
-   Written summary of the main experiment outcomes, especially the go/no-go
-   findings that weakened the original SSM-specific thesis.
-
-8. `OPTION_A_PIVOT.md`
-   The proposed broader pivot toward bottleneck prediction models.
-
-9. `RESEARCH_RESET_PLAN.md`
-   Historical reset document plus status updates showing how the later method
-   branches were tested and ultimately closed.
-
-10. `PHASE2_RESULTS.md`
-   Robust validation showing why causality-preserving bottleneck training was
-   stopped as the active method-building direction.
-
-11. `PIVOT_EXPERIMENTS_RESULTS.md`
-   Pivot experiment summary showing the broader bottleneck extraction signal
-   and architecture ranking.
-
-12. `LAG_RESOLVED_RESULTS.md`
-   Exp 13 results for Jacobian/impulse lag probing of existing SSM models.
-
-13. `EXP15_LAGGED_BOTTLENECK_STRESS_RESULTS.md`
-   Exp 15 results for explicit lagged bottleneck extraction against tuned
-   lagged linear baselines.
-
-14. `RESEARCH_DECISION_MEMO_2026-04-07.md`
-    Intermediate decision memo before the final Exp 17 gate; now preserved as
-    part of the reasoning chain rather than the final status.
-
-15. `EXP15_EXP16_GPU_RESULTS.md`
-    GPU stress-grid summary plus the intermediate semi-real aggregate gate.
-    Read with the correction note pointing to Exp 17.
-
-Current benchmark-hardening artifacts:
+Benchmark artifacts:
 
 - Edge provenance records live in `data/real_loaders.py`.
 - Provenance-card and leave-one-group-out utilities live in
@@ -77,6 +28,5 @@ Current benchmark-hardening artifacts:
 - The submitted provenance cards are in
   `results/corrected_workshop/real_data/edge_provenance_cards.json`.
 - `make smoke` runs bounded CPU-friendly empirical verification.
-- `make workshop-evidence` reproduces the compact corrected workshop artifact
-  set; `reproduce_all.sh` and `make falsification` run the broader F1-F6
-  pipeline.
+- `make workshop-evidence` reproduces the corrected workshop artifact set;
+  `reproduce_all.sh` and `make falsification` run the broader pipeline.

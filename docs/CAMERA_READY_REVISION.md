@@ -228,6 +228,12 @@ Paper changes:
   Lagged-BN labels in Figure 1, Table 4 and the text; and a finance test that
   checks the loaded array against a float64 recomputation.
 
+- Repository cleanup: superseded research notes and planning documents, the
+  original state-space-model paper sources and figures, the legacy table and
+  figure generators with their Makefile targets, the Colab notebook, and the
+  AWS/Drive helper scripts were removed from the tree (they remain in Git
+  history). `LICENSE` now names all four authors.
+
 Validation after this round: the full suite passes (246 tests). Both PDFs
 build to six main-text pages, two reference pages, and three appendix pages,
 with no undefined references, overfull boxes, bibliography warnings, or Type 3

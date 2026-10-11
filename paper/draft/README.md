@@ -15,7 +15,6 @@ corrected evidence boundary, not a new causal-discovery method.
 - `generated_reviewer_results.tex` — post-review artifact-derived tables
 
 - `main_4page.tex` — anonymous Interpretability for Discovery submission
-- `main.tex` — superseded long-form draft of the earlier preprint; not built
 - `main_arxiv.tex` — preprint sharing the camera-ready content and appendices
 - `generated_workshop_results.tex` — artifact-derived values; do not edit manually
 - `../neurips_2026.sty` — official NeurIPS 2026 workshop style

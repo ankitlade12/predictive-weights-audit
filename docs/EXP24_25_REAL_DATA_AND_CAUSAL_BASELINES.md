@@ -51,8 +51,9 @@ default/tuned protocols, plus a three-model-seed Lagged-Bottleneck run
 | PCMCI+ | 0.605 | 0.579 | 0.875 |
 | Bivariate Granger | 0.605 | 0.512 | **0.989** |
 
-The former Lorenz-96 PCMCI value `0.986` was an orientation error and is
-superseded by `0.839` under the matched lag horizon. The corrected ordering
+The former Lorenz-96 PCMCI value `0.986` (earlier preprint, arXiv:2605.09169)
+combined a transposed score matrix with lag horizon `5`; at the correct
+orientation and the shared horizon `3` it is `0.839`. The corrected ordering
 still supports the substantive
 negative conclusion without claiming that PCMCI dominates: on the exact
 simulated graph, simple Granger and tuned linear regression outperform PCMCI
@@ -126,27 +127,17 @@ advantage. Together, Exp 23 and Exp 25 show:
    size-matched estimand;
 5. no bottleneck-specific causal extraction claim survives.
 
-DYNOTEARS and VAR-LiNGAM are absent from the corrected empirical table because
-their optional dependencies were unavailable locally. Their orientation and
-lag adapters are covered by fixture-based tests, but this artifact makes no
-empirical claim about either method.
+DYNOTEARS and VAR-LiNGAM were absent from this submitted table because their
+optional dependencies were unavailable locally at the time. After review they
+were run on Lorenz-96 in an isolated environment (AUROC `0.833` and `0.896` on
+the original array; ten-trajectory results in the camera-ready Table 2). The
+earlier preprint's `0.983` and `0.968` included contemporaneous coefficients
+and are superseded. See `CAMERA_READY_REVISION.md`.
 
 ## Workshop Interpretation
 
-The workshop contribution is an audit protocol for interpretability-based
-scientific discovery claims:
-
-1. declare matrix direction and lag conventions;
-2. attach provenance and claim scope to every graph label;
-3. separate real observational soft labels from simulated exact graphs;
-4. preserve trajectory boundaries;
-5. match usable data budgets;
-6. encode intervention targets in fitting and evaluation;
-7. include sparse and classical causal baselines;
-8. use independent seeds, paired intervals, and multiplicity correction;
-9. retain contradictory and null results;
-10. state explicitly that readable predictive dependency is not causal
-    knowledge.
+The workshop contribution is the audit checklist stated in the camera-ready
+paper (Section 4) and the repository README.
 
 These experiments are not evidence for deploying bottleneck scores, Granger,
 PCMCI, or any other benchmarked method as an automated causal decision system.

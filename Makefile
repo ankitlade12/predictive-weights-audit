@@ -9,7 +9,7 @@ export MPLBACKEND
 
 UV_RUN := uv run --frozen --extra baselines --extra dev
 
-.PHONY: help install test smoke workshop-evidence workshop-tables workshop-manifest anonymous-supplement submission-audit exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments tables figures paper paper-arxiv paper-workshop paper-camera-ready reviewer-tables release all clean
+.PHONY: help install test smoke workshop-evidence workshop-tables workshop-manifest anonymous-supplement submission-audit exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments paper paper-arxiv paper-workshop paper-camera-ready reviewer-tables release all clean
 
 help:
 	@echo "Targets:"
@@ -100,12 +100,6 @@ exp27:
 falsification: exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27
 
 experiments: falsification
-
-tables:
-	$(UV_RUN) python paper/generate_tables.py
-
-figures:
-	$(UV_RUN) python paper/generate_figures.py
 
 reviewer-tables:
 	$(UV_RUN) python paper/generate_reviewer_results.py
