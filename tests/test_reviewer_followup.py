@@ -6,9 +6,12 @@ import importlib.util
 import json
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+FINANCE_SNAPSHOT_SHA256 = "2de8e1fd1497656b060ae6b9cf72b2746f0245253c3d6ddd9e0c1c12f25d658e"
 spec = importlib.util.spec_from_file_location(
     "reviewer_tables", ROOT / "paper/generate_reviewer_results.py"
 )
@@ -63,9 +66,17 @@ def test_versioned_finance_snapshot_matches_submitted_benchmark():
 
     snapshot = ROOT / "data/real/sector_etfs.csv"
     assert snapshot.is_file(), "The release must include the original finance snapshot"
-    data, graph, _ = load_sector_etfs(data_dir=str(snapshot.parent))
+    # Pin file bytes: float32 log returns differ in the last ULPs across platforms,
+    # so the loaded array is checked against a float64 recomputation instead.
+    assert hashlib.sha256(snapshot.read_bytes()).hexdigest() == FINANCE_SNAPSHOT_SHA256
+    data, graph, names = load_sector_etfs(data_dir=str(snapshot.parent))
     submitted = json.loads(
         (ROOT / "results/corrected_workshop/real_data/real_data_benchmark_results.json").read_text()
     )["datasets"]["finance"]
-    assert _array_sha256(data) == submitted["data_sha256"]
+    prices = pd.read_csv(snapshot, index_col=0).dropna().to_numpy(np.float64)
+    returns = np.diff(np.log(prices), axis=0)
+    expected = (returns - returns.mean(axis=0)) / returns.std(axis=0)
+    assert names == submitted["names"]
+    assert data.dtype == np.float32 and data.shape == (submitted["T"], submitted["K"])
+    np.testing.assert_allclose(data, expected, atol=1e-4)
     assert _array_sha256(graph) == submitted["graph_sha256"]

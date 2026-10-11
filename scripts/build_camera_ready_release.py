@@ -25,6 +25,7 @@ def build():
             "docs/CAMERA_READY_REVISION.md",
             "paper/neurips_2026.sty",
             "paper/references.bib",
+            "paper/camera_ready_references.bib",
             "paper/generate_workshop_results.py",
             "paper/generate_reviewer_results.py",
             "paper/draft/README.md",

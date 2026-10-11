@@ -242,9 +242,13 @@ def render_tex(values: dict[str, Any]) -> str:
         for method in real_labels
     ]
     intervention_rows = [
-        f"{method} & {_render_intervention_cell(intervention[method]['K10'])} & "
+        f"{label} & {_render_intervention_cell(intervention[method]['K10'])} & "
         f"{_render_intervention_cell(intervention[method]['K20'])} \\\\"
-        for method in ("Bottleneck", "Lasso", "PCMCI", "Granger")
+        for method, label in zip(
+            ("Bottleneck", "Lasso", "PCMCI", "Granger"),
+            ("Lagged-BN", "Lasso", "PCMCI", "Granger"),
+            strict=True,
+        )
     ]
 
     lines = [
@@ -356,12 +360,12 @@ def render_figure(values: dict[str, Any], output: Path = FIGURE_OUTPUT) -> None:
     plt.rcParams.update(
         {
             "font.family": "serif",
-            "font.size": 7.2,
-            "axes.titlesize": 8.0,
-            "axes.labelsize": 7.2,
-            "xtick.labelsize": 6.7,
-            "ytick.labelsize": 6.7,
-            "legend.fontsize": 6.6,
+            "font.size": 8.5,
+            "axes.titlesize": 9.0,
+            "axes.labelsize": 8.5,
+            "xtick.labelsize": 8.0,
+            "ytick.labelsize": 8.0,
+            "legend.fontsize": 8.0,
             "axes.linewidth": 0.6,
             "lines.linewidth": 1.0,
             "pdf.fonttype": 42,
@@ -371,7 +375,7 @@ def render_figure(values: dict[str, Any], output: Path = FIGURE_OUTPUT) -> None:
     fig, (ax_real, ax_intervention) = plt.subplots(
         1,
         2,
-        figsize=(5.5, 2.35),
+        figsize=(5.5, 2.6),
         gridspec_kw={"width_ratios": (0.95, 1.25)},
         constrained_layout=True,
     )
@@ -424,6 +428,7 @@ def render_figure(values: dict[str, Any], output: Path = FIGURE_OUTPUT) -> None:
     ax_real.spines["right"].set_visible(False)
 
     methods = ("Bottleneck", "Lasso", "PCMCI", "Granger")
+    method_labels = ("Lagged-BN", "Lasso", "PCMCI", "Granger")
     x_positions = np.arange(len(methods))
     conditions = (
         ("K10", r"$K=10$", "#0072B2", "o", -0.10),
@@ -456,12 +461,12 @@ def render_figure(values: dict[str, Any], output: Path = FIGURE_OUTPUT) -> None:
         )
 
     ax_intervention.axhline(0.0, color="#444444", linewidth=0.7)
-    ax_intervention.set_xticks(x_positions, methods)
+    ax_intervention.set_xticks(x_positions, method_labels)
     ax_intervention.set_ylim(-0.005, 0.115)
     ax_intervention.set_yticks((0.00, 0.03, 0.06, 0.09))
     ax_intervention.set_ylabel(r"AUROC gain $\Delta_m$")
     ax_intervention.set_title(
-        "(b) Matched random forcing (95% CI)",
+        "(b) Matched random forcing",
         loc="left",
         fontweight="bold",
     )
@@ -478,7 +483,7 @@ def render_figure(values: dict[str, Any], output: Path = FIGURE_OUTPUT) -> None:
     ax_intervention.spines["right"].set_visible(False)
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, format="pdf")
+    fig.savefig(output, format="pdf", metadata={"CreationDate": None})
     plt.close(fig)
 
 

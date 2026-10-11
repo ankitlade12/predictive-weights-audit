@@ -1,13 +1,19 @@
 # Docs
 
-This folder is the home for the project's research-planning and strategy documents.
+Current results are in the camera-ready paper
+(`../paper/draft/main_camera_ready.pdf`) and its revision record,
+`CAMERA_READY_REVISION.md`, which maps every reviewer concern to a change and
+lists the post-review evidence. Where any other document here disagrees with
+those two, the other document is superseded.
 
-Suggested reading order:
+The remaining files are the project's historical research record, kept to show
+how earlier positive claims were tested and withdrawn. Suggested reading order:
 
 1. `EXP24_25_REAL_DATA_AND_CAUSAL_BASELINES.md`
-   Current real-data benchmark and causal-baseline summary. Read this first
-   for the reviewer-facing falsification story: corrected NOAA ground truth,
-   Lorenz-96, PCMCI/Granger, and intervention method contrasts.
+   Corrected real-data benchmark and causal-baseline summary from the
+   submission: soft climate and finance labels, Lorenz-96, PCMCI/Granger, and
+   intervention method contrasts. DYNOTEARS and VAR-LiNGAM were later run;
+   see the revision record.
 
 2. `RESEARCH_WRAP_UP_2026-04-16.md`
    Final follow-up wrap-up after the intervention controls and real-data
@@ -68,7 +74,8 @@ Current benchmark-hardening artifacts:
 - Edge provenance records live in `data/real_loaders.py`.
 - Provenance-card and leave-one-group-out utilities live in
   `ssm_causal/benchmark_metadata.py`.
-- Exp 24 writes `results/real_data_benchmark/edge_provenance_cards.json`.
+- The submitted provenance cards are in
+  `results/corrected_workshop/real_data/edge_provenance_cards.json`.
 - `make smoke` runs bounded CPU-friendly empirical verification.
 - `make workshop-evidence` reproduces the compact corrected workshop artifact
   set; `reproduce_all.sh` and `make falsification` run the broader F1-F6

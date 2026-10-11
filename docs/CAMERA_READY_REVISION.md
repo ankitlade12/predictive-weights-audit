@@ -18,10 +18,9 @@ it is not a response posted to OpenReview.
 - Post-review artifacts are separate in `results/reviewer_followup/`.
 - Release ZIP: `dist/camera_ready_release.zip`, with per-file SHA-256 checksums.
 
-Author order and affiliations follow the accepted OpenReview entry, as
-confirmed by the corresponding user: Ankit Hemant Lade (University of Central
-Missouri), Sai Krishna Jasti (Ascentt Systems Inc), Aman Chadha (Google),
-Indar Kumar (Ascentt Systems Inc). The outdated citation metadata was corrected
+Author order follows the accepted OpenReview entry: Ankit Hemant Lade
+(University of Central Missouri), Sai Krishna Jasti (Independent Researcher),
+Aman Chadha (Google), Indar Kumar (Ascentt Systems Inc). The outdated citation metadata was corrected
 to name all four authors and the workshop, without claiming a main-conference
 proceedings publication.
 
@@ -119,7 +118,7 @@ replicates. Regression tests exercise these failure modes and verify joining
 by data seed rather than list order. Source hashes are recorded in the new
 experiment artifacts; archive checksums cover all packaged files.
 
-## Completed validation
+## Completed validation (second round)
 
 - Full repository suite: **244 passed** (seven existing dependency warnings).
 - After the final archive-builder adjustment: **15 focused release tests passed**.
@@ -138,20 +137,13 @@ experiment artifacts; archive checksums cover all packaged files.
   match the delivered source. The seed-0 data and graph match the original
   benchmark hashes; optional and primary runs use matching exported arrays.
 
-## Publication logistics still requiring the authors' attention
+## Venue requirements
 
-The [official CFP](https://interpretability4discovery.github.io/cfp.html),
-checked 2026-10-10, allows six main-text pages for accepted papers; references
-and appendices are excluded. Accepted papers are presented as posters, with
-a subset selected for talks. In-person attendance is encouraged, not required.
-
-The public CFP does **not** list a camera-ready deadline. Check the acceptance
-email/OpenReview author task for that deadline, the actual upload field, and
-any later organizer instructions. Poster dimensions, upload deadlines, and
-whether this paper received a spotlight were not provided. No upload,
-submission or organizer message was made. The revision was pushed to
-`ankitlade12/ssm-causal` on `main` in commit `8122a09`; this record is also
-updated with the final audit fixes below.
+The [official CFP](https://interpretability4discovery.github.io/cfp.html) and
+the acceptance notice allow six main-text pages for the camera-ready version;
+references and appendices are excluded. Accepted papers are presented as
+posters (34 x 34 inches recommended), with a subset selected for spotlight
+talks.
 
 The broader benchmark and interpretation-signal limitations are addressed
 through bounded claims, not reported as experimentally resolved.
@@ -167,7 +159,7 @@ submitted artifact hashes, and verify exported trajectory hashes against
 both follow-up stages. Two minor prose errors were corrected. Main-text
 methods now explicitly distinguish the original Holm-adjusted tests from
 exploratory follow-up intervals, and clarify VAR-LiNGAM's lag selection.
-The final paper now links directly to the public code and artifact repository.
+The final paper links directly to the code and artifact repository.
 
 All 24 original nonlinearity cell summaries (including bootstrap intervals,
 Holm adjustment, gates, and the regime outcome) were recomputed exactly from
@@ -176,3 +168,94 @@ from saved score matrices. No numerical changes were needed. A clean Git
 snapshot built both PDFs and the release archive; 23 focused reproduction
 and release tests passed there. Original artifact and follow-up source hashes
 remain valid.
+
+## Third revision round
+
+A further audit against the verbatim reviews (AH3Q, CqQD) and the earlier
+preprint found these issues; all are fixed in the camera-ready sources.
+
+Corrections to the record above:
+
+- The repository was private when this record called it public. The paper
+  now links `https://github.com/ankitlade12/predictive-weights-audit`, so the
+  repository must be renamed and made public before upload.
+- The finance array-hash test failed on some x86-64 machines: float32 log
+  returns differ in the last ULP. The test now pins the CSV file bytes and
+  checks the graph hash; every finance AUROC was reproduced exactly.
+- The release builder failed on a fresh clone because the figure is
+  generated. `make release` now builds both PDFs before packaging.
+
+Paper changes:
+
+- Bibliography: corrected the author lists of `runge2019pcmci` and
+  `pamfil2020dynotears`; added PCMCI+ (Runge 2020), which appeared in both
+  tables uncited; updated Tank et al. (2022) and Mamba (COLM 2024); fixed
+  entry types and capitalization. The self-citation lives in
+  `paper/camera_ready_references.bib` so the anonymous archive stays
+  identity-free.
+- The earlier preprint (arXiv:2605.09169) is now cited wherever its values
+  appear. Its PCMCI 0.986 combined a transposed score matrix with lag horizon
+  5, so the abstract no longer attributes the change to a transpose alone.
+  Its DYNOTEARS (0.983) and VAR-LiNGAM (0.968) values included contemporaneous
+  coefficients; Appendix B states that the strictly lagged values supersede
+  them.
+- Nonlinearity: Linear-BN attains AUROC and AUPRC 1.00 in all 240 fits, so
+  the gate-passing +0.50 comes entirely from the prediction-tuned Lasso
+  selecting the largest grid penalty and returning all-zero cross scores.
+  The abstract and Section 3.3 now say so. The undefined term "isolated
+  positive" is removed. The tested hypothesis (the preprint's mild-nonlinearity
+  finding) is stated.
+- Checklist item (iv) adds a comparator non-degeneracy check (no all-tied
+  scores, no selected penalty at a grid boundary). Finance Lasso in Table 1
+  is flagged as the same degenerate case.
+- Section 3.2 describes the VAR(3) intervention generator and defines the
+  gain before the semantics audit uses it. The numeric intervention table
+  dropped after submission is restored as Appendix C.
+- Section 2 states that the predictor is linear with width 16 (32 in the
+  nonlinearity study) and unifies the bottleneck labels. Table 2 states the
+  sign of its difference column, and the text summarizes it, including that
+  Lagged-BN has the lowest AUPRC of all eight methods.
+- Author block with emails, Acknowledgments and Disclosure of Funding, PDF
+  metadata, Latin Modern typewriter font (no Type 3 bitmap fonts), larger
+  Figure 1 text, and a deterministic figure timestamp.
+
+- A final independent review added: disclosure that Ridge also selects
+  grid-boundary penalties on climate and finance (checklist item (iv) now asks
+  to report such penalties rather than forbid them); a note that combined-arm
+  AUROC is at least .99, so intervention gains are bounded by observational
+  shortfall; the definition of sigma in the nonlinearity generator; the exact
+  per-lag edge probability of the intervention generator; consistent
+  Lagged-BN labels in Figure 1, Table 4 and the text; and a finance test that
+  checks the loaded array against a float64 recomputation.
+
+Validation after this round: the full suite passes (246 tests). Both PDFs
+build to six main-text pages, two reference pages, and three appendix pages,
+with no undefined references, overfull boxes, bibliography warnings, or Type 3
+fonts. A fresh-clone simulation of the change passes `make release`, the
+release tests from the extracted archive, and the anonymous-supplement
+identity audit; all recorded follow-up source hashes still match.
+
+Still requiring author confirmation: Aman Chadha's affiliation line, the
+funding/competing-interest statement, and the repository rename.
+
+OpenReview abstract field (plain text, matching the PDF):
+
+> Readable model weights are tempting evidence about the mechanisms that
+> generated scientific data. We audit one such candidate: the endpoint-product
+> score of a next-step time-series predictor. A sequence of initially
+> plausible architecture, benchmark, intervention, and nonlinearity stories
+> does not survive controls for direction conventions, lag horizons, label
+> provenance, data budgets, intervention targets, and classical baselines.
+> Correcting a source/target transpose and matching lag horizons changes
+> Lorenz-96 PCMCI AUROC from 0.986 in our earlier preprint to 0.839. On
+> target-aware, size-matched random forcing, all four tested methods improve,
+> so the effect is not bottleneck-specific. In a fixed nonlinearity
+> confirmation, the only gate-passing bottleneck advantage is identical at
+> every nonlinearity strength, vanishes when the sample size doubles, and
+> arises because the prediction-tuned Lasso comparator returns all-zero
+> cross-variable scores. We demonstrate a reproducible falsification protocol
+> on one endpoint-product score family, with reporting and responsible-use
+> boundaries; transfer to other interpretability signals remains untested.
+> This negative study illustrates how a readable predictive representation
+> can remain useful for hypothesis generation without constituting causal
+> knowledge.

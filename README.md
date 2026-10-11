@@ -1,4 +1,4 @@
-# SSM-Causal: Auditing Causal Interpretations of Predictive Bottlenecks
+# When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -20,7 +20,8 @@ an SSM-specific discovery mechanism.
 
 Accepted at the NeurIPS 2026 Workshop on Interpretability for Discovery
 (non-archival). The camera-ready revision is `paper/draft/main_camera_ready.tex`;
-build it with `make paper-camera-ready`. The original four-page manuscript is
+build it with `make paper-camera-ready`, or build both PDFs and the checksummed
+release archive with `make release`. The original four-page manuscript is
 retained separately. See [the revision record](docs/CAMERA_READY_REVISION.md)
 for every reviewer concern, follow-up commands, and remaining limits.
 
@@ -30,17 +31,18 @@ reproducing all 240 original Lasso fits. These are exploratory additions;
 they do not broaden the evaluated graph family or interpretability signal.
 
 The Interp4Discovery-facing contribution is a reusable falsification and audit
-protocol for interpretability-based scientific discovery claims. It asks:
+protocol for interpretability-based scientific discovery claims. Before
+elevating an interpretation to a discovery claim:
 
-1. Are score direction and lag conventions tested on planted edges?
-2. Does the signal survive architecture and sparse-regression controls?
-3. Are trajectory boundaries, data budgets, and random seeds matched?
-4. Are intervention targets represented in the fitting estimand?
-5. Do results survive alternative intervention semantics?
-6. Are real-data labels exact, literature-derived, or heuristic?
-7. Do classical methods show the same apparent effect?
-8. Are independent replicates, paired uncertainty, and multiple comparisons
-   handled correctly?
+1. Test direction, lag, and diagonal conventions on planted examples.
+2. Match data budgets, preprocessing, trajectory boundaries, and seeds.
+3. Encode intervention targets and state intervention semantics.
+4. Compare against sparse and classical baselines under the same estimand, and
+   verify that each comparator gives a non-degenerate ranking (no all-tied
+   scores, no selected penalty at a grid boundary).
+5. Distinguish exact graphs from soft labels.
+6. Fix variants before evaluation, report multiplicity-adjusted effects, and
+   retain failures.
 
 This is a negative/failure study, not a causal-discovery competition. Earlier
 positive results are retained as historical context but are superseded where
@@ -69,9 +71,12 @@ Corrected AUROC:
 | PCMCI+ | 0.605 | 0.579 | 0.875 |
 | Bivariate Granger | 0.605 | 0.512 | 0.989 |
 
-The previously reported Lorenz-96 PCMCI AUROC of `0.986` came from a
-source/target orientation error. With every method evaluated at lag horizon
-`3`, the corrected value is `0.839`. The exact
+The Lorenz-96 PCMCI AUROC of `0.986` in our earlier preprint
+(arXiv:2605.09169) came from a transposed score matrix at lag horizon `5`.
+At the correct orientation, with every method evaluated at lag horizon `3`,
+the corrected value is `0.839`. Finance Lasso selects the largest grid penalty
+and returns all-zero cross-variable scores, so its `0.500` is a tie, not a
+ranking. The exact
 simulated benchmark still separates readable predictive structure from reliable
 graph recovery, but it does not support the old claim that PCMCI dominates.
 The Lagged-Bottleneck's `0.881 +/- 0.018` on the exact graph is readable
@@ -133,7 +138,8 @@ Artifact:
 
 Exp 27 fixed the Linear-BN configuration before evaluation and swept
 `K in {10,20}`, `T in {300,600}`, and nonlinearity mixes from `0.0` to `1.0`.
-The artifact status is `isolated_positive_exploratory`, not a confirmed regime.
+No nonlinearity strength passes the pre-specified regime rule; the six
+passing cells all sit at one `(K, T)` setting.
 
 - At `K=20, T=300`, Linear-BN minus Lasso AUROC is exactly `+0.50` at
   every nonlinearity mix, including `0.0` and `1.0`.
@@ -142,8 +148,11 @@ The artifact status is `isolated_positive_exploratory`, not a confirmed regime.
   passes the pre-specified gate.
 
 The invariance to nonlinearity and disappearance with more samples reject the
-old mild-nonlinearity interpretation. The isolated result is consistent with a
-finite-sample, dimensional regularization effect in this generator.
+old mild-nonlinearity interpretation. The post-review diagnostic
+(`results/reviewer_followup/lasso_diagnostic.json`) locates the cause in the
+comparator: Linear-BN reaches `1.00` AUROC in all 240 fits, while every
+`K=20, T=300` Lasso fit selects the largest grid penalty (`alpha=1`) and
+returns all-zero cross-variable scores.
 
 Artifact:
 `results/corrected_workshop/nonlinearity_confirmation.json`
@@ -152,7 +161,10 @@ Artifact:
 
 The following statements should not be used as current conclusions:
 
-- PCMCI achieves `0.986` AUROC on Lorenz-96.
+- PCMCI achieves `0.986` AUROC on Lorenz-96 (transposed scores, lag horizon 5).
+- DYNOTEARS and VAR-LiNGAM achieve `0.983` and `0.968` on Lorenz-96 (these
+  included contemporaneous coefficients; strictly lagged values are `0.833`
+  and `0.896`).
 - Lorenz-96 is a real dataset or has 90 evaluated cross-variable edges.
 - Bottlenecks have a confirmed mild-nonlinearity regime.
 - The current experiments establish sample efficiency.
@@ -199,14 +211,23 @@ make workshop-evidence
 The exact commands and claim scope for each artifact are recorded in
 `results/corrected_workshop/experiment_manifest.json`.
 
-Build the anonymous workshop paper with the official NeurIPS 2026 style:
+Build the camera-ready paper, the preprint, and the release archive with the
+official NeurIPS 2026 style:
 
 ```bash
 # Debian/Ubuntu native build dependency
 sudo apt-get install texlive-latex-base texlive-latex-extra \
-  texlive-fonts-recommended texlive-bibtex-extra
-make paper-workshop
+  texlive-fonts-recommended texlive-bibtex-extra lmodern
+make release
 ```
+
+The PDFs are written to `paper/draft/main_camera_ready.pdf` and
+`paper/draft/main_arxiv.pdf`; the archive is written to
+`dist/camera_ready_release.zip`.
+
+The historical double-blind submission and its review supplement remain
+reproducible; they are not the final paper. The submission builds with
+`make paper-workshop` (written to `paper/draft/main_4page.pdf`).
 
 Build the deterministic, identity-scanned review supplement:
 
@@ -214,20 +235,11 @@ Build the deterministic, identity-scanned review supplement:
 make anonymous-supplement
 ```
 
-Run all release checks without rerunning the experiments:
-
-```bash
-make submission-audit
-```
-
-The PDF is written to `paper/draft/main_4page.pdf`; the anonymous supplement
-is written to `dist/anonymous_workshop_supplement.zip`. Do not link the public
-repository during double-blind review.
-
 ## Repository Map
 
 ```text
 ssm_causal/       model, extraction, intervention, and statistical utilities
+                  (package name kept from the project's original SSM focus)
 baselines/        Granger, PCMCI/PCMCI+, DYNOTEARS, and VAR-LiNGAM wrappers
 data/             synthetic generators and observational data loaders
 experiments/      executable experiment protocols

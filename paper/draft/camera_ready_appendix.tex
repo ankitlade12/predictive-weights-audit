@@ -75,7 +75,8 @@ $\Delta$ and CI refer to lag-resolved AUROC. PR reports bottleneck/Lasso
 mean AUPRC; MSE reports their mean-MSE ratio. Failure labels are effect
 ($\Delta<.03$), CI (lower bound $\leq0$), $p$ (adjusted $p\geq.05$),
 and PR (no AUPRC superiority). A dash denotes an unevaluable all-zero
-Wilcoxon contrast. No cell fails the prevalence or MSE gate.}
+Wilcoxon contrast. No cell fails the prevalence or MSE gate. A Lasso AUPRC
+near $.50$ is the trapezoidal value for all-tied zero scores.}
 \label{tab:gates}
 \begin{tabular}{rrrrlllll}
 \toprule
@@ -138,8 +139,32 @@ value in $[\mathrm{target},\mathrm{source}]$ orientation.
 On the original seed-0 Lorenz-96 array, the added baselines give AUROC
 \DynotearsOriginal{} (DYNOTEARS) and \LingamOriginal{} (VAR-LiNGAM).
 They were not part of the submitted Table~\ref{tab:real}; that historical
-comparison is preserved. Neither method is run on the intervention or
+comparison is preserved. Our earlier preprint \citep{lade2026prediction}
+reported higher Lorenz-96 values ($0.983$ and $0.968$) from adapter versions
+that also aggregated contemporaneous coefficients; the strictly lagged values
+here supersede them. Neither method is run on the intervention or
 nonlinearity conditions in this revision. Their linear structural-model
 assumptions (including non-Gaussian independent innovations for VAR-LiNGAM)
 are not established for the subsampled Lorenz-96 trajectories. Their scores
 are therefore bounded empirical comparisons, not proofs of causal validity.
+
+\section{Intervention gains}
+\label{app:interventions}
+
+Table~\ref{tab:interventions} lists the values plotted in
+Figure~\ref{fig:evidence-summary}(b).
+
+\begin{table}[ht]
+\centering\small
+\caption{Target-aware random-forcing gain $\Delta_m$ (lag-aggregated AUROC):
+paired mean and bootstrap 95\% interval over 10 independent data seeds,
+$T=300$.}
+\label{tab:interventions}
+\begin{tabular}{lcc}
+\toprule
+Method & $K=10$ & $K=20$ \\
+\midrule
+\InterventionTableRows
+\bottomrule
+\end{tabular}
+\end{table}

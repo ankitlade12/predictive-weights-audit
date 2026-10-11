@@ -3,7 +3,11 @@
 \usepackage[preprint]{neurips_2026}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\renewcommand{\ttdefault}{lmtt}
 \usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={When Predictive Weights Look Causal: An Audit Protocol for
+Interpretability-Based Discovery},
+pdfauthor={Ankit Hemant Lade, Sai Krishna Jasti, Aman Chadha, Indar Kumar}}
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -14,11 +18,24 @@
 \workshoptitle{Interpretability for Discovery}
 \title{When Predictive Weights Look Causal:\\
 An Audit Protocol for Interpretability-Based Discovery}
+% TODO: confirm Aman Chadha's affiliation line (earlier draft footnote:
+% "Work done outside role at Google DeepMind").
 \author{%
-Ankit Hemant Lade$^{1}$ \quad Sai Krishna Jasti$^{2}$ \quad
-Aman Chadha$^{3}$ \quad Indar Kumar$^{2}$\\
-$^{1}$University of Central Missouri \quad $^{2}$Ascentt Systems Inc\\
-$^{3}$Google
+Ankit Hemant Lade\\
+University of Central Missouri\\
+\texttt{ankitlade12@gmail.com}
+\And
+Sai Krishna Jasti\\
+Independent Researcher\\
+\texttt{jsaikrishna379@gmail.com}
+\AND
+Aman Chadha\\
+Google\\
+\texttt{hi@aman.ai}
+\And
+Indar Kumar\\
+Ascentt Systems Inc\\
+\texttt{indarkarhana@gmail.com}
 }
 
 \input{generated_workshop_results}
@@ -29,9 +46,15 @@ $^{3}$Google
 
 \input{camera_ready_content}
 \label{lastmainpage}
+
+% TODO: confirm funding and competing-interest statements with all co-authors.
+\begin{ack}
+The authors received no dedicated funding for this work and declare no
+competing interests.
+\end{ack}
 \clearpage
 \bibliographystyle{plainnat}
-\bibliography{../references}
+\bibliography{../references,../camera_ready_references}
 \clearpage
 \appendix
 \input{camera_ready_appendix}

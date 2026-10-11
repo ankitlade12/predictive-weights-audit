@@ -9,7 +9,7 @@ export MPLBACKEND
 
 UV_RUN := uv run --frozen --extra baselines --extra dev
 
-.PHONY: help install test smoke workshop-evidence workshop-tables workshop-manifest anonymous-supplement submission-audit exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments tables figures paper paper-arxiv paper-workshop paper-camera-ready reviewer-tables all clean
+.PHONY: help install test smoke workshop-evidence workshop-tables workshop-manifest anonymous-supplement submission-audit exp7 exp15 exp17 exp22 exp23 exp24 exp25 exp26 exp27 falsification experiments tables figures paper paper-arxiv paper-workshop paper-camera-ready reviewer-tables release all clean
 
 help:
 	@echo "Targets:"
@@ -23,6 +23,7 @@ help:
 	@echo "  paper-arxiv      Compile paper/draft/main_arxiv.tex"
 	@echo "  paper-workshop   Compile paper/draft/main_4page.tex"
 	@echo "  paper-camera-ready Compile accepted revision with appendices"
+	@echo "  release          Build both PDFs and the checksummed release ZIP"
 	@echo "  anonymous-supplement Build and audit the double-blind code supplement"
 	@echo "  submission-audit Run tests, paper build, manifest, and anonymity checks"
 	@echo "  paper            Alias for paper-arxiv"
@@ -113,11 +114,14 @@ paper-camera-ready: workshop-tables reviewer-tables
 	cd paper/draft && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_camera_ready.tex && bibtex main_camera_ready && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_camera_ready.tex && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_camera_ready.tex
 
 paper-arxiv: workshop-tables reviewer-tables
-	cd paper/draft && TEXINPUTS=..: pdflatex main_arxiv.tex && bibtex main_arxiv && TEXINPUTS=..: pdflatex main_arxiv.tex && TEXINPUTS=..: pdflatex main_arxiv.tex
+	cd paper/draft && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_arxiv.tex && bibtex main_arxiv && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_arxiv.tex && TEXINPUTS=..: pdflatex -interaction=nonstopmode -halt-on-error main_arxiv.tex
 
 paper-workshop:
 	$(MAKE) workshop-tables
 	cd paper/draft && TEXINPUTS=..: pdflatex main_4page.tex && bibtex main_4page && TEXINPUTS=..: pdflatex main_4page.tex && TEXINPUTS=..: pdflatex main_4page.tex
+
+release: paper-camera-ready paper-arxiv
+	$(UV_RUN) python scripts/build_camera_ready_release.py
 
 paper: paper-arxiv
 

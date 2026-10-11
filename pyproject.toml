@@ -1,7 +1,7 @@
 [project]
 name = "ssm-causal"
 version = "0.1.0"
-description = "Causal Discovery via State Space Model Internals"
+description = "Audit of causal interpretations of predictive bottleneck weights"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

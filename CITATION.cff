@@ -11,6 +11,8 @@ authors:
   - family-names: "Kumar"
     given-names: "Indar"
 type: software
+repository-code: "https://github.com/ankitlade12/predictive-weights-audit"
+license: MIT
 preferred-citation:
   type: conference-paper
   title: "When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery"
