@@ -1,8 +1,7 @@
 # When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery
 
 Code and experimental evidence for the accepted NeurIPS 2026 Workshop on
-Interpretability for Discovery study (non-archival). Manuscripts, PDFs,
-LaTeX sources, and paper-build tooling are maintained outside this repository.
+Interpretability for Discovery study (non-archival).
 
 [Citation](CITATION.cff) · [MIT license](LICENSE)
 
