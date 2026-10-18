@@ -218,35 +218,6 @@ An optional CPU Docker build is provided in [Dockerfile](Dockerfile). Its
 `make all` command runs the tests and packages the code and evidence. Docker and a fresh
 dependency installation were not exercised in the latest local verification.
 
-## Repository contents and validation
-
-- `experiments/`: eight retained experiment/helper modules and package init.
-- `results/`: original corrected artifacts and exploratory follow-up analyses.
-- `data/`: fixed input snapshots, loaders, and synthetic generators.
-- `ssm_causal/`, `baselines/`: model, metric, protocol, and baseline dependencies.
-- `tests/`: implementation, statistical, provenance, and release checks.
-- `scripts/`: numerical summaries and code/evidence packaging.
-
-The legacy package name `ssm_causal` is retained for compatibility. Older
-modules needed by imports or recorded source hashes remain unchanged; obsolete
-experiment entry points and separate anonymous/preprint builds were removed.
-
-The original corrected evidence and all follow-up numerical results are
-preserved. Follow-up paths and descriptive metadata were normalized on
-2026-10-17 without rerunning computations. Original execution hashes remain
-in `execution_source_sha256`; `source_sha256` identifies the renamed source
-snapshot. Summary metadata retains the preceding artifact digests alongside
-the current file checksums.
-Some artifact paths retain `paper_values.json` as a historical filename;
-these are machine-readable results, not manuscript files.
-Full experimental reruns are separate from the repository tests.
-
-Verified on 2026-10-17 from a clean Git snapshot: all 229 tests pass, every
-tracked file is included in the code release, and all eight experiment CLIs
-load successfully. The paired numerical summary exactly matches the saved
-reference. Verification used the installed dependency environment; full
-experiment reruns, a fresh dependency installation, and Docker were not run.
-
 ## Citation and license
 
 Ankit Hemant Lade, Sai Krishna Jasti, Aman Chadha, and Indar Kumar (2026).
