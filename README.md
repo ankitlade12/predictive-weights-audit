@@ -248,18 +248,6 @@ load successfully. The paired numerical summary exactly matches the saved
 reference. Verification used the installed dependency environment; full
 experiment reruns, a fresh dependency installation, and Docker were not run.
 
-## Scope and release status
-
-Only one interpretation score family and limited dimensions, sample sizes,
-and graph settings were evaluated. Climate/finance labels are incomplete.
-Passing the checklist does not establish causal identification; predictive
-scores must not directly prescribe scientific interventions, financial trades,
-or policy decisions.
-
-Repository: `https://github.com/ankitlade12/predictive-weights-audit`.
-Public release is pending; the repository rename and local cleanup do not
-remove Git history. The manuscript and submission metadata are managed separately.
-
 ## Citation and license
 
 Ankit Hemant Lade, Sai Krishna Jasti, Aman Chadha, and Indar Kumar (2026).
