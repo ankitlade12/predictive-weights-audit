@@ -33,25 +33,10 @@ data/climate_raw/
 data/fmri_raw/
 # The ETF snapshot used by the submitted benchmark is versioned for exact reproduction.
 
-# LaTeX build artifacts (any depth under paper/)
-paper/**/*.aux
-paper/**/*.log
-paper/**/*.out
-paper/**/*.bbl
-paper/**/*.blg
-paper/**/*.fls
-paper/**/*.fdb_latexmk
-paper/**/*.synctex.gz
-paper/**/*.pdf
-paper/**/*.xdv
-
-# Auto-generated tables (regenerable)
-paper/table*.tex
-
 # Pytest
 .pytest_cache/
 
-# Local workspace files; never part of the camera-ready release.
+# Local workspace files; never part of the code release.
 /.claude/
 /AGENTS.md
 /ssm-causal-results.tar.gz

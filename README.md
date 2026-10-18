@@ -178,6 +178,12 @@ Some artifact paths retain `paper_values.json` as a historical filename;
 these are machine-readable results, not manuscript files.
 Full experimental reruns are separate from the repository tests.
 
+Verified on 2026-10-17 from a clean Git snapshot: all 229 tests pass, every
+tracked file is included in the code release, and all eight experiment CLIs
+load successfully. The paired numerical summary exactly matches the saved
+reference. Verification used the installed dependency environment; full
+experiment reruns, a fresh dependency installation, and Docker were not run.
+
 ## Scope and release status
 
 Only one interpretation score family and limited dimensions, sample sizes,

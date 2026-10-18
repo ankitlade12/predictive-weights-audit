@@ -14,7 +14,6 @@ sys.path.insert(0, str(ROOT))
 from ssm_causal.statistics import paired_bootstrap_ci  # noqa: E402
 
 RESULTS = ROOT / "results/reviewer_followup"
-ORIGINAL = ROOT / "results/corrected_workshop/nonlinearity_confirmation.json"
 
 
 def summarize(primary, optional):

@@ -11,15 +11,12 @@ ssm_causal_discovery_plan.md
 **/__pycache__/
 **/*.pyc
 
-paper/draft/*.aux
-paper/draft/*.bbl
-paper/draft/*.blg
-paper/draft/*.fdb_latexmk
-paper/draft/*.fls
-paper/draft/*.log
-paper/draft/*.out
-paper/draft/*.pdf
-paper/draft/*.synctex.gz
+# Manuscripts are outside the code repository and build context.
+paper/
+**/*.tex
+**/*.bib
+**/*.sty
+**/*.pdf
 
 data/real/*.txt
 
