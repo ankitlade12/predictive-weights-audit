@@ -6,6 +6,17 @@ LaTeX sources, and paper-build tooling are maintained outside this repository.
 
 [Citation](CITATION.cff) · [MIT license](LICENSE)
 
+## Paper identity
+
+- **Title:** When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery
+- **Venue:** NeurIPS 2026 Workshop on Interpretability for Discovery (Interp4Discovery).
+- **Status:** Accepted; non-archival workshop contribution.
+- **OpenReview submission:** 11, as recorded in the supplied acceptance entry.
+- **Contribution:** Negative results and a worked audit of causal interpretations of predictive weights.
+
+Author order follows the accepted entry; affiliations below reflect the
+authors' corrections confirmed on 2026-10-17.
+
 | Author | Affiliation |
 |---|---|
 | Ankit Hemant Lade | Ascentt Systems Inc |
@@ -28,6 +39,24 @@ structure. The contribution is a worked falsification protocol validated on
 **one score family**, with controls for orientation, lag horizon, label
 provenance, data budgets, intervention targets, and baseline comparisons.
 Transfer to other interpretability signals remains untested.
+
+`Lagged-BN` and `Linear-BN` denote the linear factorized predictor, with no
+hidden activation. The historical term “bottleneck” does not imply a strict
+rank restriction: width is 16 in the main comparisons and 32 in the
+nonlinearity study, and can exceed the variable count. Self-edges are
+excluded. Observational scores aggregate positive lags by their maximum;
+the nonlinearity experiment instead retains lag identity.
+
+The reusable audit checks are:
+
+1. Verify direction, lag, and diagonal conventions on planted examples.
+2. Match usable observations, preprocessing, trajectory boundaries, and seeds.
+3. Encode intervention targets and distinguish intervention semantics.
+4. Compare classical baselines under the same estimand; check for all-tied
+   scores and report penalties selected at grid boundaries.
+5. Separate exact simulation graphs from incomplete observational labels.
+6. Fix evaluation rules before graph evaluation, account for multiple testing,
+   and retain failures and contradictory outcomes.
 
 ## Quick start
 
@@ -52,8 +81,8 @@ is required. Building the archive does not rerun experiments.
 
 ### Observational labels and benchmark orientation
 
-Climate uses six NOAA indices and three literature-derived soft labels;
-finance uses ten sector ETFs and six heuristic soft labels. Both are
+Climate uses six NOAA indices (`T=757`) and three literature-derived soft labels;
+finance uses ten sector ETFs (`T=1893`) and six heuristic soft labels. Both are
 sensitivity analyses, not causal leaderboards. Lorenz-96 uses an exact
 30-edge continuous-time generating graph at `K=10, T=1500`; subsampling does
 not guarantee the same discrete-time conditional-independence graph.
@@ -131,6 +160,41 @@ Evidence: [intervention semantics](results/corrected_workshop/intervention_seman
 and [Lasso diagnostic](results/reviewer_followup/lasso_diagnostic.json).
 The experiment implementations define the complete gates, metrics, splits, and settings.
 
+### Statistical and experimental details
+
+The intervention studies use `K ∈ {10,20}`, `T=300`, and ten independent data
+seeds. Forced target outcomes are excluded from fitting on their intervention
+segments, and lag windows never cross segment boundaries. The semantics
+comparison uses lag-resolved AUROC; the four-method comparison aggregates lags.
+
+The nonlinearity grid is `K ∈ {10,20}`, `T ∈ {300,600}`, and
+`s ∈ {0,.2,.3,.4,.6,1}`: 24 cells with ten paired data seeds each. Its two
+planted cross-variable edges are at lags 3 and 4; evaluation uses horizon 5.
+Data are split chronologically 80/20, with standardization fitted on training
+data only. Lasso selects its penalty using prediction validation, not graph
+labels. Without outcome masks it is MultiTaskLasso; target-aware intervention
+fits use separate outcome regressions.
+
+A positive cell must meet all six original gates:
+
+1. Mean paired AUROC difference ≥ `.03`.
+2. Paired bootstrap 95% lower bound > `0`.
+3. One-sided Wilcoxon Holm-adjusted `p < .05`, across all 24 cells.
+4. Mean bottleneck AUPRC greater than Lasso AUPRC.
+5. Mean bottleneck AUPRC greater than edge prevalence.
+6. Mean bottleneck test MSE ≤ `1.10 ×` mean Lasso test MSE.
+
+A regime requires the **same two or more** strengths from `{.2,.3,.4}` to
+pass at both dimensions at one common `T`. None satisfies this rule. AUPRC
+is trapezoidal precision–recall area, not average precision; the prevalence
+gate is a heuristic floor, not a calibrated null test. All-zero Wilcoxon
+contrasts are unevaluable, enter Holm as `p=1`, and cannot pass.
+
+The follow-up uses data seeds `81000–81009`, model seeds `42–44`, and 10,000
+bootstrap resamples with seed `82000`. Independent trajectories—not model
+initializations—are the inference units. Its confidence intervals are
+marginal, and its analyses were specified after review.
+
 ## Reproduction commands
 
 The checked-in `uv.lock` pins the main environment. Optional DYNOTEARS and
@@ -197,6 +261,11 @@ Public release is pending; the repository rename and local cleanup do not
 remove Git history. The manuscript and submission metadata are managed separately.
 
 ## Citation and license
+
+Ankit Hemant Lade, Sai Krishna Jasti, Aman Chadha, and Indar Kumar (2026).
+“When Predictive Weights Look Causal: An Audit Protocol for
+Interpretability-Based Discovery.” NeurIPS 2026 Workshop on Interpretability
+for Discovery (Interp4Discovery).
 
 Use [CITATION.cff](CITATION.cff) for the author list and workshop citation.
 This is a non-archival workshop paper, not a main-conference proceedings paper.
