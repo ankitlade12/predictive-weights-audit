@@ -12,9 +12,6 @@ Interpretability for Discovery study (non-archival).
 - **Status:** Accepted; non-archival workshop contribution.
 - **Contribution:** Negative results and a worked audit of causal interpretations of predictive weights.
 
-Author order follows the accepted entry; affiliations below reflect the
-authors' corrections confirmed on 2026-10-17.
-
 | Author | Affiliation |
 |---|---|
 | Ankit Hemant Lade | Ascentt Systems Inc |
