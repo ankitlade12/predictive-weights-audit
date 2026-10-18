@@ -1,4 +1,4 @@
-"""Release checks for paired post-review evidence and generated tables."""
+"""Checks for paired follow-up evidence and numerical summaries."""
 
 import copy
 import hashlib
@@ -13,7 +13,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 FINANCE_SNAPSHOT_SHA256 = "2de8e1fd1497656b060ae6b9cf72b2746f0245253c3d6ddd9e0c1c12f25d658e"
 spec = importlib.util.spec_from_file_location(
-    "reviewer_tables", ROOT / "paper/generate_reviewer_results.py"
+    "reviewer_results", ROOT / "scripts/summarize_results.py"
 )
 generator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generator)

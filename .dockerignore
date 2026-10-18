@@ -41,3 +41,5 @@ ssm_causal/reproduce_all.sh
 ssm_causal/scripts/
 ssm_causal/ssm_causal/
 ssm_causal/tests/
+
+AGENTS.md

@@ -1,264 +1,197 @@
 # When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+Code and experimental evidence for the accepted NeurIPS 2026 Workshop on
+Interpretability for Discovery study (non-archival). Manuscripts, PDFs,
+LaTeX sources, and paper-build tooling are maintained outside this repository.
 
-This repository studies a tempting interpretability claim: whether the endpoint
-weights of a next-step predictor reveal causal structure. For a model with
-input and output projections, the candidate score is
+[Citation](CITATION.cff) · [MIT license](LICENSE)
+
+| Author | Affiliation |
+|---|---|
+| Ankit Hemant Lade | Ascentt Systems Inc |
+| Sai Krishna Jasti | Nextgen Healthcare |
+| Aman Chadha | Apple |
+| Indar Kumar | Ascentt Systems Inc |
+
+## What the paper establishes
+
+We audit the endpoint-product score of a prediction-trained linear factorized
+model:
 
 ```text
-S = abs(W_out @ W_in)
-S[target, source] = proposed strength of source -> target
+S_lag = abs(W_out @ W_in_lag)
+S_lag[target, source] = candidate strength of source -> target
 ```
 
-The score can contain readable temporal dependency information, but the
-corrected evidence does not support interpreting it as causal knowledge or as
-an SSM-specific discovery mechanism.
+Readable predictive weights can suggest hypotheses without identifying causal
+structure. The contribution is a worked falsification protocol validated on
+**one score family**, with controls for orientation, lag horizon, label
+provenance, data budgets, intervention targets, and baseline comparisons.
+Transfer to other interpretability signals remains untested.
 
-## Workshop Contribution
+## Quick start
 
-Accepted at the NeurIPS 2026 Workshop on Interpretability for Discovery
-(non-archival). The camera-ready revision is `paper/draft/main_camera_ready.tex`;
-build it with `make paper-camera-ready`, or build both PDFs and the checksummed
-release archive with `make release`. The original four-page manuscript is
-retained separately. See [the revision record](docs/CAMERA_READY_REVISION.md)
-for every reviewer concern, follow-up commands, and remaining limits.
+Requirements: Python 3.10+, [uv](https://docs.astral.sh/uv/), and Make.
+Run from the repository root:
 
-Post-review analyses in `results/reviewer_followup/` add ten independent
-Lorenz-96 trajectories, actual DYNOTEARS and VAR-LiNGAM runs, and a diagnostic
-reproducing all 240 original Lasso fits. These are exploratory additions;
-they do not broaden the evaluated graph family or interpretability signal.
+```bash
+uv sync --frozen --extra baselines --extra dev
+make test
+make summary
+make release
+```
 
-The Interp4Discovery-facing contribution is a reusable falsification and audit
-protocol for interpretability-based scientific discovery claims. Before
-elevating an interpretation to a discovery claim:
+`make summary` prints paired follow-up metrics from saved results.
+`make release` creates `dist/predictive_weights_audit.zip` and its SHA-256
+checksum. The ZIP contains code, data, evidence, tests, and an internal
+`SHA256SUMS` manifest, using an explicit file allowlist. Git history,
+local workspace files, and manuscript assets are excluded. No TeX installation
+is required. Building the archive does not rerun experiments.
 
-1. Test direction, lag, and diagonal conventions on planted examples.
-2. Match data budgets, preprocessing, trajectory boundaries, and seeds.
-3. Encode intervention targets and state intervention semantics.
-4. Compare against sparse and classical baselines under the same estimand, and
-   verify that each comparator gives a non-degenerate ranking (no all-tied
-   scores, no selected penalty at a grid boundary).
-5. Distinguish exact graphs from soft labels.
-6. Fix variants before evaluation, report multiplicity-adjusted effects, and
-   retain failures.
+## Corrected evidence
 
-This is a negative/failure study, not a causal-discovery competition. Earlier
-positive results are superseded where the corrected artifacts disagree; see
-"What Is Superseded" below.
+### Observational labels and benchmark orientation
 
-## Corrected Evidence
+Climate uses six NOAA indices and three literature-derived soft labels;
+finance uses ten sector ETFs and six heuristic soft labels. Both are
+sensitivity analyses, not causal leaderboards. Lorenz-96 uses an exact
+30-edge continuous-time generating graph at `K=10, T=1500`; subsampling does
+not guarantee the same discrete-time conditional-independence graph.
 
-### 1. Real-data labels and simulated ground truth
-
-The corrected Exp 24 artifact separates label scope before reporting scores:
-
-| Dataset | Kind | Labels | Claim scope |
-|---|---|---|---|
-| NOAA climate | Real observational | 3 literature-derived soft labels | Sensitivity audit |
-| Sector ETFs | Real observational | 6 heuristic soft labels | Sensitivity audit only |
-| Lorenz-96 | Simulated | Exact 30-edge generating graph | Controlled graph recovery |
-
-Corrected AUROC:
+Corrected AUROC at maximum lag 3 on the original fixed datasets:
 
 | Method | Climate | Finance | Lorenz-96 |
 |---|---:|---:|---:|
+| Lagged-BN | 0.626 ± 0.021 | 0.596 ± 0.051 | 0.881 ± 0.018 |
 | Lasso | 0.617 | 0.500 | 0.973 |
 | Ridge | 0.617 | 0.597 | 0.973 |
-| Lagged-Bottleneck (3 model seeds) | 0.626 +/- 0.021 | 0.596 +/- 0.051 | 0.881 +/- 0.018 |
 | PCMCI | 0.407 | 0.609 | 0.839 |
 | PCMCI+ | 0.605 | 0.579 | 0.875 |
 | Bivariate Granger | 0.605 | 0.512 | 0.989 |
 
-The Lorenz-96 PCMCI AUROC of `0.986` in our earlier preprint
-(arXiv:2605.09169) came from a transposed score matrix at lag horizon `5`.
-At the correct orientation, with every method evaluated at lag horizon `3`,
-the corrected value is `0.839`. Finance Lasso selects the largest grid penalty
-and returns all-zero cross-variable scores, so its `0.500` is a tie, not a
-ranking. The exact
-simulated benchmark still separates readable predictive structure from reliable
-graph recovery, but it does not support the old claim that PCMCI dominates.
-The Lagged-Bottleneck's `0.881 +/- 0.018` on the exact graph is readable
-dependency signal, but Granger, Lasso, and Ridge reach
-`0.989/0.973/0.973`. Its spread over model seeds 42, 43, and 44 describes
-initialization stability only; these are not independent data replicates and
-do not support uncertainty or competitiveness inference.
+Lagged-BN reports mean ± standard deviation across three initializations;
+other entries are deterministic fits. This table is descriptive, not an
+estimate of uncertainty across datasets. Finance Lasso returns all-zero
+cross-variable scores. Ridge also selects grid-boundary penalties on climate
+and finance, but its scores are untied.
 
-Artifact:
-`results/corrected_workshop/real_data/real_data_benchmark_results.json`
+The earlier preprint's PCMCI value of `0.986` used a transposed score matrix
+and lag horizon 5; correcting orientation and matching the lag horizon gives
+`0.839`. Earlier DYNOTEARS/VAR-LiNGAM values included contemporaneous
+coefficients; their strictly lagged seed-0 AUROCs are `0.833` and `0.896`.
 
-### 2. Intervention semantics
+Evidence: [original benchmark](results/corrected_workshop/real_data/real_data_benchmark_results.json)
+and [label provenance](results/corrected_workshop/real_data/edge_provenance_cards.json).
 
-The corrected intervention protocol:
+### Reviewer follow-up: ten independent trajectories
 
-- uses equal usable rows in `big` observational and `combined` arms;
-- treats each trajectory as a separate segment;
-- prevents lag windows from crossing segment boundaries;
-- records the target of each intervention segment;
-- excludes the intervened target outcome from fitting on that segment;
-- pairs all arms within independent data-generating seeds.
+All eight methods receive identical Lorenz-96 trajectories. Lagged-BN averages
+three initialization metrics within each trajectory. Entries below are means
+with marginal 95% trajectory-bootstrap intervals; the last column is the
+paired difference **method minus Lagged-BN**. These analyses are exploratory,
+with no multiplicity-adjusted superiority claim.
 
-Exp 23 measures the bottleneck's intervention-specific gap relative to Lasso or
-Ridge. At `K in {10,20}` and `T=300`, Holm-significant positive effects are
-small (`0.012` to `0.021` AUROC). Constant clamps show no bottleneck relative
-advantage. Random and soft forcing produce selected positive cells, but do not
-establish a bottleneck-specific causal mechanism.
+| Method | AUROC [95% CI] | AUPRC [95% CI] | Paired Δ AUROC [95% CI] |
+|---|---|---|---|
+| Lagged-BN | 0.872 [0.854, 0.890] | 0.765 [0.731, 0.799] | — |
+| Lasso | 0.955 [0.942, 0.968] | 0.933 [0.916, 0.949] | 0.083 [0.064, 0.100] |
+| Ridge | 0.954 [0.941, 0.967] | 0.931 [0.914, 0.948] | 0.082 [0.063, 0.100] |
+| PCMCI | 0.855 [0.841, 0.870] | 0.831 [0.820, 0.844] | -0.017 [-0.043, 0.008] |
+| PCMCI+ | 0.844 [0.800, 0.885] | 0.836 [0.798, 0.874] | -0.028 [-0.065, 0.007] |
+| Granger | 0.977 [0.963, 0.988] | 0.964 [0.944, 0.980] | 0.105 [0.094, 0.116] |
+| DYNOTEARS | 0.800 [0.783, 0.816] | 0.851 [0.833, 0.866] | -0.073 [-0.094, -0.047] |
+| VAR-LiNGAM | 0.900 [0.880, 0.917] | 0.845 [0.818, 0.868] | 0.027 [0.013, 0.042] |
 
-Artifact:
-`results/corrected_workshop/intervention_semantics/intervention_sweep_results.json`
+Replication improves uncertainty reporting, but uses the same graph and
+sampling configuration. It does not provide a harder benchmark. DYNOTEARS
+and VAR-LiNGAM were evaluated only on Lorenz-96, with documented defaults;
+this does not establish their causal validity on that system.
 
-### 3. Shared but unequal gains under random forcing
+Evidence: [follow-up values](results/reviewer_followup/paper_values.json),
+[primary runs](results/reviewer_followup/trajectory_replication.json), and
+[optional baseline runs](results/reviewer_followup/optional_baselines.json).
 
-Exp 25 applies the same target-aware, size-matched random-forcing protocol to
-four methods. Values are mean
-`AUROC(combined) - AUROC(size-matched observational)` with paired bootstrap
-95% intervals:
+### Interventions and nonlinearity
 
-| Method | `K=10, T=300` | `K=20, T=300` |
-|---|---:|---:|
-| Bottleneck | `+0.057` `[0.036, 0.079]` | `+0.050` `[0.038, 0.061]` |
-| Lasso | `+0.033` `[0.017, 0.050]` | `+0.014` `[0.008, 0.021]` |
-| PCMCI | `+0.041` `[0.022, 0.060]` | `+0.022` `[0.014, 0.031]` |
-| Bivariate Granger | **`+0.068`** `[0.044, 0.094]` | **`+0.080`** `[0.057, 0.106]` |
+- Target-aware, size-matched random forcing improves all four tested methods
+  at both dimensions. The gains are not bottleneck-specific or necessarily
+  equal. Combined-arm AUROC is at least `.99`, so gains are bounded by each
+  method's observational shortfall.
+- The six-gate nonlinearity rule is not satisfied across dimensions at a
+  common sample size. All six passing cells occur at `K=20, T=300`, with the
+  same `+0.50` AUROC difference at every nonlinearity strength.
+- Linear-BN attains AUROC/AUPRC `1.00` in all 240 fits. The apparent advantage
+  comes from prediction-tuned Lasso returning all-zero cross-variable scores.
+  At `T=600`, both methods attain AUROC `1.00`. This design cannot resolve a
+  nonlinearity effect in either direction.
 
-All eight within-method gains reject after Holm correction
-(`p_Holm=0.0078125`), so the effect is not unique to the bottleneck. A direct
-exploratory Granger-minus-Bottleneck paired contrast is not significant at
-`K=10` (`p_Holm=0.278`), but is positive at `K=20`
-(`+0.030`, `p_Holm=0.027`). This rejects a method-invariance claim while still
-showing that random forcing can improve several distinct estimators. The
-corrected evidence also does not support the older target-corruption
-mechanism: target-aware Lasso gains.
+Evidence: [intervention semantics](results/corrected_workshop/intervention_semantics/intervention_sweep_results.json),
+[intervention methods](results/corrected_workshop/intervention_methods/causal_baselines_results.json),
+[nonlinearity cells](results/corrected_workshop/nonlinearity_confirmation.json),
+and [Lasso diagnostic](results/reviewer_followup/lasso_diagnostic.json).
+The experiment implementations define the complete gates, metrics, splits, and settings.
 
-Artifact:
-`results/corrected_workshop/intervention_methods/causal_baselines_results.json`
+## Reproduction commands
 
-### 4. Nonlinearity confirmation
+The checked-in `uv.lock` pins the main environment. Optional DYNOTEARS and
+VAR-LiNGAM runs use a separate Python 3.10.19 environment pinned by
+`results/reviewer_followup/legacy-requirements.txt`.
 
-Exp 27 fixed the Linear-BN configuration before evaluation and swept
-`K in {10,20}`, `T in {300,600}`, and nonlinearity mixes from `0.0` to `1.0`.
-No nonlinearity strength passes the pre-specified regime rule; the six
-passing cells all sit at one `(K, T)` setting.
+| Command | Purpose |
+|---|---|
+| `make test` | Full test suite, including saved-evidence integrity checks |
+| `make smoke` | Focused protocol, baseline, and release tests |
+| `make summary` | Print paired follow-up metrics and bootstrap intervals |
+| `make release` | Package code and evidence into a checksummed ZIP |
+| `make workshop-evidence` | Rerun the original corrected experiment protocols |
+| `make reviewer-evidence` | Rerun trajectory comparisons and the Lasso diagnostic |
+| `make reviewer-optional` | Fit DYNOTEARS/VAR-LiNGAM to exported trajectory arrays |
+| `bash reproduce_all.sh` | Check saved evidence, rerun all retained experiments, and build the release |
 
-- At `K=20, T=300`, Linear-BN minus Lasso AUROC is exactly `+0.50` at
-  every nonlinearity mix, including `0.0` and `1.0`.
-- At `T=600`, both methods reach `1.00` AUROC and the difference vanishes.
-- At `K=10, T=300`, the difference is `+0.05` at every mix, but no cell
-  passes the pre-specified gate.
+Run `reviewer-optional` after `reviewer-evidence`: it reads the exact exported
+arrays. Experiment commands overwrite results, so use a separate checkout to
+compare reruns with committed evidence. Integrity tests check the original
+saved artifacts and should be run before overwriting them. Numeric or runtime
+variation can change artifact hashes on a rerun. The original experiment
+manifest remains historical provenance and is not relabeled as a new run.
 
-The invariance to nonlinearity and disappearance with more samples reject the
-old mild-nonlinearity interpretation. The post-review diagnostic
-(`results/reviewer_followup/lasso_diagnostic.json`) locates the cause in the
-comparator: Linear-BN reaches `1.00` AUROC in all 240 fits, while every
-`K=20, T=300` Lasso fit selects the largest grid penalty (`alpha=1`) and
-returns all-zero cross-variable scores.
+An optional CPU Docker build is provided in [Dockerfile](Dockerfile). Its
+`make all` command runs the tests and packages the code and evidence. Docker and a fresh
+dependency installation were not exercised in the latest local verification.
 
-Artifact:
-`results/corrected_workshop/nonlinearity_confirmation.json`
+## Repository contents and validation
 
-## What Is Superseded
+- `experiments/`: eight retained experiment/helper modules and package init.
+- `results/`: original corrected artifacts and exploratory reviewer follow-ups.
+- `data/`: fixed input snapshots, loaders, and synthetic generators.
+- `ssm_causal/`, `baselines/`: model, metric, protocol, and baseline dependencies.
+- `tests/`: implementation, statistical, provenance, and release checks.
+- `scripts/`: numerical summaries and code/evidence packaging.
 
-The following statements should not be used as current conclusions:
+The legacy package name `ssm_causal` is retained for compatibility. Older
+modules needed by imports or recorded source hashes remain unchanged; obsolete
+experiment entry points and separate anonymous/preprint builds were removed.
 
-- PCMCI achieves `0.986` AUROC on Lorenz-96 (transposed scores, lag horizon 5).
-- DYNOTEARS and VAR-LiNGAM achieve `0.983` and `0.968` on Lorenz-96 (these
-  included contemporaneous coefficients; strictly lagged values are `0.833`
-  and `0.896`).
-- Lorenz-96 is a real dataset or has 90 evaluated cross-variable edges.
-- Bottlenecks have a confirmed mild-nonlinearity regime.
-- The current experiments establish sample efficiency.
-- Random-forcing gains arise from target-corruption robustness.
-- Exp 20 establishes distribution-shift robustness.
-- Intervention data uniquely benefits a bottleneck or neural method.
+The original corrected and follow-up experimental artifacts are retained
+unchanged, including their historical provenance and numerical summaries.
+Some artifact paths retain `paper_values.json` as a historical filename;
+these are machine-readable results, not manuscript files.
+Full experimental reruns are separate from the repository tests.
 
-## Responsible Interpretation
+## Scope and release status
 
-Readable weights are evidence about a trained predictor, not automatically
-about the data-generating process. Climate and finance scores must not be used
-to recommend interventions, trading decisions, or scientific mechanisms.
-Lorenz-96 results are controlled simulation evidence only. Any downstream
-causal claim requires domain validation, explicit assumptions, target-aware
-intervention design, and comparison with methods fit to the same estimand.
+Only one interpretation score family and limited dimensions, sample sizes,
+and graph settings were evaluated. Climate/finance labels are incomplete.
+Passing the checklist does not establish causal identification; predictive
+scores must not directly prescribe scientific interventions, financial trades,
+or policy decisions.
 
-## Reproduction
+Repository: `https://github.com/ankitlade12/predictive-weights-audit`.
+Public release is pending; the repository rename and local cleanup do not
+remove Git history. The manuscript and submission metadata are managed separately.
 
-The checked-in `uv.lock` is the dependency authority. Install the exact
-core, baseline, and test environment:
+## Citation and license
 
-```bash
-uv sync --frozen --extra baselines --extra dev
-```
-
-Run the full test suite:
-
-```bash
-make test
-```
-
-Run the native bounded, CPU-friendly reproduction path:
-
-```bash
-make smoke
-```
-
-Run the corrected experiments:
-
-```bash
-make workshop-evidence
-```
-
-The exact commands and claim scope for each artifact are recorded in
-`results/corrected_workshop/experiment_manifest.json`.
-
-Build the camera-ready paper, the preprint, and the release archive with the
-official NeurIPS 2026 style:
-
-```bash
-# Debian/Ubuntu native build dependency
-sudo apt-get install texlive-latex-base texlive-latex-extra \
-  texlive-fonts-recommended texlive-bibtex-extra lmodern
-make release
-```
-
-The PDFs are written to `paper/draft/main_camera_ready.pdf` and
-`paper/draft/main_arxiv.pdf`; the archive is written to
-`dist/camera_ready_release.zip`.
-
-The historical double-blind submission and its review supplement remain
-reproducible; they are not the final paper. The submission builds with
-`make paper-workshop` (written to `paper/draft/main_4page.pdf`).
-
-Build the deterministic, identity-scanned review supplement:
-
-```bash
-make anonymous-supplement
-```
-
-## Repository Map
-
-```text
-ssm_causal/       model, extraction, intervention, and statistical utilities
-                  (package name kept from the project's original SSM focus)
-baselines/        Granger, PCMCI/PCMCI+, DYNOTEARS, and VAR-LiNGAM wrappers
-data/             synthetic generators and observational data loaders
-experiments/      executable experiment protocols
-results/          local experiment artifacts
-tests/            direction, lag, segmentation, seed, and statistics checks
-docs/             camera-ready revision record and corrected experiment summaries
-paper/            workshop and arXiv paper sources
-```
-
-## Historical Context
-
-The project began by asking whether selective SSM internals expose causal
-structure. Architecture controls showed that a linear bottleneck can match or
-beat the SSM, and sparse regression remains a strong baseline. A later
-causality-preserving bottleneck design explored whether training objectives
-could make the endpoint score more readable. The corrected workshop result is
-not a new extraction method; it is the audit procedure that prevented readable
-predictive structure from being overstated as causal discovery.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Use [CITATION.cff](CITATION.cff) for the author list and workshop citation.
+This is a non-archival workshop paper, not a main-conference proceedings paper.
+Code is distributed under the [MIT license](LICENSE).
