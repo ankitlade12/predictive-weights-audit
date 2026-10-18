@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT))
 
 from ssm_causal.statistics import paired_bootstrap_ci  # noqa: E402
 
-RESULTS = ROOT / "results/reviewer_followup"
+RESULTS = ROOT / "results/followup"
 
 
 def summarize(primary, optional):

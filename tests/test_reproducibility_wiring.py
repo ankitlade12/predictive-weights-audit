@@ -7,7 +7,7 @@ from pathlib import Path
 def test_reproduction_stages_exist_and_optional_stage_follows_primary():
     script = Path("reproduce_all.sh").read_text()
     makefile = Path("Makefile").read_text()
-    targets = ["test", "workshop-evidence", "reviewer-evidence", "reviewer-optional", "release"]
+    targets = ["test", "workshop-evidence", "followup-evidence", "followup-optional", "release"]
     positions = [script.index(f"make {target}") for target in targets]
     assert positions == sorted(positions)
     for target in targets:

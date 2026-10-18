@@ -13,14 +13,14 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 FINANCE_SNAPSHOT_SHA256 = "2de8e1fd1497656b060ae6b9cf72b2746f0245253c3d6ddd9e0c1c12f25d658e"
 spec = importlib.util.spec_from_file_location(
-    "reviewer_results", ROOT / "scripts/summarize_results.py"
+    "followup_results", ROOT / "scripts/summarize_results.py"
 )
 generator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generator)
 
 
 def artifacts():
-    directory = ROOT / "results/reviewer_followup"
+    directory = ROOT / "results/followup"
     return tuple(
         json.loads((directory / name).read_text())
         for name in ("trajectory_replication.json", "optional_baselines.json")
@@ -56,7 +56,7 @@ def test_followup_refuses_unpaired_or_failed_results(damage):
 def test_exported_inputs_match_both_followup_stages():
     for payload in artifacts():
         for record in payload["replicates"]:
-            path = ROOT / "results/reviewer_followup" / f"lorenz96_seed{record['data_seed']}.npz"
+            path = ROOT / "results/followup" / f"lorenz96_seed{record['data_seed']}.npz"
             assert hashlib.sha256(path.read_bytes()).hexdigest() == record["input_sha256"]
 
 

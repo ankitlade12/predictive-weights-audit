@@ -19,7 +19,7 @@ def _load_script(name, relative_path):
 
 def test_followup_source_and_original_artifact_hashes_remain_valid():
     for name in ("trajectory_replication", "optional_baselines", "lasso_diagnostic"):
-        payload = json.loads((ROOT / f"results/reviewer_followup/{name}.json").read_text())
+        payload = json.loads((ROOT / f"results/followup/{name}.json").read_text())
         for relative, digest in payload["source_sha256"].items():
             assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == digest, relative
     manifest = json.loads(
@@ -43,7 +43,7 @@ def test_release_is_allowlisted_checksummed_and_builds_without_git(tmp_path, mon
     # Clutter in otherwise permitted directories must never leak into the release.
     for relative in (
         "experiments/local_credentials.py",
-        "results/reviewer_followup/private.txt",
+        "results/followup/private.txt",
         "ssm_causal/paper/old_draft.tex",
         ".git/config",
     ):

@@ -4,6 +4,6 @@ set -euo pipefail
 cd "$(dirname "$0")"
 make test
 make workshop-evidence
-make reviewer-evidence
-make reviewer-optional
+make followup-evidence
+make followup-optional
 make release

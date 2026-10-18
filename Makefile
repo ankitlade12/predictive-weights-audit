@@ -6,10 +6,10 @@ export UV_CACHE_DIR MPLCONFIGDIR MPLBACKEND
 UV_RUN := uv run --frozen --extra baselines --extra dev
 .DEFAULT_GOAL := help
 
-.PHONY: summary help install test smoke workshop-evidence reviewer-evidence reviewer-optional release all
+.PHONY: summary help install test smoke workshop-evidence followup-evidence followup-optional release all
 
 help:
-	@echo "Targets: install test smoke workshop-evidence reviewer-evidence reviewer-optional summary release"
+	@echo "Targets: install test smoke workshop-evidence followup-evidence followup-optional summary release"
 
 install:
 	uv sync --frozen --extra baselines --extra dev
@@ -18,7 +18,7 @@ test:
 	$(UV_RUN) pytest tests/ -q
 
 smoke:
-	$(UV_RUN) pytest tests/test_reviewer_followup.py tests/test_statistical_protocol.py tests/test_nonlinearity_confirmation.py tests/test_modern_baselines.py tests/test_release.py -q
+	$(UV_RUN) pytest tests/test_followup.py tests/test_statistical_protocol.py tests/test_nonlinearity_confirmation.py tests/test_modern_baselines.py tests/test_release.py -q
 
 workshop-evidence:
 	$(UV_RUN) python experiments/exp20_distribution_shift.py --quick --save-dir results/corrected_workshop/graph_label_sensitivity_smoke
@@ -29,13 +29,13 @@ workshop-evidence:
 	$(UV_RUN) python experiments/exp27_nonlinearity_confirmation.py --output results/corrected_workshop/nonlinearity_confirmation.json
 
 
-reviewer-evidence:
-	$(UV_RUN) python experiments/exp28_reviewer_followup.py primary
-	$(UV_RUN) python experiments/exp28_reviewer_followup.py diagnose
+followup-evidence:
+	$(UV_RUN) python experiments/exp28_followup.py primary
+	$(UV_RUN) python experiments/exp28_followup.py diagnose
 
-# Run after reviewer-evidence; reads the exact exported trajectory arrays.
-reviewer-optional:
-	uv run --no-project --python 3.10.19 --with-requirements results/reviewer_followup/legacy-requirements.txt python experiments/exp28_reviewer_followup.py optional
+# Run after followup-evidence; reads the exact exported trajectory arrays.
+followup-optional:
+	uv run --no-project --python 3.10.19 --with-requirements results/followup/legacy-requirements.txt python experiments/exp28_followup.py optional
 
 summary:
 	$(UV_RUN) python scripts/summarize_results.py

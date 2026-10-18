@@ -1,4 +1,4 @@
-"""Post-review follow-up; preserves the submitted artifacts and fixed gates.
+"""Exploratory follow-up; preserves the submitted artifacts and fixed gates.
 
 Run `primary` in the locked project environment, then `optional` in the
 isolated Python 3.10 environment. Both stages use identical exported arrays.
@@ -21,7 +21,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-OUTPUT = ROOT / "results" / "reviewer_followup"
+OUTPUT = ROOT / "results" / "followup"
 DATA_SEEDS = tuple(range(81000, 81010))
 METHODS = ("Lagged-Bottleneck", "Lasso", "Ridge", "PCMCI", "PCMCI+", "Granger")
 
@@ -61,7 +61,7 @@ def primary():
     payload = {
         "status": "running",
         "source_sha256": source_hashes(),
-        "analysis": "post_review_exploratory",
+        "analysis": "exploratory_followup",
         "environment": environment(["numpy", "scipy", "scikit-learn", "torch", "tigramite"]),
         "protocol": {
             "K": 10,
@@ -126,7 +126,7 @@ def optional():
     payload = {
         "status": "running",
         "source_sha256": source_hashes(),
-        "analysis": "post_review_exploratory",
+        "analysis": "exploratory_followup",
         "environment": environment(["causalnex", "lingam", "numpy", "scipy", "scikit-learn"]),
         "protocol": {
             "lag_horizon": 3,
@@ -235,7 +235,7 @@ def diagnose():
     save(
         OUTPUT / "lasso_diagnostic.json",
         {
-            "analysis": "post_review_diagnostic",
+            "analysis": "followup_diagnostic",
             "source_sha256": source_hashes(),
             "original_sha256": hashlib.sha256(original_path.read_bytes()).hexdigest(),
             "environment": environment(["numpy", "scikit-learn", "torch"]),

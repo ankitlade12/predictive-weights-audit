@@ -1,4 +1,4 @@
-# Python 3.10.19; isolated reviewer-follow-up environment
+# Python 3.10.19; isolated follow-up environment
 Jinja2==3.1.6
 MarkupSafe==3.0.4
 Pygments==2.21.0

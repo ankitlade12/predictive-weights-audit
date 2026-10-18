@@ -1,5 +1,5 @@
 {
-  "analysis": "post_review_exploratory",
+  "analysis": "exploratory_followup",
   "bootstrap_resamples": 10000,
   "bootstrap_seed": 82000,
   "trajectory_summary": {
@@ -141,9 +141,16 @@
     }
   },
   "source_artifacts": {
-    "results/reviewer_followup/trajectory_replication.json": "d886df62cf8445e66d6766f787c0f94f58e9f3983eece7dc951734153c546e77",
-    "results/reviewer_followup/optional_baselines.json": "a4c194e6ed05bf44588cfaade651ec49993d469ee27ca292dd222c85d94a24ad",
-    "results/reviewer_followup/lasso_diagnostic.json": "7755fc2bbe8210bb647c12629754ee39a49ea4e43a173c35c7a5e02571b0baee",
+    "results/followup/trajectory_replication.json": "177c0b14072cf05dcac7dc689f192b55c4830841ebaf24fc760e5c349722ed54",
+    "results/followup/optional_baselines.json": "09c143c51f1c05d2eb317acd804d8371674be45d551049b82f8c9a09e7e0fe91",
+    "results/followup/lasso_diagnostic.json": "da54d9e31a1cd6cc16e6a20af09c7440417d49087c19371aa0b20acfdc81bf3e",
     "results/corrected_workshop/nonlinearity_confirmation.json": "d6790727b100764cfbae5993bed772df6b07d1e6cf93b8438553c92f9a6ab9d4"
-  }
+  },
+  "previous_artifact_sha256": {
+    "results/followup/trajectory_replication.json": "d886df62cf8445e66d6766f787c0f94f58e9f3983eece7dc951734153c546e77",
+    "results/followup/optional_baselines.json": "a4c194e6ed05bf44588cfaade651ec49993d469ee27ca292dd222c85d94a24ad",
+    "results/followup/lasso_diagnostic.json": "7755fc2bbe8210bb647c12629754ee39a49ea4e43a173c35c7a5e02571b0baee",
+    "results/corrected_workshop/nonlinearity_confirmation.json": "d6790727b100764cfbae5993bed772df6b07d1e6cf93b8438553c92f9a6ab9d4"
+  },
+  "artifact_metadata_note": "Paths and descriptive metadata normalized on 2026-10-17. Numerical results are unchanged. previous_artifact_sha256 preserves the preceding artifact digests under the current path aliases."
 }

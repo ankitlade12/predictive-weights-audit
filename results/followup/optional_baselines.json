@@ -1,7 +1,7 @@
 {
   "status": "complete",
   "source_sha256": {
-    "experiments/exp28_reviewer_followup.py": "78f246a2ecfa339f94e953fec30d850be040836e5bddbf9e03a84a15a95db5aa",
+    "experiments/exp28_followup.py": "f904c3f87aec9c2d6701735a9e67b74d53e1a2ab91a395dca2fad2a44fcdfa58",
     "data/real_loaders.py": "17714cb428947fa05b439f8f8bcdaaf7b78bdfe09d57d98b7614d8ad6f3521a8",
     "experiments/exp18_mechanistic_ablation.py": "77b4b313c07f0404d46adfb7cbe0441ae918df0764a115df8e3045234c944ff7",
     "experiments/exp24_real_data_benchmark.py": "3ba2ef6732ec8075c5ad3dd27510aa4c07a49c51c7e34a8af2264d59d96ff609",
@@ -28,7 +28,7 @@
     "baselines/__init__.py": "309b331bd11dbd0d954349c012e20f6cdf388f6de744efdce9258ec43cf41286",
     "baselines/neural_granger.py": "3aba6ef3955281e6bef0747d37bbd8107f80f49cada1a297d6e598939c6bb94a"
   },
-  "analysis": "post_review_exploratory",
+  "analysis": "exploratory_followup",
   "environment": {
     "python": "3.10.19",
     "causalnex": "0.12.1",
@@ -274,5 +274,34 @@
         }
       }
     }
-  ]
+  ],
+  "execution_source_sha256": {
+    "experiments/exp28_followup.py": "78f246a2ecfa339f94e953fec30d850be040836e5bddbf9e03a84a15a95db5aa",
+    "data/real_loaders.py": "17714cb428947fa05b439f8f8bcdaaf7b78bdfe09d57d98b7614d8ad6f3521a8",
+    "experiments/exp18_mechanistic_ablation.py": "77b4b313c07f0404d46adfb7cbe0441ae918df0764a115df8e3045234c944ff7",
+    "experiments/exp24_real_data_benchmark.py": "3ba2ef6732ec8075c5ad3dd27510aa4c07a49c51c7e34a8af2264d59d96ff609",
+    "experiments/exp27_nonlinearity_confirmation.py": "35457b72b6f64ee59d211a8e6ada05a9fff2cd396cfe0d8047cef79ac3456466",
+    "ssm_causal/intervention_protocol.py": "24dec48fc674b06f963f4260412abb25eb87e26b251d76b6b4b938c35d305454",
+    "ssm_causal/improved_score.py": "c395c03504a93113b704ce6e82ce5f2424dc36432caded905723c8e989533233",
+    "ssm_causal/__init__.py": "cabdead648be53d2e8d1816e3a70cd9799500ec70c47e903ca50bf9df56bc720",
+    "ssm_causal/mamba_model.py": "a8c82292820aa8f0218e196b18f828c76394b67d2307d990a4e847b895e48d6f",
+    "ssm_causal/extractor.py": "edd5adadb3cacc32c8cc929013aa812926c6d9a3c6dc85e541cc04f9a131e8bb",
+    "ssm_causal/threshold.py": "66319a801c9f7dc97e1afadca1abf71b1ae4116288ceceb2bdba481fad3ddad9",
+    "ssm_causal/utils.py": "561b2d064d74d965d0da99dfe2bda1c23af0524311692bc5f72e72950515add8",
+    "ssm_causal/causeme_benchmarks.py": "9eef5c11145bacd191fff79548b359f42fa5204950591e6124d289527b773b4f",
+    "ssm_causal/statistics.py": "fc8661ab62eb921d9a8ba0d1aebb066029c4c408ef880853ea596c091142f0a7",
+    "ssm_causal/bottleneck_training.py": "d287e33af8b399b376ee7071b6c7a2cb0a5d7b2d41bed36a269545aff134e462",
+    "ssm_causal/lag_synthetic.py": "47e21ff4ce26248c27b67d32b37bf9d670b6cf058d18a5e056f67ce14100e6fc",
+    "ssm_causal/benchmark_metadata.py": "fb76f91c246075675db2222eb93b59a024fd7c27375a636fb78dffeb1f93b5fc",
+    "ssm_causal/score.py": "70a9db1aedfd21dda9ea6f171ebddc245d3bba82c3573dac59146d7561ab63aa",
+    "ssm_causal/lag_bottleneck.py": "6d67ddbb7b70e4f068f5833b4c10debcc63507c41264beaebf0f0d24b3811245",
+    "ssm_causal/lag_extraction.py": "f5a196eb55d1006a06b5c80a5a634e24a3b503778536a6ea75cc0555453fc30a",
+    "baselines/lingam_wrapper.py": "99e8b33e63d59efbe1839b634d1604a8541568498d6fea0c55ca79e5bb24115e",
+    "baselines/dynotears.py": "88223e81ce5643d2a714dcc95ffb46191e9bc89f4404710ef25116c9ee757352",
+    "baselines/pcmci_wrapper.py": "edd043a4c3a53c4b8cab8919f5070d173e0a21f5b0b6867af3a161e54a3d1ef5",
+    "baselines/granger.py": "0bd1d1eb4c599442dd4b6f4bb4f6a6978cdcaab2e07fa70d80e0aeec588743ec",
+    "baselines/__init__.py": "309b331bd11dbd0d954349c012e20f6cdf388f6de744efdce9258ec43cf41286",
+    "baselines/neural_granger.py": "3aba6ef3955281e6bef0747d37bbd8107f80f49cada1a297d6e598939c6bb94a"
+  },
+  "source_metadata_note": "Paths and descriptive wording normalized on 2026-10-17; computations were not rerun. source_sha256 describes the renamed source snapshot; execution_source_sha256 preserves original execution hashes under the current path aliases."
 }

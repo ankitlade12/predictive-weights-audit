@@ -2,8 +2,7 @@
 Experiment 25: Causal Baselines (PCMCI + Granger) on Exp 22/23 Control Setup
 ============================================================================
 
-Reviewers at ICBINB will ask: "Did you compare against actual causal discovery
-methods, or just prediction baselines?" Exps 22 and 23 compared bottleneck
+Exps 22 and 23 compared bottleneck
 against Lasso/Ridge/RRR — all prediction baselines. This experiment adds
 PCMCI and bivariate Granger to the same size-matched intervention-control
 setup, so our falsification story includes proper causal discovery methods.

@@ -107,7 +107,7 @@ coefficients; their strictly lagged seed-0 AUROCs are `0.833` and `0.896`.
 Evidence: [original benchmark](results/corrected_workshop/real_data/real_data_benchmark_results.json)
 and [label provenance](results/corrected_workshop/real_data/edge_provenance_cards.json).
 
-### Reviewer follow-up: ten independent trajectories
+### Trajectory replication: ten independent trajectories
 
 All eight methods receive identical Lorenz-96 trajectories. Lagged-BN averages
 three initialization metrics within each trajectory. Entries below are means
@@ -131,9 +131,9 @@ sampling configuration. It does not provide a harder benchmark. DYNOTEARS
 and VAR-LiNGAM were evaluated only on Lorenz-96, with documented defaults;
 this does not establish their causal validity on that system.
 
-Evidence: [follow-up values](results/reviewer_followup/paper_values.json),
-[primary runs](results/reviewer_followup/trajectory_replication.json), and
-[optional baseline runs](results/reviewer_followup/optional_baselines.json).
+Evidence: [follow-up values](results/followup/paper_values.json),
+[primary runs](results/followup/trajectory_replication.json), and
+[optional baseline runs](results/followup/optional_baselines.json).
 
 ### Interventions and nonlinearity
 
@@ -152,7 +152,7 @@ Evidence: [follow-up values](results/reviewer_followup/paper_values.json),
 Evidence: [intervention semantics](results/corrected_workshop/intervention_semantics/intervention_sweep_results.json),
 [intervention methods](results/corrected_workshop/intervention_methods/causal_baselines_results.json),
 [nonlinearity cells](results/corrected_workshop/nonlinearity_confirmation.json),
-and [Lasso diagnostic](results/reviewer_followup/lasso_diagnostic.json).
+and [Lasso diagnostic](results/followup/lasso_diagnostic.json).
 The experiment implementations define the complete gates, metrics, splits, and settings.
 
 ### Statistical and experimental details
@@ -188,13 +188,13 @@ contrasts are unevaluable, enter Holm as `p=1`, and cannot pass.
 The follow-up uses data seeds `81000–81009`, model seeds `42–44`, and 10,000
 bootstrap resamples with seed `82000`. Independent trajectories—not model
 initializations—are the inference units. Its confidence intervals are
-marginal, and its analyses were specified after review.
+marginal, and its analyses were exploratory and not pre-registered.
 
 ## Reproduction commands
 
 The checked-in `uv.lock` pins the main environment. Optional DYNOTEARS and
 VAR-LiNGAM runs use a separate Python 3.10.19 environment pinned by
-`results/reviewer_followup/legacy-requirements.txt`.
+`results/followup/legacy-requirements.txt`.
 
 | Command | Purpose |
 |---|---|
@@ -203,11 +203,11 @@ VAR-LiNGAM runs use a separate Python 3.10.19 environment pinned by
 | `make summary` | Print paired follow-up metrics and bootstrap intervals |
 | `make release` | Package code and evidence into a checksummed ZIP |
 | `make workshop-evidence` | Rerun the original corrected experiment protocols |
-| `make reviewer-evidence` | Rerun trajectory comparisons and the Lasso diagnostic |
-| `make reviewer-optional` | Fit DYNOTEARS/VAR-LiNGAM to exported trajectory arrays |
+| `make followup-evidence` | Rerun trajectory comparisons and the Lasso diagnostic |
+| `make followup-optional` | Fit DYNOTEARS/VAR-LiNGAM to exported trajectory arrays |
 | `bash reproduce_all.sh` | Check saved evidence, rerun all retained experiments, and build the release |
 
-Run `reviewer-optional` after `reviewer-evidence`: it reads the exact exported
+Run `followup-optional` after `followup-evidence`: it reads the exact exported
 arrays. Experiment commands overwrite results, so use a separate checkout to
 compare reruns with committed evidence. Integrity tests check the original
 saved artifacts and should be run before overwriting them. Numeric or runtime
@@ -221,7 +221,7 @@ dependency installation were not exercised in the latest local verification.
 ## Repository contents and validation
 
 - `experiments/`: eight retained experiment/helper modules and package init.
-- `results/`: original corrected artifacts and exploratory reviewer follow-ups.
+- `results/`: original corrected artifacts and exploratory follow-up analyses.
 - `data/`: fixed input snapshots, loaders, and synthetic generators.
 - `ssm_causal/`, `baselines/`: model, metric, protocol, and baseline dependencies.
 - `tests/`: implementation, statistical, provenance, and release checks.
@@ -231,8 +231,12 @@ The legacy package name `ssm_causal` is retained for compatibility. Older
 modules needed by imports or recorded source hashes remain unchanged; obsolete
 experiment entry points and separate anonymous/preprint builds were removed.
 
-The original corrected and follow-up experimental artifacts are retained
-unchanged, including their historical provenance and numerical summaries.
+The original corrected evidence and all follow-up numerical results are
+preserved. Follow-up paths and descriptive metadata were normalized on
+2026-10-17 without rerunning computations. Original execution hashes remain
+in `execution_source_sha256`; `source_sha256` identifies the renamed source
+snapshot. Summary metadata retains the preceding artifact digests alongside
+the current file checksums.
 Some artifact paths retain `paper_values.json` as a historical filename;
 these are machine-readable results, not manuscript files.
 Full experimental reruns are separate from the repository tests.

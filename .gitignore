@@ -25,8 +25,8 @@ Thumbs.db
 results/*
 !results/corrected_workshop/
 !results/corrected_workshop/**
-!results/reviewer_followup/
-!results/reviewer_followup/**
+!results/followup/
+!results/followup/**
 
 # Data (downloaded, not committed)
 data/climate_raw/
