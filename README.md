@@ -215,8 +215,9 @@ variation can change artifact hashes on a rerun. The original experiment
 manifest remains historical provenance and is not relabeled as a new run.
 
 An optional CPU Docker build is provided in [Dockerfile](Dockerfile). Its
-`make all` command runs the tests and packages the code and evidence. Docker and a fresh
-dependency installation were not exercised in the latest local verification.
+`make all` command runs the tests and packages the code and evidence.
+The pinned main environment installs successfully in a fresh checkout;
+Docker has not been exercised.
 
 ## Citation and license
 
