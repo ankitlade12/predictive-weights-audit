@@ -11,7 +11,6 @@ LaTeX sources, and paper-build tooling are maintained outside this repository.
 - **Title:** When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery
 - **Venue:** NeurIPS 2026 Workshop on Interpretability for Discovery (Interp4Discovery).
 - **Status:** Accepted; non-archival workshop contribution.
-- **OpenReview submission:** 11, as recorded in the supplied acceptance entry.
 - **Contribution:** Negative results and a worked audit of causal interpretations of predictive weights.
 
 Author order follows the accepted entry; affiliations below reflect the
