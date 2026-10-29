@@ -2,18 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery"
 authors:
-  - family-names: "Lade"
-    given-names: "Ankit Hemant"
-    affiliation: "Ascentt Systems Inc"
-  - family-names: "Jasti"
-    given-names: "Sai Krishna"
-    affiliation: "Nextgen Healthcare"
-  - family-names: "Chadha"
-    given-names: "Aman"
-    affiliation: "Apple"
-  - family-names: "Kumar"
-    given-names: "Indar"
-    affiliation: "Ascentt Systems Inc"
+  - name: "Anonymous authors"
 type: software
 repository-code: "https://github.com/ankitlade12/predictive-weights-audit"
 license: MIT
@@ -21,17 +10,6 @@ preferred-citation:
   type: conference-paper
   title: "When Predictive Weights Look Causal: An Audit Protocol for Interpretability-Based Discovery"
   authors:
-    - family-names: "Lade"
-      given-names: "Ankit Hemant"
-      affiliation: "Ascentt Systems Inc"
-    - family-names: "Jasti"
-      given-names: "Sai Krishna"
-      affiliation: "Nextgen Healthcare"
-    - family-names: "Chadha"
-      given-names: "Aman"
-      affiliation: "Apple"
-    - family-names: "Kumar"
-      given-names: "Indar"
-      affiliation: "Ascentt Systems Inc"
+    - name: "Anonymous authors"
   collection-title: "NeurIPS 2026 Workshop on Interpretability for Discovery (non-archival)"
   year: 2026

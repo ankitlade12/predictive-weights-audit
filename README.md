@@ -12,13 +12,6 @@ Interpretability for Discovery study (non-archival).
 - **Status:** Accepted; non-archival workshop contribution.
 - **Contribution:** Negative results and a worked audit of causal interpretations of predictive weights.
 
-| Author | Affiliation |
-|---|---|
-| Ankit Hemant Lade | Ascentt Systems Inc |
-| Sai Krishna Jasti | Nextgen Healthcare |
-| Aman Chadha | Apple |
-| Indar Kumar | Ascentt Systems Inc |
-
 ## What the paper establishes
 
 We audit the endpoint-product score of a prediction-trained linear factorized
@@ -221,11 +214,10 @@ Docker has not been exercised.
 
 ## Citation and license
 
-Ankit Hemant Lade, Sai Krishna Jasti, Aman Chadha, and Indar Kumar (2026).
 “When Predictive Weights Look Causal: An Audit Protocol for
 Interpretability-Based Discovery.” NeurIPS 2026 Workshop on Interpretability
 for Discovery (Interp4Discovery).
 
-Use [CITATION.cff](CITATION.cff) for the author list and workshop citation.
+Use [CITATION.cff](CITATION.cff) for the workshop citation.
 This is a non-archival workshop paper, not a main-conference proceedings paper.
 Code is distributed under the [MIT license](LICENSE).
