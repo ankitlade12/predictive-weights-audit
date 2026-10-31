@@ -39,7 +39,6 @@ data/fmri_raw/
 # Local workspace files; never part of the code release.
 /.claude/
 /AGENTS.md
-/ssm-causal-results.tar.gz
 /ssm_causal_discovery_plan.md
 /data/real/*.txt
 .ruff_cache/

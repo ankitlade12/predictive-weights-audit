@@ -1,5 +1,5 @@
 """
-Core tests for SSM-Causal.
+Core tests for the predictive-weights audit.
 
 Tests the fundamental claims:
     1. Data generators produce valid data with correct shapes
